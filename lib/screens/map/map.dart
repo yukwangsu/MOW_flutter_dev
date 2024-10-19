@@ -700,22 +700,41 @@ class _MapScreenState extends State<MapScreen> {
                               scrollDirection: Axis.horizontal,
                               child: Row(
                                 children: [
-                                  for (int i = 0;
-                                      i < topThreeTags.length;
-                                      i++) ...[
-                                    SelectButton(
-                                      height: 37.0,
-                                      padding: 8.0,
-                                      bgColor: const Color(0xFFFFF8F1),
-                                      radius: 12.0,
-                                      text: topThreeTags[i],
-                                      textColor: const Color(0xFF6B4D38),
-                                      textSize: 16.0,
-                                      onPress: () {},
-                                    ),
-                                    if (i < topThreeTags.length - 1)
-                                      const SizedBoxWidth6(), // 마지막 항목 뒤에는 추가 안되도록
-                                  ],
+                                  SelectButton(
+                                    height: 37.0,
+                                    padding: 8.0,
+                                    bgColor: const Color(0xFFFFF8F1),
+                                    radius: 12.0,
+                                    text:
+                                        '# 콘센트 ${placeDetail.outletDegree == 0 ? '많아요' : placeDetail.outletDegree == 1 ? '보통이에요' : '적어요'}',
+                                    textColor: const Color(0xFF6B4D38),
+                                    textSize: 16.0,
+                                    onPress: () {},
+                                  ),
+                                  const SizedBoxWidth6(),
+                                  SelectButton(
+                                    height: 37.0,
+                                    padding: 8.0,
+                                    bgColor: const Color(0xFFFFF8F1),
+                                    radius: 12.0,
+                                    text:
+                                        '# 공간 ${placeDetail.widenessDegree == 0 ? '넓어요' : placeDetail.widenessDegree == 1 ? '보통이에요' : '좁아요'}',
+                                    textColor: const Color(0xFF6B4D38),
+                                    textSize: 16.0,
+                                    onPress: () {},
+                                  ),
+                                  const SizedBoxWidth6(),
+                                  SelectButton(
+                                    height: 37.0,
+                                    padding: 8.0,
+                                    bgColor: const Color(0xFFFFF8F1),
+                                    radius: 12.0,
+                                    text:
+                                        '# 좌석 ${placeDetail.chairDegree == 0 ? '많아요' : placeDetail.chairDegree == 1 ? '보통이에요' : '적어요'}',
+                                    textColor: const Color(0xFF6B4D38),
+                                    textSize: 16.0,
+                                    onPress: () {},
+                                  ),
                                 ],
                               ),
                             ),
@@ -833,20 +852,36 @@ class _MapScreenState extends State<MapScreen> {
                                 const SizedBox(
                                   height: 28,
                                 ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    for (int i = 0;
-                                        i < placeDetail.reviews.length;
-                                        i++) ...[
-                                      reviewList(placeDetail.reviews[i]),
-                                      if (i < placeDetail.reviews.length - 1)
-                                        const SizedBox(
-                                          height: 32,
-                                        ), // 마지막 항목 뒤에는 추가 안되도록
-                                    ],
-                                  ],
-                                ),
+                                placeDetail.reviews.isEmpty
+                                    //리뷰가 존재하지 않을 때
+                                    ? const Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            '첫 리뷰를 남겨주세요!',
+                                            style: TextStyle(
+                                                color: Color(0xffc3c3c3)),
+                                          ),
+                                        ],
+                                      )
+                                    // 리뷰가 존재할 때
+                                    : Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          for (int i = 0;
+                                              i < placeDetail.reviews.length;
+                                              i++) ...[
+                                            reviewList(placeDetail.reviews[i]),
+                                            if (i <
+                                                placeDetail.reviews.length - 1)
+                                              const SizedBox(
+                                                height: 32,
+                                              ), // 마지막 항목 뒤에는 추가 안되도록
+                                          ],
+                                        ],
+                                      ),
                                 const SizedBox(
                                   height: 72,
                                 ),
@@ -1169,7 +1204,6 @@ class _MapScreenState extends State<MapScreen> {
   // }
 
   Widget reviewList(dynamic reviewObj) {
-    print(reviewObj.createdAt);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

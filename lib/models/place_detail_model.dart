@@ -10,7 +10,12 @@ class PlaceDetailModel {
       description,
       featureTags;
   final double starscore;
-  final int workspaceId, reviewCnt, workspaceStatus;
+  final int workspaceId,
+      reviewCnt,
+      workspaceStatus,
+      widenessDegree,
+      outletDegree,
+      chairDegree;
   final Map<String, String> workspaceOperationTime; // Map으로 변경
   final List<ReviewModel> reviews; // ReviewModel 리스트로 수정
   final List photos;
@@ -28,6 +33,9 @@ class PlaceDetailModel {
             (json['starscore'] != null) ? json['starscore'].toDouble() : 0.0,
         workspaceId = json['workspaceId'] ?? 0,
         reviewCnt = json['reviewCnt'] ?? 0,
+        widenessDegree = json['widenessDegree'] ?? 0,
+        outletDegree = json['outletDegree'] ?? 0,
+        chairDegree = json['chairDegree'] ?? 0,
         workspaceStatus = json['workspaceStatus'] ?? 0,
         workspaceOperationTime = (json['workspaceOperationTime'] != null)
             ? Map<String, String>.from(
