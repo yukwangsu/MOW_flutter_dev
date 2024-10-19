@@ -132,7 +132,7 @@ class _MapScreenState extends State<MapScreen> {
     print('********latitude: ${position.latitude}');
     print('********longitude: ${position.longitude}');
     isLoadingMap = false;
-    reloadWorkspaces = false;
+    reloadWorkspaces = true;
     setState(() {});
     return position;
   }
@@ -856,6 +856,7 @@ class _MapScreenState extends State<MapScreen> {
           );
         } else {
           // 데이터가 성공적으로 로드되었을 때
+          print("!!!!!!!!!!!!장소 리스트 로딩 완료!!!!!!!!!!!!!!!");
           final workspaceList = snapshot.data;
           copyWorkspaceList = workspaceList; //데이터 복사
           print('----------rebuild showWorkspace search result----------');
