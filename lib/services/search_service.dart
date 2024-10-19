@@ -8,6 +8,8 @@ class SearchService {
     int order,
     String locationType,
     List<String> appliedSearchTags,
+    double userLatitude,
+    double userLongitude,
   ) async {
     final url =
         Uri.parse('${Secrets.awsKey}workspace?order=$order&page=0&size=20');
@@ -55,11 +57,15 @@ class SearchService {
         ? {
             "keyword": keyword,
             "featureYnList": tagNumbers,
+            "userLatitude": userLatitude,
+            "userLongitude": userLongitude,
           }
         : {
             "keyword": keyword,
             "workspaceType": [locationType],
             "featureYnList": tagNumbers,
+            "userLatitude": userLatitude,
+            "userLongitude": userLongitude,
           };
     var body = jsonEncode(data);
 

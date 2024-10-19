@@ -251,7 +251,7 @@ class _MapScreenState extends State<MapScreen> {
                 ),
                 // 모드에 따라 bottomsheet가 변함
                 child: bottomsheetMode == 'normal'
-                    ? detailMode()
+                    ? normalMode()
                     : bottomsheetMode == 'detail'
                         ? detailMode()
                         : normalMode(),
@@ -417,31 +417,52 @@ class _MapScreenState extends State<MapScreen> {
         // 스크롤되는 부분(장소 리스트)
         // 1. 장소를 reload하는 setstate 일 경우 showWorkspace 진행
         if (reloadWorkspaces)
-          // showWorkspace(
-          //   searchController,
-          //   order,
-          //   locationType,
-          //   appliedSearchTags,
-          // ),
-          // 2. bottomsheet을 올리는 setstate 일 경우 (복사본 데이터 사용)
-          if (!reloadWorkspaces)
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.only(top: 0.0),
-                itemCount: copyWorkspaceList!.length,
-                itemBuilder: (context, index) {
-                  return placeList(
-                    copyWorkspaceList?[index]['workspaceId'],
-                    copyWorkspaceList?[index]['workspaceName'],
-                    copyWorkspaceList?[index]['workspaceType'],
-                    copyWorkspaceList?[index]['starscore'],
-                    copyWorkspaceList?[index]['reviewCnt'],
-                    copyWorkspaceList?[index]['location'],
-                    copyWorkspaceList?[index]['distance'],
-                  );
-                },
-              ),
-            )
+          isLoadingMap
+              //사용자의 위치를 받아오기 중
+              ? Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(top: 0.0),
+                    itemCount: 1,
+                    itemBuilder: (context, index) {
+                      return const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            color: Color(0xFFAD7541),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                )
+              //사용자의 위치를 받아왔을 때
+              : showWorkspace(
+                  searchController,
+                  order,
+                  locationType,
+                  appliedSearchTags,
+                  latitude,
+                  longitude,
+                ),
+        // 2. bottomsheet을 올리는 setstate 일 경우 (복사본 데이터 사용)
+        if (!reloadWorkspaces)
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.only(top: 0.0),
+              itemCount: copyWorkspaceList!.length,
+              itemBuilder: (context, index) {
+                return placeList(
+                  copyWorkspaceList?[index]['workspaceId'],
+                  copyWorkspaceList?[index]['workspaceName'],
+                  copyWorkspaceList?[index]['workspaceType'],
+                  copyWorkspaceList?[index]['starscore'],
+                  copyWorkspaceList?[index]['reviewCnt'],
+                  copyWorkspaceList?[index]['location'],
+                  copyWorkspaceList?[index]['distance'],
+                );
+              },
+            ),
+          )
       ],
     );
   }
@@ -786,78 +807,82 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  // Widget showWorkspace(
-  //   TextEditingController controller, // 입력값 controller
-  //   int order,
-  //   String locationType,
-  //   List<String> appliedSearchTags,
-  // ) {
-  //   return FutureBuilder<List<dynamic>?>(
-  //     future: SearchService.searchPlace(
-  //       controller.text,
-  //       order,
-  //       locationType,
-  //       appliedSearchTags,
-  //     ), // 비동기 데이터 호출
-  //     builder: (BuildContext context, AsyncSnapshot<List<dynamic>?> snapshot) {
-  //       if (snapshot.connectionState == ConnectionState.waiting) {
-  //         // 데이터가 로드 중일 때 로딩 표시
-  //         return Expanded(
-  //           child: ListView.builder(
-  //             padding: const EdgeInsets.only(top: 0.0),
-  //             itemCount: 1,
-  //             itemBuilder: (context, index) {
-  //               return const Row(
-  //                 mainAxisAlignment: MainAxisAlignment.center,
-  //                 children: [
-  //                   CircularProgressIndicator(
-  //                     color: Color(0xFFAD7541),
-  //                   ),
-  //                 ],
-  //               );
-  //             },
-  //           ),
-  //         );
-  //       } else if (snapshot.hasError) {
-  //         // 오류가 발생했을 때
-  //         return Expanded(
-  //           child: ListView.builder(
-  //             padding: const EdgeInsets.only(top: 0.0),
-  //             itemCount: 1,
-  //             itemBuilder: (context, index) {
-  //               return Text('Error: ${snapshot.error}');
-  //             },
-  //           ),
-  //         );
-  //       } else {
-  //         // 데이터가 성공적으로 로드되었을 때
-  //         final workspaceList = snapshot.data;
-  //         copyWorkspaceList = workspaceList; //데이터 복사
-  //         print('----------rebuild showWorkspace search result----------');
-  //         print('workspaceList: $workspaceList');
-  //         print('your keyword: ${controller.text}');
-  //         print('your order: $order');
-  //         return Expanded(
-  //           child: ListView.builder(
-  //             padding: const EdgeInsets.only(top: 0.0),
-  //             itemCount: workspaceList!.length,
-  //             itemBuilder: (context, index) {
-  //               return placeList(
-  //                 workspaceList[index]['workspaceId'],
-  //                 workspaceList[index]['workspaceName'],
-  //                 workspaceList[index]['workspaceType'],
-  //                 workspaceList[index]['starscore'],
-  //                 workspaceList[index]['reviewCnt'],
-  //                 workspaceList[index]['location'],
-  //                 workspaceList[index]['distance'],
-  //               );
-  //             },
-  //           ),
-  //         );
-  //       }
-  //     },
-  //   );
-  // }
+  Widget showWorkspace(
+    TextEditingController controller, // 입력값 controller
+    int order,
+    String locationType,
+    List<String> appliedSearchTags,
+    double latitude,
+    double longitute,
+  ) {
+    return FutureBuilder<List<dynamic>?>(
+      future: SearchService.searchPlace(
+        controller.text,
+        order,
+        locationType,
+        appliedSearchTags,
+        latitude,
+        longitute,
+      ), // 비동기 데이터 호출
+      builder: (BuildContext context, AsyncSnapshot<List<dynamic>?> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // 데이터가 로드 중일 때 로딩 표시
+          return Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.only(top: 0.0),
+              itemCount: 1,
+              itemBuilder: (context, index) {
+                return const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      color: Color(0xFFAD7541),
+                    ),
+                  ],
+                );
+              },
+            ),
+          );
+        } else if (snapshot.hasError) {
+          // 오류가 발생했을 때
+          return Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.only(top: 0.0),
+              itemCount: 1,
+              itemBuilder: (context, index) {
+                return Text('Error: ${snapshot.error}');
+              },
+            ),
+          );
+        } else {
+          // 데이터가 성공적으로 로드되었을 때
+          final workspaceList = snapshot.data;
+          copyWorkspaceList = workspaceList; //데이터 복사
+          print('----------rebuild showWorkspace search result----------');
+          print('workspaceList: $workspaceList');
+          print('your keyword: ${controller.text}');
+          print('your order: $order');
+          return Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.only(top: 0.0),
+              itemCount: workspaceList!.length,
+              itemBuilder: (context, index) {
+                return placeList(
+                  workspaceList[index]['workspaceId'],
+                  workspaceList[index]['workspaceName'],
+                  workspaceList[index]['workspaceType'],
+                  workspaceList[index]['starscore'],
+                  workspaceList[index]['reviewCnt'],
+                  workspaceList[index]['location'],
+                  workspaceList[index]['distance'],
+                );
+              },
+            ),
+          );
+        }
+      },
+    );
+  }
 
   Widget placeList(
     int id,
