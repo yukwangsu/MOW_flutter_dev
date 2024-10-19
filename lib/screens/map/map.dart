@@ -37,7 +37,9 @@ class _MapScreenState extends State<MapScreen> {
   bool reloadWorkspaces = true;
   List<dynamic>? copyWorkspaceList = [];
   String bottomsheetMode = 'normal';
+  bool reloadDetailspace = false;
   late int workspaceId;
+  late Future<PlaceDetailModel> place;
 
   @override
   void initState() {
@@ -469,32 +471,36 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Widget detailMode() {
-    late Future<PlaceDetailModel> place;
-    place = SearchService.getPlaceById(workspaceId);
+    // //테스트용
+    // late String name;
+    // late double score;
+    // late int reviewCount;
+    // late String adress;
+    // late String phoneNumber;
+    // late int isOpen;
+    // late String openingHour;
+    // late List<String> topThreeTags;
+    // late String link;
+    // late List<String> reviews;
 
-    //테스트용
-    late String name;
-    late double score;
-    late int reviewCount;
-    late String adress;
-    late String phoneNumber;
-    late int isOpen;
-    late String openingHour;
-    late List<String> topThreeTags;
-    late String link;
-    late List<String> reviews;
+    // //테스트용
+    // name = "스타벅스 연세로점";
+    // score = 4.3;
+    // reviewCount = 234;
+    // adress = "서울 서대문구 34나길 6";
+    // phoneNumber = "02-123-1231";
+    // isOpen = 2;
+    // openingHour = '수 09:00 - 21:00';
+    // topThreeTags = ['# 콘센트 많아요', '# 콘센트 많아요', '# 콘센트 많아요'];
+    // link = "https://www.yonsei.com";
+    // reviews = ['좋아요', '멋있어요', '깔끔해요', '좋아요', '멋있어요', '깔끔해요'];
 
-    //테스트용
-    name = "스타벅스 연세로점";
-    score = 4.3;
-    reviewCount = 234;
-    adress = "서울 서대문구 34나길 6";
-    phoneNumber = "02-123-1231";
-    isOpen = 2;
-    openingHour = '수 09:00 - 21:00';
-    topThreeTags = ['# 콘센트 많아요', '# 콘센트 많아요', '# 콘센트 많아요'];
-    link = "https://www.yonsei.com";
-    reviews = ['좋아요', '멋있어요', '깔끔해요', '좋아요', '멋있어요', '깔끔해요'];
+    //처음 들어왔을 때만 api요청하기. bottomsheet을 조절하면서 발생하는 setstate로는
+    //api를 요청하지 않는다.
+    if (reloadDetailspace) {
+      place = SearchService.getPlaceById(workspaceId);
+      reloadDetailspace = false;
+    }
 
     return Column(
       children: [
@@ -1009,6 +1015,7 @@ class _MapScreenState extends State<MapScreen> {
                 onTap: () {
                   bottomsheetMode = 'detail';
                   reloadWorkspaces = false;
+                  reloadDetailspace = true;
                   workspaceId = id;
                   print('workspaceId: $id');
                   setState(() {});
