@@ -2,6 +2,7 @@ import 'package:flutter_mow/models/place_detail_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_mow/secrets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SearchService {
   static Future<List?> searchPlace(
@@ -96,8 +97,11 @@ class SearchService {
   }
 
   static Future<PlaceDetailModel> getPlaceById(int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    int? userId = prefs.getInt('userId');
+
     final url = Uri.parse(
-        '${Secrets.awsKey}workspace/info?workspaceId=$id&order=1&page=0&size=20');
+        '${Secrets.awsKey}workspace/info?workspaceId=$id&userId=$userId&order=1&page=0&size=20');
     var headers = {
       'Content-Type': 'application/json',
     };

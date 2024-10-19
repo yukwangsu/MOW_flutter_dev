@@ -20,9 +20,12 @@ class SigninService {
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         String accessToken = responseData['accessToken'];
+        int userId = responseData['userId'];
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('accessToken', accessToken);
+        await prefs.setInt('userId', userId);
         print('AccessToken saved: $accessToken');
+        print('userId saved: $userId');
         return true;
       } else {
         return false;

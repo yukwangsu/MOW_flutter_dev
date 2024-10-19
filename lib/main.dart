@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: const LoginScreen(),
+      home: const SplashScreen(),
       theme: ThemeData(
         textTheme: const TextTheme(
           bodyLarge: TextStyle(

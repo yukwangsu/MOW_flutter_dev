@@ -40,6 +40,12 @@ class _MapScreenState extends State<MapScreen> {
   bool reloadDetailspace = false;
   late int workspaceId;
   late Future<PlaceDetailModel> place;
+  //리뷰 작성
+  num addReviewScore = 0;
+  int addReviewWidenessDegree = -1;
+  int addReviewChairDegree = -1;
+  int addReviewOutletDegree = -1;
+  String addReviewText = '';
 
   @override
   void initState() {
@@ -257,7 +263,7 @@ class _MapScreenState extends State<MapScreen> {
                     ? normalMode()
                     : bottomsheetMode == 'detail'
                         ? detailMode()
-                        : normalMode(),
+                        : reviewMode(),
               ),
             ),
           ),
@@ -532,7 +538,7 @@ class _MapScreenState extends State<MapScreen> {
             )
           ],
         ),
-        // 스크롤되는 부분 (추후 FutureBuilder 사용)
+        // 스크롤되는 부분
         FutureBuilder(
             future: place,
             builder: (context, snapshot) {
@@ -837,21 +843,31 @@ class _MapScreenState extends State<MapScreen> {
                                       style:
                                           Theme.of(context).textTheme.bodyLarge,
                                     ),
-                                    Row(
-                                      children: [
-                                        SvgPicture.asset(
-                                            'assets/icons/review_icon.svg'),
-                                        const SizedBoxWidth4(),
-                                        Text(
-                                          '리뷰쓰기',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleSmall
-                                              ?.copyWith(
-                                                color: const Color(0xFF6B4D38),
-                                              ),
-                                        ),
-                                      ],
+                                    GestureDetector(
+                                      behavior: HitTestBehavior
+                                          .opaque, // *** 빈 공간까지 터치 감지 ***
+                                      onTap: () {
+                                        reloadWorkspaces = false;
+                                        bottomsheetMode = 'review';
+                                        setState(() {});
+                                      },
+                                      child: Row(
+                                        children: [
+                                          SvgPicture.asset(
+                                              'assets/icons/review_icon.svg'),
+                                          const SizedBoxWidth4(),
+                                          Text(
+                                            '리뷰쓰기',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleSmall
+                                                ?.copyWith(
+                                                  color:
+                                                      const Color(0xFF6B4D38),
+                                                ),
+                                          ),
+                                        ],
+                                      ),
                                     )
                                   ],
                                 ),
@@ -913,6 +929,395 @@ class _MapScreenState extends State<MapScreen> {
             }),
       ],
     );
+  }
+
+  Widget reviewMode() {
+    return Column(children: [
+      // 스크롤되지 않는 부분[bar, arrow]
+      Column(
+        children: [
+          // 바
+          const Bar(),
+          const SizedBox(
+            height: 4.0,
+          ),
+          // 뒤로가기 아이콘
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Row(
+              children: [
+                GestureDetector(
+                    onTap: () {
+                      //초기화 해야하는 변수들
+                      addReviewScore = 0;
+                      addReviewWidenessDegree = -1;
+                      addReviewChairDegree = -1;
+                      addReviewOutletDegree = -1;
+                      //
+                      reloadWorkspaces = false;
+                      bottomsheetMode = 'detail';
+                      setState(() {});
+                    },
+                    child: SvgPicture.asset('assets/icons/back_icon.svg')),
+              ],
+            ),
+          ),
+          const SizedBox(
+            height: 28.0,
+          )
+        ],
+      ),
+      //스크롤 되는 부분
+      Expanded(
+        child: ListView.builder(
+          padding: const EdgeInsets.only(top: 0.0),
+          itemCount: 1,
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: Column(children: [
+                //리뷰 작성
+                const Row(
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.only(left: 4.0),
+                      child: Text('리뷰 작성'),
+                    ),
+                  ],
+                ),
+                const SizedBox(
+                  height: 42,
+                ),
+                const Row(
+                  children: [
+                    Text('별점'),
+                  ],
+                ),
+                const SizedBox(
+                  height: 16,
+                ),
+                //별 아이콘
+                Row(
+                  children: [
+                    // 별점
+                    for (int i = 0; i < addReviewScore.round(); i++) ...[
+                      GestureDetector(
+                          onTap: () {
+                            addReviewScore = i + 1;
+                            setState(() {});
+                          },
+                          child: SvgPicture.asset(
+                              'assets/icons/star_fill_big_icon.svg')),
+                    ],
+                    for (int i = 0; i < 5 - addReviewScore.round(); i++) ...[
+                      GestureDetector(
+                          onTap: () {
+                            addReviewScore = addReviewScore.round() + i + 1;
+                            setState(() {});
+                          },
+                          child: SvgPicture.asset(
+                              'assets/icons/star_unfill_big_icon.svg')),
+                    ],
+                    const SizedBox(
+                      width: 4.0,
+                    ),
+                  ],
+                ),
+                const SizedBox(
+                  height: 56,
+                ),
+                //태그 선택
+                const Row(
+                  children: [
+                    Text('태그'),
+                  ],
+                ),
+                const SizedBox(
+                  height: 8,
+                ),
+                const Row(
+                  children: [
+                    Text('해당 공간에 어울리는 태그를 골라주세요!'),
+                  ],
+                ),
+                const SizedBox(
+                  height: 24,
+                ),
+                const Row(
+                  children: [
+                    Text('공간'),
+                  ],
+                ),
+                const SizedBox(
+                  height: 12,
+                ),
+                Row(
+                  children: [
+                    SelectButton(
+                        height: 40,
+                        padding: 14,
+                        bgColor: addReviewWidenessDegree == 2
+                            ? const Color(0xFF6B4D38)
+                            : Colors.white,
+                        radius: 1000,
+                        text: '# 좁아요',
+                        textColor: addReviewWidenessDegree == 2
+                            ? Colors.white
+                            : const Color(0xFF6B4D38),
+                        textSize: 14,
+                        borderColor: const Color(0xFFAD7541),
+                        borderOpacity: 0.4,
+                        borderWidth: 1.0,
+                        lineHeight: 2.0,
+                        onPress: () {
+                          addReviewWidenessDegree = 2;
+                          setState(() {});
+                        }),
+                    const SizedBoxWidth6(),
+                    SelectButton(
+                        height: 40,
+                        padding: 14,
+                        bgColor: addReviewWidenessDegree == 1
+                            ? const Color(0xFF6B4D38)
+                            : Colors.white,
+                        radius: 1000,
+                        text: '# 보통이에요',
+                        textColor: addReviewWidenessDegree == 1
+                            ? Colors.white
+                            : const Color(0xFF6B4D38),
+                        textSize: 14,
+                        borderColor: const Color(0xFFAD7541),
+                        borderOpacity: 0.4,
+                        borderWidth: 1.0,
+                        lineHeight: 2.0,
+                        onPress: () {
+                          addReviewWidenessDegree = 1;
+                          setState(() {});
+                        }),
+                    const SizedBoxWidth6(),
+                    SelectButton(
+                        height: 40,
+                        padding: 14,
+                        bgColor: addReviewWidenessDegree == 0
+                            ? const Color(0xFF6B4D38)
+                            : Colors.white,
+                        radius: 1000,
+                        text: '# 넓어요',
+                        textColor: addReviewWidenessDegree == 0
+                            ? Colors.white
+                            : const Color(0xFF6B4D38),
+                        textSize: 14,
+                        borderColor: const Color(0xFFAD7541),
+                        borderOpacity: 0.4,
+                        borderWidth: 1.0,
+                        lineHeight: 2.0,
+                        onPress: () {
+                          addReviewWidenessDegree = 0;
+                          setState(() {});
+                        })
+                  ],
+                ),
+                const SizedBox(
+                  height: 18,
+                ),
+                const Row(
+                  children: [
+                    Text('좌석 수'),
+                  ],
+                ),
+                const SizedBox(
+                  height: 12,
+                ),
+                Row(
+                  children: [
+                    SelectButton(
+                        height: 40,
+                        padding: 14,
+                        bgColor: addReviewChairDegree == 2
+                            ? const Color(0xFF6B4D38)
+                            : Colors.white,
+                        radius: 1000,
+                        text: '# 적어요',
+                        textColor: addReviewChairDegree == 2
+                            ? Colors.white
+                            : const Color(0xFF6B4D38),
+                        textSize: 14,
+                        borderColor: const Color(0xFFAD7541),
+                        borderOpacity: 0.4,
+                        borderWidth: 1.0,
+                        lineHeight: 2.0,
+                        onPress: () {
+                          addReviewChairDegree = 2;
+                          setState(() {});
+                        }),
+                    const SizedBoxWidth6(),
+                    SelectButton(
+                        height: 40,
+                        padding: 14,
+                        bgColor: addReviewChairDegree == 1
+                            ? const Color(0xFF6B4D38)
+                            : Colors.white,
+                        radius: 1000,
+                        text: '# 보통이에요',
+                        textColor: addReviewChairDegree == 1
+                            ? Colors.white
+                            : const Color(0xFF6B4D38),
+                        textSize: 14,
+                        borderColor: const Color(0xFFAD7541),
+                        borderOpacity: 0.4,
+                        borderWidth: 1.0,
+                        lineHeight: 2.0,
+                        onPress: () {
+                          addReviewChairDegree = 1;
+                          setState(() {});
+                        }),
+                    const SizedBoxWidth6(),
+                    SelectButton(
+                        height: 40,
+                        padding: 14,
+                        bgColor: addReviewChairDegree == 0
+                            ? const Color(0xFF6B4D38)
+                            : Colors.white,
+                        radius: 1000,
+                        text: '# 많아요',
+                        textColor: addReviewChairDegree == 0
+                            ? Colors.white
+                            : const Color(0xFF6B4D38),
+                        textSize: 14,
+                        borderColor: const Color(0xFFAD7541),
+                        borderOpacity: 0.4,
+                        borderWidth: 1.0,
+                        lineHeight: 2.0,
+                        onPress: () {
+                          addReviewChairDegree = 0;
+                          setState(() {});
+                        })
+                  ],
+                ),
+                const SizedBox(
+                  height: 18,
+                ),
+                const Row(
+                  children: [
+                    Text('콘센트 수'),
+                  ],
+                ),
+                const SizedBox(
+                  height: 12,
+                ),
+                Row(
+                  children: [
+                    SelectButton(
+                        height: 40,
+                        padding: 14,
+                        bgColor: addReviewOutletDegree == 2
+                            ? const Color(0xFF6B4D38)
+                            : Colors.white,
+                        radius: 1000,
+                        text: '# 적어요',
+                        textColor: addReviewOutletDegree == 2
+                            ? Colors.white
+                            : const Color(0xFF6B4D38),
+                        textSize: 14,
+                        borderColor: const Color(0xFFAD7541),
+                        borderOpacity: 0.4,
+                        borderWidth: 1.0,
+                        lineHeight: 2.0,
+                        onPress: () {
+                          addReviewOutletDegree = 2;
+                          setState(() {});
+                        }),
+                    const SizedBoxWidth6(),
+                    SelectButton(
+                        height: 40,
+                        padding: 14,
+                        bgColor: addReviewOutletDegree == 1
+                            ? const Color(0xFF6B4D38)
+                            : Colors.white,
+                        radius: 1000,
+                        text: '# 보통이에요',
+                        textColor: addReviewOutletDegree == 1
+                            ? Colors.white
+                            : const Color(0xFF6B4D38),
+                        textSize: 14,
+                        borderColor: const Color(0xFFAD7541),
+                        borderOpacity: 0.4,
+                        borderWidth: 1.0,
+                        lineHeight: 2.0,
+                        onPress: () {
+                          addReviewOutletDegree = 1;
+                          setState(() {});
+                        }),
+                    const SizedBoxWidth6(),
+                    SelectButton(
+                        height: 40,
+                        padding: 14,
+                        bgColor: addReviewOutletDegree == 0
+                            ? const Color(0xFF6B4D38)
+                            : Colors.white,
+                        radius: 1000,
+                        text: '# 많아요',
+                        textColor: addReviewOutletDegree == 0
+                            ? Colors.white
+                            : const Color(0xFF6B4D38),
+                        textSize: 14,
+                        borderColor: const Color(0xFFAD7541),
+                        borderOpacity: 0.4,
+                        borderWidth: 1.0,
+                        lineHeight: 2.0,
+                        onPress: () {
+                          addReviewOutletDegree = 0;
+                          setState(() {});
+                        })
+                  ],
+                ),
+                const SizedBox(
+                  height: 24,
+                ),
+                const ListBorderLine(),
+                const SizedBox(
+                  height: 24,
+                ),
+                const Row(
+                  children: [
+                    Text('추가적으로 어떤 태그가 어울릴까요?'),
+                  ],
+                ),
+                //추가 태그 선택 (생략)
+                const SizedBox(
+                  height: 56,
+                ),
+                //줄글 리뷰
+                const Row(
+                  children: [
+                    Text('줄글리뷰'),
+                  ],
+                ),
+                const SizedBox(
+                  height: 4,
+                ),
+                const Row(
+                  children: [
+                    Text('줄글리뷰 작성시 1젤리를 추가로 더 드려요!!'),
+                  ],
+                ),
+                const SizedBox(
+                  height: 16,
+                ),
+                //줄글리뷰 입력칸(생략)
+                const SizedBox(
+                  height: 48,
+                ),
+                //완료버튼(생략)
+                const SizedBox(
+                  height: 56,
+                ),
+              ]),
+            );
+          },
+        ),
+      )
+    ]);
   }
 
   Widget showWorkspace(
