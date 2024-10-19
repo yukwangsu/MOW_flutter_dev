@@ -1,3 +1,4 @@
+import 'package:flutter_mow/models/place_detail_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_mow/secrets.dart';
@@ -91,6 +92,34 @@ class SearchService {
     } catch (e) {
       print('Error during searchPlace: $e');
       return null;
+    }
+  }
+
+  static Future<PlaceDetailModel> getPlaceById(int id) async {
+    final url = Uri.parse(
+        '${Secrets.awsKey}workspace/info?workspaceId=$id&order=1&page=0&size=20');
+    var headers = {
+      'Content-Type': 'application/json',
+    };
+    try {
+      final response = await http.get(url, headers: headers);
+      print('----------[service] getPlaceById----------');
+      print('Response status: ${response.statusCode}');
+
+      // UTF-8로 응답을 수동 디코딩
+      final utf8Body = utf8.decode(response.bodyBytes);
+      print('Response body: $utf8Body');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final responseData = json.decode(utf8Body);
+        return PlaceDetailModel.fromJson(responseData);
+      } else {
+        print('Fail getPlaceById');
+        throw Error();
+      }
+    } catch (e) {
+      print('Error during getPlaceById: $e');
+      throw Error();
     }
   }
 }

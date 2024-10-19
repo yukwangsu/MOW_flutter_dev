@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mow/models/place_detail_model.dart';
 import 'package:flutter_mow/screens/map/edit_tag.dart';
 import 'package:flutter_mow/services/search_service.dart';
 import 'package:flutter_mow/widgets/curation_list.dart';
@@ -468,6 +469,10 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Widget detailMode() {
+    late Future<PlaceDetailModel> place;
+    place = SearchService.getPlaceById(workspaceId);
+
+    //테스트용
     late String name;
     late double score;
     late int reviewCount;
@@ -522,287 +527,349 @@ class _MapScreenState extends State<MapScreen> {
           ],
         ),
         // 스크롤되는 부분 (추후 FutureBuilder 사용)
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.only(top: 0.0),
-            itemCount: 1,
-            itemBuilder: (context, index) {
-              return Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Column(
-                      children: [
-                        // 가게 이름
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              name,
-                              style: Theme.of(context).textTheme.bodyLarge,
-                            ),
-                            SvgPicture.asset('assets/icons/share_icon.svg')
-                          ],
-                        ),
-                        const SizedBox(height: 4.0),
-                        // 가게 별점, 리뷰
-                        Row(
-                          children: [
-                            // 별점
-                            for (int i = 0; i < score.round(); i++) ...[
-                              SvgPicture.asset(
-                                  'assets/icons/star_fill_icon.svg'),
-                            ],
-                            for (int i = 0; i < 5 - 4.round(); i++) ...[
-                              SvgPicture.asset(
-                                  'assets/icons/star_unfill_icon.svg'),
-                            ],
-                            const SizedBox(
-                              width: 8.0,
-                            ),
-                            // 리뷰 개수
-                            Text(
-                              '($reviewCount)',
-                              style: Theme.of(context).textTheme.titleSmall,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12.0),
-                        // 가게 위치, 연락처
-                        Row(
-                          children: [
-                            // 주소
-                            Text(
-                              adress.substring(0, 7),
-                              style: Theme.of(context).textTheme.titleSmall,
-                            ),
-                            const SizedBoxWidth4(),
-                            SvgPicture.asset(
-                                'assets/icons/dropdown_down_padding.svg'),
-                            const SizedBox(
-                              width: 58.0,
-                            ),
-                            Text(
-                              '연락처',
-                              style: Theme.of(context).textTheme.titleSmall,
-                            ),
-                            const SizedBoxWidth4(),
-                            SvgPicture.asset(
-                                'assets/icons/dropdown_down_padding.svg'),
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 8.0,
-                        ),
-                        // 현재 영업 유무, 영업 시간 등 표시
-                        Row(
-                          children: [
-                            Text(
-                              isOpen == 0
-                                  ? '영업중'
-                                  : isOpen == 1
-                                      ? '브레이크 타임'
-                                      : isOpen == 2
-                                          ? '영업종료'
-                                          : '휴무',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall!
-                                  .copyWith(color: const Color(0xFF6B4D38)),
-                            ),
-                            const SizedBoxWidth4(),
-                            Text(
-                              '・',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall!
-                                  .copyWith(color: const Color(0xFF6B4D38)),
-                            ),
-                            const SizedBoxWidth4(),
-                            Text(
-                              openingHour,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall!
-                                  .copyWith(color: const Color(0xFF6B4D38)),
-                            ),
-                            const SizedBoxWidth4(),
-                            SvgPicture.asset(
-                                'assets/icons/dropdown_down_padding.svg'),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 20.0,
-                  ),
-                  // Top3 태그
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 21.5),
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
+        FutureBuilder(
+            future: place,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                // 데이터가 로드 중일 때 로딩 표시
+                return Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(top: 0.0),
+                    itemCount: 1,
+                    itemBuilder: (context, index) {
+                      return const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          for (int i = 0; i < topThreeTags.length; i++) ...[
-                            SelectButton(
-                              height: 37.0,
-                              padding: 8.0,
-                              bgColor: const Color(0xFFFFF8F1),
-                              radius: 12.0,
-                              text: topThreeTags[i],
-                              textColor: const Color(0xFF6B4D38),
-                              textSize: 16.0,
-                              onPress: () {},
-                            ),
-                            if (i < topThreeTags.length - 1)
-                              const SizedBoxWidth6(), // 마지막 항목 뒤에는 추가 안되도록
-                          ],
+                          CircularProgressIndicator(
+                            color: Color(0xFFAD7541),
+                          ),
                         ],
-                      ),
-                    ),
+                      );
+                    },
                   ),
-                  const SizedBoxHeight20(),
-                  // 저장하기, 길찾기 버튼
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SelectButton(
-                        height: 36.0,
-                        padding: 10.0,
-                        bgColor: const Color(0xFFFFFCF8),
-                        radius: 12.0,
-                        text: '저장하기',
-                        textColor: const Color(0xFF6B4D38),
-                        textSize: 16.0,
-                        borderColor: const Color(0xFF6B4D38),
-                        borderOpacity: 1.0,
-                        borderWidth: 1.0,
-                        lineHeight: 1.5,
-                        svgIconPath: "assets/icons/unsave_icon.svg",
-                        isIconFirst: true,
-                        onPress: () {},
-                      ),
-                      const SizedBox(
-                        width: 8.0,
-                      ),
-                      SelectButton(
-                        height: 36.0,
-                        padding: 10.0,
-                        bgColor: const Color(0xFFFFFCF8),
-                        radius: 12.0,
-                        text: '길찾기',
-                        textColor: const Color(0xFF6B4D38),
-                        textSize: 16.0,
-                        borderColor: const Color(0xFF6B4D38),
-                        borderOpacity: 1.0,
-                        borderWidth: 1.0,
-                        lineHeight: 1.5,
-                        svgIconPath: "assets/icons/navigation_icon.svg",
-                        isIconFirst: true,
-                        onPress: () {},
-                      ),
-                    ],
+                );
+              } else if (snapshot.hasError) {
+                // 오류가 발생했을 때
+                return Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(top: 0.0),
+                    itemCount: 1,
+                    itemBuilder: (context, index) {
+                      return Text('Error: ${snapshot.error}');
+                    },
                   ),
-                  const SizedBoxHeight30(),
-                  // 상세정보, 리뷰 등등
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const ListBorderLine(),
-                        const SizedBoxHeight30(),
-                        //상세정보
-                        Text(
-                          '상세정보',
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                        const SizedBox(
-                          height: 28,
-                          width: double.infinity,
-                        ),
-                        Text(
-                          '웹사이트',
-                          style: Theme.of(context).textTheme.headlineMedium,
-                        ),
-                        const SizedBox(
-                          height: 12,
-                        ),
-                        Text(
-                          link,
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineMedium
-                              ?.copyWith(
-                                decoration: TextDecoration.underline,
-                              ),
-                        ),
-                        const SizedBoxHeight30(),
-                        const ListBorderLine(),
-                        const SizedBoxHeight30(),
-                        //리뷰
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '리뷰',
-                              style: Theme.of(context).textTheme.bodyLarge,
-                            ),
-                            Row(
+                );
+              } else {
+                // 정상적으로 데이터를 가져왔을 때
+                PlaceDetailModel placeDetail = snapshot.data!;
+                return (Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(top: 0.0),
+                    itemCount: 1,
+                    itemBuilder: (context, index) {
+                      return Column(
+                        children: [
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 20.0),
+                            child: Column(
                               children: [
-                                SvgPicture.asset(
-                                    'assets/icons/review_icon.svg'),
-                                const SizedBoxWidth4(),
-                                Text(
-                                  '리뷰쓰기',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleSmall
-                                      ?.copyWith(
-                                        color: const Color(0xFF6B4D38),
-                                      ),
+                                // 가게 이름
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      placeDetail.workspaceName,
+                                      style:
+                                          Theme.of(context).textTheme.bodyLarge,
+                                    ),
+                                    SvgPicture.asset(
+                                        'assets/icons/share_icon.svg')
+                                  ],
+                                ),
+                                const SizedBox(height: 4.0),
+                                // 가게 별점, 리뷰
+                                Row(
+                                  children: [
+                                    // 별점
+                                    for (int i = 0;
+                                        i < placeDetail.starscore.round();
+                                        i++) ...[
+                                      SvgPicture.asset(
+                                          'assets/icons/star_fill_icon.svg'),
+                                    ],
+                                    for (int i = 0; i < 5 - 4.round(); i++) ...[
+                                      SvgPicture.asset(
+                                          'assets/icons/star_unfill_icon.svg'),
+                                    ],
+                                    const SizedBox(
+                                      width: 8.0,
+                                    ),
+                                    // 리뷰 개수
+                                    Text(
+                                      '(${placeDetail.reviewCnt})',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12.0),
+                                // 가게 위치, 연락처
+                                Row(
+                                  children: [
+                                    // 주소
+                                    Text(
+                                      placeDetail.location.substring(0, 7),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall,
+                                    ),
+                                    const SizedBoxWidth4(),
+                                    SvgPicture.asset(
+                                        'assets/icons/dropdown_down_padding.svg'),
+                                    const SizedBox(
+                                      width: 58.0,
+                                    ),
+                                    Text(
+                                      '연락처',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall,
+                                    ),
+                                    const SizedBoxWidth4(),
+                                    SvgPicture.asset(
+                                        'assets/icons/dropdown_down_padding.svg'),
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 8.0,
+                                ),
+                                // 현재 영업 유무, 영업 시간 등 표시
+                                Row(
+                                  children: [
+                                    Text(
+                                      placeDetail.workspaceStatus == 0
+                                          ? '영업중'
+                                          : placeDetail.workspaceStatus == 1
+                                              ? '브레이크 타임'
+                                              : placeDetail.workspaceStatus == 2
+                                                  ? '영업종료'
+                                                  : '휴무',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall!
+                                          .copyWith(
+                                              color: const Color(0xFF6B4D38)),
+                                    ),
+                                    const SizedBoxWidth4(),
+                                    Text(
+                                      '・',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall!
+                                          .copyWith(
+                                              color: const Color(0xFF6B4D38)),
+                                    ),
+                                    const SizedBoxWidth4(),
+                                    // 영업시간
+                                    Text(
+                                      setOpenHour(
+                                          placeDetail.workspaceOperationTime),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall,
+                                    ),
+                                    const SizedBoxWidth4(),
+                                    SvgPicture.asset(
+                                        'assets/icons/dropdown_down_padding.svg'),
+                                  ],
                                 ),
                               ],
-                            )
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 28,
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            for (int i = 0; i < reviews.length; i++) ...[
-                              reviewList(reviews[i]),
-                              if (i < reviews.length - 1)
-                                const SizedBox(
-                                  height: 32,
-                                ), // 마지막 항목 뒤에는 추가 안되도록
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 20.0,
+                          ),
+                          // Top3 태그
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 21.5),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  for (int i = 0;
+                                      i < topThreeTags.length;
+                                      i++) ...[
+                                    SelectButton(
+                                      height: 37.0,
+                                      padding: 8.0,
+                                      bgColor: const Color(0xFFFFF8F1),
+                                      radius: 12.0,
+                                      text: topThreeTags[i],
+                                      textColor: const Color(0xFF6B4D38),
+                                      textSize: 16.0,
+                                      onPress: () {},
+                                    ),
+                                    if (i < topThreeTags.length - 1)
+                                      const SizedBoxWidth6(), // 마지막 항목 뒤에는 추가 안되도록
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBoxHeight20(),
+                          // 저장하기, 길찾기 버튼
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SelectButton(
+                                height: 36.0,
+                                padding: 10.0,
+                                bgColor: const Color(0xFFFFFCF8),
+                                radius: 12.0,
+                                text: '저장하기',
+                                textColor: const Color(0xFF6B4D38),
+                                textSize: 16.0,
+                                borderColor: const Color(0xFF6B4D38),
+                                borderOpacity: 1.0,
+                                borderWidth: 1.0,
+                                lineHeight: 1.5,
+                                svgIconPath: "assets/icons/unsave_icon.svg",
+                                isIconFirst: true,
+                                onPress: () {},
+                              ),
+                              const SizedBox(
+                                width: 8.0,
+                              ),
+                              SelectButton(
+                                height: 36.0,
+                                padding: 10.0,
+                                bgColor: const Color(0xFFFFFCF8),
+                                radius: 12.0,
+                                text: '길찾기',
+                                textColor: const Color(0xFF6B4D38),
+                                textSize: 16.0,
+                                borderColor: const Color(0xFF6B4D38),
+                                borderOpacity: 1.0,
+                                borderWidth: 1.0,
+                                lineHeight: 1.5,
+                                svgIconPath: "assets/icons/navigation_icon.svg",
+                                isIconFirst: true,
+                                onPress: () {},
+                              ),
                             ],
-                          ],
-                        ),
-                        const SizedBox(
-                          height: 72,
-                        ),
-                      ],
-                    ),
-                  ),
+                          ),
+                          const SizedBoxHeight30(),
+                          // 상세정보, 리뷰 등등
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 20.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const ListBorderLine(),
+                                const SizedBoxHeight30(),
+                                //상세정보
+                                Text(
+                                  '상세정보',
+                                  style: Theme.of(context).textTheme.bodyLarge,
+                                ),
+                                const SizedBox(
+                                  height: 28,
+                                  width: double.infinity,
+                                ),
+                                Text(
+                                  '웹사이트',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium,
+                                ),
+                                const SizedBox(
+                                  height: 12,
+                                ),
+                                Text(
+                                  placeDetail.spaceUrl,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium
+                                      ?.copyWith(
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                ),
+                                const SizedBoxHeight30(),
+                                const ListBorderLine(),
+                                const SizedBoxHeight30(),
+                                //리뷰
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      '리뷰',
+                                      style:
+                                          Theme.of(context).textTheme.bodyLarge,
+                                    ),
+                                    Row(
+                                      children: [
+                                        SvgPicture.asset(
+                                            'assets/icons/review_icon.svg'),
+                                        const SizedBoxWidth4(),
+                                        Text(
+                                          '리뷰쓰기',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleSmall
+                                              ?.copyWith(
+                                                color: const Color(0xFF6B4D38),
+                                              ),
+                                        ),
+                                      ],
+                                    )
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 28,
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    for (int i = 0;
+                                        i < placeDetail.reviews.length;
+                                        i++) ...[
+                                      reviewList(placeDetail.reviews[i]),
+                                      if (i < placeDetail.reviews.length - 1)
+                                        const SizedBox(
+                                          height: 32,
+                                        ), // 마지막 항목 뒤에는 추가 안되도록
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(
+                                  height: 72,
+                                ),
+                              ],
+                            ),
+                          ),
 
-                  // 큐레이션 상세페이지 (listview 사용-> 옆으로 스크롤)
-                  //임시 코드
-                  // const CurationList(
-                  //   title: '큐레이션 제목입니다.',
-                  //   placeName: '상호명',
-                  //   thumb:
-                  //       'https://media.istockphoto.com/id/1400194993/ko/%EC%82%AC%EC%A7%84/%EC%B9%B4%ED%91%B8%EC%B9%98%EB%85%B8-%EC%98%88%EC%88%A0%EC%A7%81.jpg?s=612x612&w=0&k=20&c=lum31BwhnHLtD647HI-RGcWRSNyZEBQ063C2rrNYdoE=',
-                  //   curationId: 1,
-                  // ),
-                ],
-              );
-            },
-          ),
-        )
+                          // 큐레이션 상세페이지 (listview 사용-> 옆으로 스크롤)
+                          //임시 코드
+                          // const CurationList(
+                          //   title: '큐레이션 제목입니다.',
+                          //   placeName: '상호명',
+                          //   thumb:
+                          //       'https://media.istockphoto.com/id/1400194993/ko/%EC%82%AC%EC%A7%84/%EC%B9%B4%ED%91%B8%EC%B9%98%EB%85%B8-%EC%98%88%EC%88%A0%EC%A7%81.jpg?s=612x612&w=0&k=20&c=lum31BwhnHLtD647HI-RGcWRSNyZEBQ063C2rrNYdoE=',
+                          //   curationId: 1,
+                          // ),
+                        ],
+                      );
+                    },
+                  ),
+                ));
+              }
+            }),
       ],
     );
   }
@@ -997,7 +1064,7 @@ class _MapScreenState extends State<MapScreen> {
                               const SizedBoxWidth4(),
                               // 거리
                               Text(
-                                '${distance.round()}m',
+                                setDistance(distance),
                                 style: Theme.of(context).textTheme.titleSmall,
                               ),
                               const SizedBox(
@@ -1033,10 +1100,117 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Widget reviewList(String content) {
-    return Text(
-      content,
-      style: Theme.of(context).textTheme.bodyMedium,
+  //거리를 입력받으면 m, km로 반환
+  String setDistance(double distance) {
+    late num adjustDistance;
+    if (distance > 1) {
+      adjustDistance = (distance * 10).round() / 10;
+      return '${adjustDistance}km';
+    } else {
+      adjustDistance = (distance * 1000).round();
+      return '${adjustDistance}m';
+    }
+  }
+
+  String setOpenHour(Map<String, String> hour) {
+    // 현재 요일 가져오기 (0: 월요일, 6: 일요일)
+    int currentWeekday = DateTime.now().weekday;
+
+    // 요일을 Map의 키와 연결 및 첫 글자 정의
+    String day;
+    String dayInitial; // 요일의 첫 글자
+    switch (currentWeekday) {
+      case 1:
+        day = 'Monday';
+        dayInitial = '월';
+        break;
+      case 2:
+        day = 'Tuesday';
+        dayInitial = '화';
+        break;
+      case 3:
+        day = 'Wednesday';
+        dayInitial = '수';
+        break;
+      case 4:
+        day = 'Thursday';
+        dayInitial = '목';
+        break;
+      case 5:
+        day = 'Friday';
+        dayInitial = '금';
+        break;
+      case 6:
+        day = 'Saturday';
+        dayInitial = '토';
+        break;
+      case 7:
+        day = 'Sunday';
+        dayInitial = '일';
+        break;
+      default:
+        day = 'Unknown';
+        dayInitial = '';
+    }
+
+    // 해당 요일의 영업 시간을 반환 (없으면 기본값으로 '정보 없음')
+    String hours = hour[day] ?? '정보 없음';
+
+    // 요일 첫 글자와 함께 반환
+    return '$dayInitial $hours';
+  }
+
+  // List<String> setTopThreeTag(String tags) {
+  //     List<int> list = tags.split(',')
+  //                     .map(int.parse)
+  //                     .take(3) // 처음 3개의 요소만 가져옴
+  //                     .toList();
+
+  // }
+
+  Widget reviewList(dynamic reviewObj) {
+    print(reviewObj.createdAt);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SvgPicture.asset('assets/icons/review_user_default_img.svg'),
+            const SizedBox(
+              width: 12,
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  reviewObj.userNickname,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(
+                  height: 8,
+                ),
+                //reviewObj.createdAt.year 는 int 타입이므로 String으로 변환
+                Text(
+                  '${reviewObj.createdAt.year.toString()}. ${reviewObj.createdAt.month.toString().padLeft(2, '0')}. ${reviewObj.createdAt.day.toString().padLeft(2, '0')}',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleSmall!
+                      .copyWith(color: const Color(0xFFC3C3C3)),
+                ),
+              ],
+            )
+          ],
+        ),
+        const SizedBox(
+          height: 16,
+        ),
+        Text(
+          reviewObj.reviewText,
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      ],
     );
   }
 
