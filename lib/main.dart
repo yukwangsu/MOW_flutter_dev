@@ -25,6 +25,12 @@ class MyApp extends StatelessWidget {
       home: const SplashScreen(),
       theme: ThemeData(
         textTheme: const TextTheme(
+          titleLarge: TextStyle(
+            fontSize: 22.0,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'SF_Pro',
+            height: 1.2,
+          ),
           bodyLarge: TextStyle(
             fontSize: 16.0,
             fontWeight: FontWeight.bold,

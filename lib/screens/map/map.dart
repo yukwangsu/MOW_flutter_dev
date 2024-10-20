@@ -858,12 +858,12 @@ class _MapScreenState extends State<MapScreen> {
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(
-                                            builder: (context) =>
-                                                const AddReview(),
+                                            builder: (context) => AddReview(
+                                                workspaceId: workspaceId),
                                           ),
                                         ).then((_) {
-                                          // *** 이 화면으로 돌아왔을 때 디테일 화면을 다시 로딩 => 리뷰 없데이트***
-                                          reloadWorkspaces = true;
+                                          // *** 이 화면으로 돌아왔을 때 디테일 화면을 다시 로딩 => 리뷰 업데이트***
+                                          reloadDetailspace = true;
                                           bottomsheetMode = 'detail';
                                           setState(() {});
                                         });
@@ -972,7 +972,7 @@ class _MapScreenState extends State<MapScreen> {
                       addReviewOutletDegree = -1;
                       addReviewTextcontroller.text = '';
                       //
-                      reloadWorkspaces = true;
+                      reloadDetailspace = true;
                       bottomsheetMode = 'detail';
                       setState(() {});
                     },

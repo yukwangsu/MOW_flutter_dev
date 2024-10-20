@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mow/services/review_service.dart';
 import 'package:flutter_mow/widgets/appbar_back.dart';
 import 'package:flutter_mow/widgets/button_main.dart';
 import 'package:flutter_mow/widgets/select_button.dart';
 import 'package:flutter_svg/svg.dart';
 
 class AddReview extends StatefulWidget {
+  final int workspaceId;
+
   const AddReview({
     super.key,
+    required this.workspaceId,
   });
 
   @override
@@ -40,6 +44,52 @@ class _AddReviewState extends State<AddReview> {
     });
   }
 
+  void onClickButtonHandler() {
+    if (addReviewWidenessDegree > 0) {
+      switch (addReviewWidenessDegree) {
+        case 0:
+          selectedTags.add('# 공간이 넓어요');
+          break;
+        case 1:
+          selectedTags.add('# 공간이 보통이에요');
+          break;
+        case 2:
+          selectedTags.add('# 공간이 좁아요');
+          break;
+      }
+    }
+    if (addReviewChairDegree > 0) {
+      switch (addReviewChairDegree) {
+        case 0:
+          selectedTags.add('# 좌석이 많아요');
+          break;
+        case 1:
+          selectedTags.add('# 좌석이 보통이에요');
+          break;
+        case 2:
+          selectedTags.add('# 좌석이 적어요');
+          break;
+      }
+    }
+    if (addReviewOutletDegree > 0) {
+      switch (addReviewOutletDegree) {
+        case 0:
+          selectedTags.add('# 콘센트가 많아요');
+          break;
+        case 1:
+          selectedTags.add('# 콘센트가 보통이에요');
+          break;
+        case 2:
+          selectedTags.add('# 콘센트가 적어요');
+          break;
+      }
+    }
+
+    //api 호출
+    ReviewService.addReview(addReviewTextcontroller.text, selectedTags,
+        widget.workspaceId, addReviewScore.toDouble());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -58,12 +108,14 @@ class _AddReviewState extends State<AddReview> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               //스크롤 X
-              const Row(
+              Row(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(top: 28, left: 4.0),
-                    child: Text('리뷰 작성'),
-                  ),
+                      padding: const EdgeInsets.only(top: 28, left: 4.0),
+                      child: Text(
+                        '리뷰 작성',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      )),
                 ],
               ),
               const SizedBox(
@@ -77,9 +129,12 @@ class _AddReviewState extends State<AddReview> {
                       const SizedBox(
                         height: 21,
                       ),
-                      const Row(
+                      Row(
                         children: [
-                          Text('별점'),
+                          Text(
+                            '별점',
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
                         ],
                       ),
                       const SizedBox(
@@ -119,25 +174,34 @@ class _AddReviewState extends State<AddReview> {
                         height: 56,
                       ),
                       //태그 선택
-                      const Row(
+                      Row(
                         children: [
-                          Text('태그'),
+                          Text(
+                            '태그',
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
                         ],
                       ),
                       const SizedBox(
-                        height: 8,
+                        height: 10,
                       ),
-                      const Row(
+                      Row(
                         children: [
-                          Text('해당 공간에 어울리는 태그를 골라주세요!'),
+                          Text(
+                            '해당 공간에 어울리는 태그를 골라주세요!',
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
                         ],
                       ),
                       const SizedBox(
                         height: 24,
                       ),
-                      const Row(
+                      Row(
                         children: [
-                          Text('공간'),
+                          Text(
+                            '공간',
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ),
                         ],
                       ),
                       const SizedBox(
@@ -212,9 +276,12 @@ class _AddReviewState extends State<AddReview> {
                       const SizedBox(
                         height: 18,
                       ),
-                      const Row(
+                      Row(
                         children: [
-                          Text('좌석 수'),
+                          Text(
+                            '좌석 수',
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ),
                         ],
                       ),
                       const SizedBox(
@@ -289,9 +356,12 @@ class _AddReviewState extends State<AddReview> {
                       const SizedBox(
                         height: 18,
                       ),
-                      const Row(
+                      Row(
                         children: [
-                          Text('콘센트 수'),
+                          Text(
+                            '콘센트 수',
+                            style: Theme.of(context).textTheme.headlineMedium,
+                          ),
                         ],
                       ),
                       const SizedBox(
@@ -370,9 +440,12 @@ class _AddReviewState extends State<AddReview> {
                       const SizedBox(
                         height: 24,
                       ),
-                      const Row(
+                      Row(
                         children: [
-                          Text('추가적으로 어떤 태그가 어울릴까요? (pass)'),
+                          Text(
+                            '추가적으로 어떤 태그가 어울릴까요? ',
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
                         ],
                       ),
                       //// 추가 태그 선택
@@ -386,125 +459,174 @@ class _AddReviewState extends State<AddReview> {
                         0,
                       ),
                       // 작업 편의 tags
-                      if (isTagOpen[0]) ...[
-                        Padding(
-                          padding:
-                              const EdgeInsets.only(top: 8.0, bottom: 24.0),
-                          child: tagListWidget(
-                            '# 한산해요',
-                            '# 의자가 편해요',
-                            '# 책상이 넓어요',
-                          ),
-                        ),
-                      ],
-
+                      // 애니메이션 효과 추가
+                      AnimatedSwitcher(
+                        duration:
+                            const Duration(milliseconds: 200), // 애니메이션 지속 시간
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          );
+                        },
+                        child: isTagOpen[0]
+                            ? Padding(
+                                key: const ValueKey(1), // 키를 다르게 설정해야 애니메이션이 동작
+                                padding: const EdgeInsets.only(
+                                    top: 8.0, bottom: 24.0),
+                                child: tagListWidget(
+                                  '# 한산해요',
+                                  '# 의자가 편해요',
+                                  '# 책상이 넓어요',
+                                ),
+                              )
+                            : Container(key: const ValueKey(2)), // 빈 컨테이너로 대체
+                      ),
                       // 분위기 tab
                       tagTitleWidget(
                         '분위기',
                         1,
                       ),
                       // 분위기 tags
-                      if (isTagOpen[1]) ...[
-                        Padding(
-                          padding:
-                              const EdgeInsets.only(top: 8.0, bottom: 24.0),
-                          child: Column(
-                            children: [
-                              tagListWidget(
-                                '# 뷰가 좋아요',
-                                '# 조용해요',
-                                null,
-                              ),
-                              const SizedBoxHeight10(),
-                              tagListWidget(
-                                '# 아늑해요',
-                                '# 인테리어가 깔끔해요',
-                                null,
-                              ),
-                              const SizedBoxHeight10(),
-                              tagListWidget(
-                                '# 어두워요',
-                                '# 밝아요',
-                                '# 다시 오고 싶어요',
-                              ),
-                              const SizedBoxHeight10(),
-                              tagListWidget(
-                                '# 음악이 좋아요',
-                                '# 대화하기 좋아요',
-                                null,
-                              ),
-                              const SizedBoxHeight10(),
-                              tagListWidget(
-                                '# 감각적이에요',
-                                '# 혼자 작업하기 좋아요',
-                                null,
-                              ),
-                              const SizedBoxHeight10(),
-                              tagListWidget(
-                                '# 회의하기에 좋아요',
-                                null,
-                                null,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-
+                      // 애니메이션 효과 추가
+                      AnimatedSwitcher(
+                        duration:
+                            const Duration(milliseconds: 200), // 애니메이션 지속 시간
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          );
+                        },
+                        child: isTagOpen[1]
+                            ? Padding(
+                                key: const ValueKey(1), // 키를 다르게 설정해야 애니메이션이 동작
+                                padding: const EdgeInsets.only(
+                                    top: 8.0, bottom: 24.0),
+                                child: Column(
+                                  children: [
+                                    tagListWidget(
+                                      '# 뷰가 좋아요',
+                                      '# 조용해요',
+                                      null,
+                                    ),
+                                    const SizedBoxHeight10(),
+                                    tagListWidget(
+                                      '# 아늑해요',
+                                      '# 인테리어가 깔끔해요',
+                                      null,
+                                    ),
+                                    const SizedBoxHeight10(),
+                                    tagListWidget(
+                                      '# 어두워요',
+                                      '# 밝아요',
+                                      '# 다시 오고 싶어요',
+                                    ),
+                                    const SizedBoxHeight10(),
+                                    tagListWidget(
+                                      '# 음악이 좋아요',
+                                      '# 대화하기 좋아요',
+                                      null,
+                                    ),
+                                    const SizedBoxHeight10(),
+                                    tagListWidget(
+                                      '# 감각적이에요',
+                                      '# 혼자 작업하기 좋아요',
+                                      null,
+                                    ),
+                                    const SizedBoxHeight10(),
+                                    tagListWidget(
+                                      '# 회의하기에 좋아요',
+                                      null,
+                                      null,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : Container(key: const ValueKey(2)), // 빈 컨테이너로 대체
+                      ),
                       // 메뉴 tab
                       tagTitleWidget(
                         '메뉴',
                         2,
                       ),
                       // 메뉴 tags
-                      if (isTagOpen[2]) ...[
-                        Padding(
-                          padding:
-                              const EdgeInsets.only(top: 8.0, bottom: 24.0),
-                          child: Column(
-                            children: [
-                              tagListWidget(
-                                '# 저렴해요',
-                                '# 매뉴가 다양해요',
-                                null,
-                              ),
-                              const SizedBoxHeight10(),
-                              tagListWidget(
-                                '# 커피가 맛있어요',
-                                '# 디저트가 맛있어요',
-                                null,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-
+                      // 애니메이션 효과 추가
+                      AnimatedSwitcher(
+                        duration:
+                            const Duration(milliseconds: 200), // 애니메이션 지속 시간
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          );
+                        },
+                        child: isTagOpen[2]
+                            ? Padding(
+                                key: const ValueKey(1), // 키를 다르게 설정해야 애니메이션이 동작
+                                padding: const EdgeInsets.only(
+                                    top: 8.0, bottom: 24.0),
+                                child: Column(
+                                  children: [
+                                    tagListWidget(
+                                      '# 저렴해요',
+                                      '# 매뉴가 다양해요',
+                                      null,
+                                    ),
+                                    const SizedBoxHeight10(),
+                                    tagListWidget(
+                                      '# 커피가 맛있어요',
+                                      '# 디저트가 맛있어요',
+                                      null,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : Container(key: const ValueKey(2)), // 빈 컨테이너로 대체
+                      ),
                       // 서비스 tab
                       tagTitleWidget(
                         '서비스',
                         3,
                       ),
                       // 서비스 tags
-                      if (isTagOpen[3]) ...[
-                        Padding(
-                          padding:
-                              const EdgeInsets.only(top: 8.0, bottom: 24.0),
-                          child: Column(
-                            children: [
-                              tagListWidget(
-                                '# 친절해요',
-                                '# 와이파이가 잘 터져요',
-                                null,
-                              ),
-                              const SizedBoxHeight10(),
-                              tagListWidget(
-                                '# 에어컨이 잘 나와요',
-                                '# 오래 작업하기 좋아요',
-                                null,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      // 애니메이션 효과 추가
+                      AnimatedSwitcher(
+                        duration:
+                            const Duration(milliseconds: 200), // 애니메이션 지속 시간
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          );
+                        },
+                        child: isTagOpen[3]
+                            ? Padding(
+                                key: const ValueKey(1), // 키를 다르게 설정해야 애니메이션이 동작
+                                padding: const EdgeInsets.only(
+                                    top: 8.0, bottom: 24.0),
+                                child: Column(
+                                  children: [
+                                    tagListWidget(
+                                      '# 친절해요',
+                                      '# 와이파이가 잘 터져요',
+                                      null,
+                                    ),
+                                    const SizedBoxHeight10(),
+                                    tagListWidget(
+                                      '# 에어컨이 잘 나와요',
+                                      '# 오래 작업하기 좋아요',
+                                      null,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : Container(key: const ValueKey(2)), // 빈 컨테이너로 대체
+                      ),
 
                       // 기타 tab
                       tagTitleWidget(
@@ -512,48 +634,70 @@ class _AddReviewState extends State<AddReview> {
                         4,
                       ),
                       // 기타 tags
-                      if (isTagOpen[4]) ...[
-                        Padding(
-                          padding:
-                              const EdgeInsets.only(top: 8.0, bottom: 24.0),
-                          child: Column(
-                            children: [
-                              tagListWidget(
-                                '# 화장실이 깨끗해요',
-                                '# 찾아가기 편해요',
-                                null,
-                              ),
-                              const SizedBoxHeight10(),
-                              tagListWidget(
-                                '# 무료로 이용이 가능해요',
-                                '# 주차가 가능해요',
-                                null,
-                              ),
-                              const SizedBoxHeight10(),
-                              tagListWidget(
-                                '# 24시간 운영이에요',
-                                null,
-                                null,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                      // 애니메이션 효과 추가
+                      AnimatedSwitcher(
+                        duration:
+                            const Duration(milliseconds: 200), // 애니메이션 지속 시간
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          );
+                        },
+                        child: isTagOpen[4]
+                            ? Padding(
+                                key: const ValueKey(1), // 키를 다르게 설정해야 애니메이션이 동작
+                                padding: const EdgeInsets.only(
+                                    top: 8.0, bottom: 24.0),
+                                child: Column(
+                                  children: [
+                                    tagListWidget(
+                                      '# 화장실이 깨끗해요',
+                                      '# 찾아가기 편해요',
+                                      null,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    tagListWidget(
+                                      '# 무료로 이용이 가능해요',
+                                      '# 주차가 가능해요',
+                                      null,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    tagListWidget(
+                                      '# 24시간 운영이에요',
+                                      null,
+                                      null,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : Container(key: const ValueKey(2)), // 빈 컨테이너로 대체
+                      ),
                       const SizedBox(
                         height: 56,
                       ),
                       //줄글 리뷰
-                      const Row(
+                      Row(
                         children: [
-                          Text('줄글리뷰'),
+                          Text(
+                            '줄글리뷰',
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
                         ],
                       ),
                       const SizedBox(
-                        height: 4,
+                        height: 10,
                       ),
-                      const Row(
+                      Row(
                         children: [
-                          Text('줄글리뷰 작성시 1젤리를 추가로 더 드려요!!'),
+                          Text(
+                            '줄글리뷰 작성시 1젤리를 추가로 더 드려요!!',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall!
+                                .copyWith(color: const Color(0xFFC3C3C3)),
+                          ),
                         ],
                       ),
                       const SizedBox(
@@ -564,9 +708,38 @@ class _AddReviewState extends State<AddReview> {
                         controller: addReviewTextcontroller,
                         focusNode: addReviewTextFocusNode,
                         maxLines: 7, // 여러 줄 입력 가능
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          hintText: '리뷰를 입력하세요',
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.circular(10), // 테두리 radius
+                            borderSide: const BorderSide(
+                              color: Color(0xFFC3C3C3), // 기본 테두리 색상
+                              width: 2.0, // 기본 테두리 두께
+                            ),
+                          ),
+                          // 포커스 상태일 때 테두리 스타일 유지
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFC3C3C3), // 포커스 시 테두리 색상
+                              width: 2.0, // 포커스 시 테두리 두께
+                            ),
+                          ),
+                          // 포커스가 없을 때 테두리 스타일 고정
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFC3C3C3), // 비활성 상태일 때 테두리 색상
+                              width: 2.0, // 비활성 상태일 때 테두리 두께
+                            ),
+                          ),
+                          hintText: addReviewTextFocusNode.hasFocus
+                              ? ''
+                              : '리뷰를 입력하세요.',
+                          hintStyle: Theme.of(context)
+                              .textTheme
+                              .titleSmall!
+                              .copyWith(color: const Color(0xFFC3C3C3)),
                         ),
                       ),
                       const SizedBox(
@@ -581,7 +754,10 @@ class _AddReviewState extends State<AddReview> {
                             textColor: Colors.white,
                             borderColor: const Color(0xFF6B4D38),
                             opacity: 1.0,
-                            onPress: () {}),
+                            onPress: () {
+                              onClickButtonHandler();
+                              Navigator.pop(context);
+                            }),
                       ),
                       const SizedBox(
                         height: 56,
