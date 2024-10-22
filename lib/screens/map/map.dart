@@ -29,6 +29,8 @@ class _MapScreenState extends State<MapScreen> {
   bool isLoadingMap = true; // 지도가 로딩중인지 기록
   double bottomSheetHeight = 134; // 초기 높이 (134픽셀)
   double minbottomSheetHeight = 134; // 최소 높이 (134픽셀)
+  final double minBottomSheetHeightNormal = 134;
+  final double minBottomSheetHeightDetail = 300;
   final TextEditingController searchController = TextEditingController();
   final FocusNode searchFocusNode = FocusNode(); // 포커스 노드 추가, 가게 이름으로 검색 중인지 확인
   String selectedOrder = '거리순'; // 초기 정렬 기준: '거리순'
@@ -71,8 +73,12 @@ class _MapScreenState extends State<MapScreen> {
         // 검색할 텍스트 입력을 완료했기 때문에 Workspace 검색
         reloadWorkspaces = true;
         setState(() {
-          //키보드가 내려갔기 때문에 최소 높이를 원래대로 134픽셀로 설정
-          minbottomSheetHeight = 134;
+          //키보드가 내려갔기 때문에 최소 높이를 원래대로 복원
+          minbottomSheetHeight = bottomsheetMode == 'normal'
+              ? minBottomSheetHeightNormal
+              : bottomsheetMode == 'detail'
+                  ? minBottomSheetHeightDetail
+                  : minBottomSheetHeightDetail;
         });
       }
     });
@@ -229,18 +235,47 @@ class _MapScreenState extends State<MapScreen> {
             bottom: 0,
             child: GestureDetector(
               onVerticalDragUpdate: (details) {
+                // bottomsheet height 조절로 인한 workspace reload 방지
                 reloadWorkspaces = false;
                 setState(() {
-                  // 드래그할 때 높이를 조정
                   bottomSheetHeight -= details.primaryDelta!;
-
-                  // 최소 높이는 134, 최대 높이는 화면 높이의 0.936
+                  // 최소 높이 설정(모드에 따라 다름), 최대 높이는 화면 높이의 0.936
                   bottomSheetHeight = bottomSheetHeight.clamp(
-                      minbottomSheetHeight, screenHeight * 0.936);
+                      bottomsheetMode == 'normal'
+                          ? minBottomSheetHeightNormal
+                          : bottomsheetMode == 'detail'
+                              ? minBottomSheetHeightDetail
+                              : minBottomSheetHeightDetail,
+                      screenHeight * 0.936);
+                });
+              },
+              onVerticalDragEnd: (details) {
+                setState(() {
+                  // 1. 드래그 중일 때(속도가 붙을 때)
+                  if (details.velocity.pixelsPerSecond.dy < 0) {
+                    bottomSheetHeight = screenHeight * 0.936;
+                  } else if (details.velocity.pixelsPerSecond.dy > 0) {
+                    bottomSheetHeight = bottomsheetMode == 'normal'
+                        ? minBottomSheetHeightNormal
+                        : bottomsheetMode == 'detail'
+                            ? minBottomSheetHeightDetail
+                            : minBottomSheetHeightDetail;
+                  } else {
+                    // 2. 드래그가 멈췄을 경우 위치로 판단
+                    if (bottomSheetHeight > screenHeight * 0.6) {
+                      bottomSheetHeight = screenHeight * 0.936;
+                    } else if (bottomSheetHeight <= screenHeight * 0.6) {
+                      bottomSheetHeight = bottomsheetMode == 'normal'
+                          ? minBottomSheetHeightNormal
+                          : bottomsheetMode == 'detail'
+                              ? minBottomSheetHeightDetail
+                              : minBottomSheetHeightDetail;
+                    }
+                  }
                 });
               },
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 100),
+                duration: const Duration(milliseconds: 130),
                 height: bottomSheetHeight,
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -260,7 +295,6 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                   ],
                 ),
-                // 모드에 따라 bottomsheet가 변함
                 child: bottomsheetMode == 'normal'
                     ? normalMode()
                     : bottomsheetMode == 'detail'
@@ -535,6 +569,7 @@ class _MapScreenState extends State<MapScreen> {
                       onTap: () {
                         reloadWorkspaces = false;
                         bottomsheetMode = 'normal';
+                        bottomSheetHeight = screenHeight * 0.936;
                         setState(() {});
                       },
                       child: SvgPicture.asset('assets/icons/back_arrow.svg')),
