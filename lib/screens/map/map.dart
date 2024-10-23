@@ -6,6 +6,7 @@ import 'package:flutter_mow/services/search_service.dart';
 import 'package:flutter_mow/widgets/button_main.dart';
 import 'package:flutter_mow/widgets/curation_list.dart';
 import 'package:flutter_mow/widgets/select_button.dart';
+import 'package:flutter_mow/widgets/switch_button.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:geolocator/geolocator.dart';
@@ -31,8 +32,9 @@ class _MapScreenState extends State<MapScreen> {
   double minbottomSheetHeight = 134; // 최소 높이 (134픽셀)
   final double minBottomSheetHeightNormal = 134;
   final double minBottomSheetHeightDetail = 300;
+  int bottomSheetHeightLevel = 1; // 1: 최소높이, 2: 중간높이, 3: 최고높이
   final TextEditingController searchController = TextEditingController();
-  final FocusNode searchFocusNode = FocusNode(); // 포커스 노드 추가, 가게 이름으로 검색 중인지 확인
+  FocusNode searchFocusNode = FocusNode(); // 포커스 노드 추가, 가게 이름으로 검색 중인지 확인
   String selectedOrder = '거리순'; // 초기 정렬 기준: '거리순'
   int order = 1;
   String locationType = '';
@@ -57,31 +59,36 @@ class _MapScreenState extends State<MapScreen> {
     loadTaggedList(); // 시작 시 태그 리스트 불러옴
     loadAppliedSearchTags(); // 시작 시 검색 태그 불러옴
     // TextField가 포커스될 때 콜백 설정
-    searchFocusNode.addListener(() {
-      if (searchFocusNode.hasFocus) {
-        reloadWorkspaces = false;
-        //키보드가 올라와있기 때문에 최소 높이를 screenHeight*0.5 으로 설정
-        minbottomSheetHeight = screenHeight * 0.5;
-        if (bottomSheetHeight < screenHeight * 0.5) {
+    // 오류해결: screenHeight는 아직 정의되지 않았기 때문에
+    // WidgetsBinding이 완료된 후 사용해야됨.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      screenHeight = MediaQuery.of(context).size.height;
+      searchFocusNode.addListener(() {
+        if (searchFocusNode.hasFocus) {
+          reloadWorkspaces = false;
           setState(() {
+            //키보드가 올라가기 때문에 높이를 0.936으로 설정;
+            minbottomSheetHeight = screenHeight * 0.936;
+            bottomSheetHeightLevel = 3;
             bottomSheetHeight =
-                screenHeight * 0.5; // 키보드가 나타났을 때 bottomSheetHeight 조정
+                screenHeight * 0.936; // 키보드가 나타났을 때 bottomSheetHeight 조정
+          });
+        } // TextField에 포커스가 풀렸을 때
+        else if (!searchFocusNode.hasFocus) {
+          // 검색할 텍스트 입력을 완료했기 때문에 Workspace 검색
+          reloadWorkspaces = true;
+          setState(() {
+            //키보드가 내려갔기 때문에 최소 높이를 원래대로 복원
+            minbottomSheetHeight = bottomsheetMode == 'normal'
+                ? minBottomSheetHeightNormal
+                : bottomsheetMode == 'detail'
+                    ? minBottomSheetHeightDetail
+                    : minBottomSheetHeightDetail;
           });
         }
-      } // TextField에 포커스가 풀렸을 때
-      else if (!searchFocusNode.hasFocus) {
-        // 검색할 텍스트 입력을 완료했기 때문에 Workspace 검색
-        reloadWorkspaces = true;
-        setState(() {
-          //키보드가 내려갔기 때문에 최소 높이를 원래대로 복원
-          minbottomSheetHeight = bottomsheetMode == 'normal'
-              ? minBottomSheetHeightNormal
-              : bottomsheetMode == 'detail'
-                  ? minBottomSheetHeightDetail
-                  : minBottomSheetHeightDetail;
-        });
-      }
+      });
     });
+
     // 위치 정보 가져오기
     getCurrentLocation();
   }
@@ -139,6 +146,7 @@ class _MapScreenState extends State<MapScreen> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
+        //(수정 필요)사용자가 위치 권한을 거부했을 경우 기본 주소로 설정해야함.
         return Future.error('permissions are denied');
       }
     }
@@ -228,6 +236,9 @@ class _MapScreenState extends State<MapScreen> {
               },
             ),
 
+          // Map, Curation 전환 버튼
+          const Positioned(right: 20, top: 66, child: SwitchButton()),
+
           // bottomsheet
           Positioned(
             left: 0,
@@ -235,6 +246,8 @@ class _MapScreenState extends State<MapScreen> {
             bottom: 0,
             child: GestureDetector(
               onVerticalDragUpdate: (details) {
+                // textfield focus 해제
+                FocusScope.of(context).unfocus();
                 // bottomsheet height 조절로 인한 workspace reload 방지
                 reloadWorkspaces = false;
                 setState(() {
@@ -251,29 +264,55 @@ class _MapScreenState extends State<MapScreen> {
               },
               onVerticalDragEnd: (details) {
                 setState(() {
-                  // 1. 드래그 중일 때(속도가 붙을 때)
+                  // 1. 속도가 붙을 때
                   if (details.velocity.pixelsPerSecond.dy < 0) {
-                    bottomSheetHeight = screenHeight * 0.936;
-                  } else if (details.velocity.pixelsPerSecond.dy > 0) {
-                    bottomSheetHeight = bottomsheetMode == 'normal'
-                        ? minBottomSheetHeightNormal
-                        : bottomsheetMode == 'detail'
-                            ? minBottomSheetHeightDetail
-                            : minBottomSheetHeightDetail;
-                  } else {
-                    // 2. 드래그가 멈췄을 경우 위치로 판단
-                    if (bottomSheetHeight > screenHeight * 0.6) {
+                    if (bottomSheetHeightLevel == 1) {
+                      bottomSheetHeightLevel = 2;
+                      bottomSheetHeight = screenHeight * 0.6;
+                    } else if (bottomSheetHeightLevel == 2) {
+                      bottomSheetHeightLevel = 3;
                       bottomSheetHeight = screenHeight * 0.936;
-                    } else if (bottomSheetHeight <= screenHeight * 0.6) {
+                    }
+                  } else if (details.velocity.pixelsPerSecond.dy > 0) {
+                    if (bottomSheetHeightLevel == 3) {
+                      bottomSheetHeightLevel = 2;
+                      bottomSheetHeight = screenHeight * 0.6;
+                    } else if (bottomSheetHeightLevel == 2) {
+                      bottomSheetHeightLevel = 1;
                       bottomSheetHeight = bottomsheetMode == 'normal'
                           ? minBottomSheetHeightNormal
                           : bottomsheetMode == 'detail'
                               ? minBottomSheetHeightDetail
                               : minBottomSheetHeightDetail;
                     }
+                  } else {
+                    // 2. 드래그가 멈췄을 경우 위치로 판단
+                    if (bottomSheetHeight > screenHeight * 0.7) {
+                      bottomSheetHeightLevel = 3;
+                      bottomSheetHeight = screenHeight * 0.936;
+                    } else {
+                      if (bottomsheetMode == 'normal') {
+                        if (bottomSheetHeight > screenHeight * 0.3) {
+                          bottomSheetHeightLevel = 2;
+                          bottomSheetHeight = screenHeight * 0.6;
+                        } else {
+                          bottomSheetHeightLevel = 1;
+                          bottomSheetHeight = minBottomSheetHeightNormal;
+                        }
+                      } else if (bottomsheetMode == 'detail') {
+                        if (bottomSheetHeight > screenHeight * 0.5) {
+                          bottomSheetHeightLevel = 2;
+                          bottomSheetHeight = screenHeight * 0.6;
+                        } else {
+                          bottomSheetHeightLevel = 1;
+                          bottomSheetHeight = minBottomSheetHeightDetail;
+                        }
+                      }
+                    }
                   }
                 });
               },
+              // 바텀시트 화면 구성
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 130),
                 height: bottomSheetHeight,
@@ -299,7 +338,7 @@ class _MapScreenState extends State<MapScreen> {
                     ? normalMode()
                     : bottomsheetMode == 'detail'
                         ? detailMode()
-                        : reviewMode(),
+                        : detailMode(),
               ),
             ),
           ),
@@ -322,140 +361,134 @@ class _MapScreenState extends State<MapScreen> {
             ),
             const SizedBox(height: 20),
             //카테고리, 태그 선택
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () {
-                FocusScope.of(context).unfocus(); // 화면의 다른 곳을 클릭하면 포커스 해제
-              },
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: 10.0,
-                  // tag가 없을 경우 '카테고리, 태그 선택' Row가 가운데에 오는 것을 방지하고자 padding을 늘리고
-                  // tag가 있다면 다시 padding을 줄임.
-                  right: taggedList.isEmpty ? screenWidth - 281.0 : 10.0,
-                ),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      SelectButton(
-                        height: 32,
-                        padding: 14,
-                        bgColor: const Color(0xFFFFFCF8),
-                        radius: 1000,
-                        text: '편집',
-                        textColor: const Color(0xFF6B4D38),
-                        textSize: 14.0,
-                        borderColor: const Color(0xFFAD7541),
-                        borderWidth: 1.0,
-                        borderOpacity: 1.0,
-                        onPress: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const EditTag(),
+            Padding(
+              padding: EdgeInsets.only(
+                left: 10.0,
+                // tag가 없을 경우 '카테고리, 태그 선택' Row가 가운데에 오는 것을 방지하고자 padding을 늘리고
+                // tag가 있다면 다시 padding을 줄임.
+                right: taggedList.isEmpty ? screenWidth - 281.0 : 10.0,
+              ),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    SelectButton(
+                      height: 32,
+                      padding: 14,
+                      bgColor: const Color(0xFFFFFCF8),
+                      radius: 1000,
+                      text: '편집',
+                      textColor: const Color(0xFF6B4D38),
+                      textSize: 14.0,
+                      borderColor: const Color(0xFFAD7541),
+                      borderWidth: 1.0,
+                      borderOpacity: 1.0,
+                      onPress: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const EditTag(),
+                          ),
+                        ).then((_) {
+                          // *** 이 화면으로 돌아왔을 때 loadTaggedList를 호출 ***
+                          loadTaggedList();
+                          loadAppliedSearchTags();
+                        });
+                      },
+                    ),
+                    const SizedBoxWidth10(),
+                    SelectButton(
+                      height: 32,
+                      padding: 14,
+                      bgColor: const Color(0xFFFFFCF8),
+                      radius: 1000,
+                      text: selectedOrder, // Dynamic button text
+                      textColor: const Color(0xFF6B4D38),
+                      textSize: 14.0,
+                      borderColor: const Color(0xFFAD7541),
+                      borderWidth: 1.0,
+                      borderOpacity: 0.4,
+                      svgIconPath: 'assets/icons/search_place_order_icon.svg',
+                      onPress: () {
+                        // ***거리순 클릭시 BottomSheet 올라오게 처리***
+                        showModalBottomSheet(
+                          context: context,
+                          // shape를 사용해서 BorderRadius 설정.
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(25.0),
                             ),
-                          ).then((_) {
-                            // *** 이 화면으로 돌아왔을 때 loadTaggedList를 호출 ***
-                            loadTaggedList();
-                            loadAppliedSearchTags();
-                          });
-                        },
-                      ),
-                      const SizedBoxWidth10(),
-                      SelectButton(
-                        height: 32,
-                        padding: 14,
-                        bgColor: const Color(0xFFFFFCF8),
-                        radius: 1000,
-                        text: selectedOrder, // Dynamic button text
-                        textColor: const Color(0xFF6B4D38),
-                        textSize: 14.0,
-                        borderColor: const Color(0xFFAD7541),
-                        borderWidth: 1.0,
-                        borderOpacity: 0.4,
-                        svgIconPath: 'assets/icons/search_place_order_icon.svg',
-                        onPress: () {
-                          // ***거리순 클릭시 BottomSheet 올라오게 처리***
-                          showModalBottomSheet(
-                            context: context,
-                            // shape를 사용해서 BorderRadius 설정.
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(25.0),
+                          ),
+                          builder: (BuildContext context) {
+                            return Container(
+                              height: 180.0,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20.0, vertical: 20.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  buildOrderList(context, '거리순', 1),
+                                  const ListBorderLine(), //bottom sheet 경계선
+                                  buildOrderList(context, '별점순', 2),
+                                ],
                               ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                    const SizedBoxWidth10(),
+                    SelectButton(
+                      height: 32,
+                      padding: 14,
+                      bgColor: const Color(0xFFFFFCF8),
+                      radius: 1000,
+                      text: locationType.isEmpty ? '공간구분' : locationType,
+                      textColor: const Color(0xFF6B4D38),
+                      textSize: 14.0,
+                      borderColor: const Color(0xFFAD7541),
+                      borderWidth: 1.0,
+                      borderOpacity: 0.4,
+                      svgIconPath: 'assets/icons/down_icon.svg',
+                      onPress: () {
+                        showModalBottomSheet(
+                          context: context,
+                          // shape를 사용해서 BorderRadius 설정.
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(25.0),
                             ),
-                            builder: (BuildContext context) {
-                              return Container(
-                                height: 180.0,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 20.0, vertical: 20.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    buildOrderList(context, '거리순', 1),
-                                    const ListBorderLine(), //bottom sheet 경계선
-                                    buildOrderList(context, '별점순', 2),
-                                  ],
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                      const SizedBoxWidth10(),
-                      SelectButton(
-                        height: 32,
-                        padding: 14,
-                        bgColor: const Color(0xFFFFFCF8),
-                        radius: 1000,
-                        text: locationType.isEmpty ? '공간구분' : locationType,
-                        textColor: const Color(0xFF6B4D38),
-                        textSize: 14.0,
-                        borderColor: const Color(0xFFAD7541),
-                        borderWidth: 1.0,
-                        borderOpacity: 0.4,
-                        svgIconPath: 'assets/icons/down_icon.svg',
-                        onPress: () {
-                          showModalBottomSheet(
-                            context: context,
-                            // shape를 사용해서 BorderRadius 설정.
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(25.0),
+                          ),
+                          builder: (BuildContext context) {
+                            return Container(
+                              height: 350.0,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20.0, vertical: 20.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  buildPlaceList(context, '모든 공간'),
+                                  const ListBorderLine(), //bottom sheet 경계선
+                                  buildPlaceList(context, '카페'),
+                                  const ListBorderLine(),
+                                  buildPlaceList(context, '도서관'),
+                                  const ListBorderLine(),
+                                  buildPlaceList(context, '스터디카페'),
+                                  const ListBorderLine(),
+                                  buildPlaceList(context, '기타 작업공간'),
+                                ],
                               ),
-                            ),
-                            builder: (BuildContext context) {
-                              return Container(
-                                height: 350.0,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 20.0, vertical: 20.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    buildPlaceList(context, '모든 공간'),
-                                    const ListBorderLine(), //bottom sheet 경계선
-                                    buildPlaceList(context, '카페'),
-                                    const ListBorderLine(),
-                                    buildPlaceList(context, '도서관'),
-                                    const ListBorderLine(),
-                                    buildPlaceList(context, '스터디카페'),
-                                    const ListBorderLine(),
-                                    buildPlaceList(context, '기타 작업공간'),
-                                  ],
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-                      // tag 버튼
-                      for (int n = 0; n < taggedList.length; n++) ...[
-                        const SizedBoxWidth10(),
-                        tagButtonWidget(taggedList[n]),
-                      ]
-                    ],
-                  ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                    // tag 버튼
+                    for (int n = 0; n < taggedList.length; n++) ...[
+                      const SizedBoxWidth10(),
+                      tagButtonWidget(taggedList[n]),
+                    ]
+                  ],
                 ),
               ),
             ),
@@ -570,6 +603,7 @@ class _MapScreenState extends State<MapScreen> {
                         reloadWorkspaces = false;
                         bottomsheetMode = 'normal';
                         bottomSheetHeight = screenHeight * 0.936;
+                        bottomSheetHeightLevel = 3;
                         setState(() {});
                       },
                       child: SvgPicture.asset('assets/icons/back_arrow.svg')),
@@ -983,422 +1017,422 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  Widget reviewMode() {
-    return Column(children: [
-      // 스크롤되지 않는 부분[bar, arrow]
-      Column(
-        children: [
-          // 바
-          const Bar(),
-          const SizedBox(
-            height: 4.0,
-          ),
-          // 뒤로가기 아이콘
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Row(
-              children: [
-                GestureDetector(
-                    onTap: () {
-                      //초기화 해야하는 변수들
-                      addReviewScore = 0;
-                      addReviewWidenessDegree = -1;
-                      addReviewChairDegree = -1;
-                      addReviewOutletDegree = -1;
-                      addReviewTextcontroller.text = '';
-                      //
-                      reloadDetailspace = true;
-                      bottomsheetMode = 'detail';
-                      setState(() {});
-                    },
-                    child: SvgPicture.asset('assets/icons/back_icon.svg')),
-              ],
-            ),
-          ),
-          const SizedBox(
-            height: 28.0,
-          )
-        ],
-      ),
-      //스크롤 되는 부분
-      Expanded(
-        child: ListView.builder(
-          padding: const EdgeInsets.only(top: 0.0),
-          itemCount: 1,
-          itemBuilder: (context, index) {
-            return GestureDetector(
-              // *** 빈 공간까지 터치 감지 ***
-              behavior: HitTestBehavior.opaque,
-              // 리뷰가 아닌 다른 공간 터치시 unfocus
-              onTap: () {
-                FocusScope.of(context).unfocus();
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Column(children: [
-                  //리뷰 작성
-                  const Row(
-                    children: [
-                      Padding(
-                        padding: EdgeInsets.only(left: 4.0),
-                        child: Text('리뷰 작성'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 42,
-                  ),
-                  const Row(
-                    children: [
-                      Text('별점'),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 16,
-                  ),
-                  //별 아이콘
-                  Row(
-                    children: [
-                      // 별점
-                      for (int i = 0; i < addReviewScore.round(); i++) ...[
-                        GestureDetector(
-                            onTap: () {
-                              addReviewScore = i + 1;
-                              setState(() {});
-                            },
-                            child: SvgPicture.asset(
-                                'assets/icons/star_fill_big_icon.svg')),
-                      ],
-                      for (int i = 0; i < 5 - addReviewScore.round(); i++) ...[
-                        GestureDetector(
-                            onTap: () {
-                              addReviewScore = addReviewScore.round() + i + 1;
-                              setState(() {});
-                            },
-                            child: SvgPicture.asset(
-                                'assets/icons/star_unfill_big_icon.svg')),
-                      ],
-                      const SizedBox(
-                        width: 4.0,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 56,
-                  ),
-                  //태그 선택
-                  const Row(
-                    children: [
-                      Text('태그'),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 8,
-                  ),
-                  const Row(
-                    children: [
-                      Text('해당 공간에 어울리는 태그를 골라주세요!'),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 24,
-                  ),
-                  const Row(
-                    children: [
-                      Text('공간'),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 12,
-                  ),
-                  Row(
-                    children: [
-                      SelectButton(
-                          height: 40,
-                          padding: 14,
-                          bgColor: addReviewWidenessDegree == 2
-                              ? const Color(0xFF6B4D38)
-                              : Colors.white,
-                          radius: 1000,
-                          text: '# 좁아요',
-                          textColor: addReviewWidenessDegree == 2
-                              ? Colors.white
-                              : const Color(0xFF6B4D38),
-                          textSize: 14,
-                          borderColor: const Color(0xFFAD7541),
-                          borderOpacity: 0.4,
-                          borderWidth: 1.0,
-                          lineHeight: 2.0,
-                          onPress: () {
-                            addReviewWidenessDegree = 2;
-                            setState(() {});
-                          }),
-                      const SizedBoxWidth6(),
-                      SelectButton(
-                          height: 40,
-                          padding: 14,
-                          bgColor: addReviewWidenessDegree == 1
-                              ? const Color(0xFF6B4D38)
-                              : Colors.white,
-                          radius: 1000,
-                          text: '# 보통이에요',
-                          textColor: addReviewWidenessDegree == 1
-                              ? Colors.white
-                              : const Color(0xFF6B4D38),
-                          textSize: 14,
-                          borderColor: const Color(0xFFAD7541),
-                          borderOpacity: 0.4,
-                          borderWidth: 1.0,
-                          lineHeight: 2.0,
-                          onPress: () {
-                            addReviewWidenessDegree = 1;
-                            setState(() {});
-                          }),
-                      const SizedBoxWidth6(),
-                      SelectButton(
-                          height: 40,
-                          padding: 14,
-                          bgColor: addReviewWidenessDegree == 0
-                              ? const Color(0xFF6B4D38)
-                              : Colors.white,
-                          radius: 1000,
-                          text: '# 넓어요',
-                          textColor: addReviewWidenessDegree == 0
-                              ? Colors.white
-                              : const Color(0xFF6B4D38),
-                          textSize: 14,
-                          borderColor: const Color(0xFFAD7541),
-                          borderOpacity: 0.4,
-                          borderWidth: 1.0,
-                          lineHeight: 2.0,
-                          onPress: () {
-                            addReviewWidenessDegree = 0;
-                            setState(() {});
-                          })
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 18,
-                  ),
-                  const Row(
-                    children: [
-                      Text('좌석 수'),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 12,
-                  ),
-                  Row(
-                    children: [
-                      SelectButton(
-                          height: 40,
-                          padding: 14,
-                          bgColor: addReviewChairDegree == 2
-                              ? const Color(0xFF6B4D38)
-                              : Colors.white,
-                          radius: 1000,
-                          text: '# 적어요',
-                          textColor: addReviewChairDegree == 2
-                              ? Colors.white
-                              : const Color(0xFF6B4D38),
-                          textSize: 14,
-                          borderColor: const Color(0xFFAD7541),
-                          borderOpacity: 0.4,
-                          borderWidth: 1.0,
-                          lineHeight: 2.0,
-                          onPress: () {
-                            addReviewChairDegree = 2;
-                            setState(() {});
-                          }),
-                      const SizedBoxWidth6(),
-                      SelectButton(
-                          height: 40,
-                          padding: 14,
-                          bgColor: addReviewChairDegree == 1
-                              ? const Color(0xFF6B4D38)
-                              : Colors.white,
-                          radius: 1000,
-                          text: '# 보통이에요',
-                          textColor: addReviewChairDegree == 1
-                              ? Colors.white
-                              : const Color(0xFF6B4D38),
-                          textSize: 14,
-                          borderColor: const Color(0xFFAD7541),
-                          borderOpacity: 0.4,
-                          borderWidth: 1.0,
-                          lineHeight: 2.0,
-                          onPress: () {
-                            addReviewChairDegree = 1;
-                            setState(() {});
-                          }),
-                      const SizedBoxWidth6(),
-                      SelectButton(
-                          height: 40,
-                          padding: 14,
-                          bgColor: addReviewChairDegree == 0
-                              ? const Color(0xFF6B4D38)
-                              : Colors.white,
-                          radius: 1000,
-                          text: '# 많아요',
-                          textColor: addReviewChairDegree == 0
-                              ? Colors.white
-                              : const Color(0xFF6B4D38),
-                          textSize: 14,
-                          borderColor: const Color(0xFFAD7541),
-                          borderOpacity: 0.4,
-                          borderWidth: 1.0,
-                          lineHeight: 2.0,
-                          onPress: () {
-                            addReviewChairDegree = 0;
-                            setState(() {});
-                          })
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 18,
-                  ),
-                  const Row(
-                    children: [
-                      Text('콘센트 수'),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 12,
-                  ),
-                  Row(
-                    children: [
-                      SelectButton(
-                          height: 40,
-                          padding: 14,
-                          bgColor: addReviewOutletDegree == 2
-                              ? const Color(0xFF6B4D38)
-                              : Colors.white,
-                          radius: 1000,
-                          text: '# 적어요',
-                          textColor: addReviewOutletDegree == 2
-                              ? Colors.white
-                              : const Color(0xFF6B4D38),
-                          textSize: 14,
-                          borderColor: const Color(0xFFAD7541),
-                          borderOpacity: 0.4,
-                          borderWidth: 1.0,
-                          lineHeight: 2.0,
-                          onPress: () {
-                            addReviewOutletDegree = 2;
-                            setState(() {});
-                          }),
-                      const SizedBoxWidth6(),
-                      SelectButton(
-                          height: 40,
-                          padding: 14,
-                          bgColor: addReviewOutletDegree == 1
-                              ? const Color(0xFF6B4D38)
-                              : Colors.white,
-                          radius: 1000,
-                          text: '# 보통이에요',
-                          textColor: addReviewOutletDegree == 1
-                              ? Colors.white
-                              : const Color(0xFF6B4D38),
-                          textSize: 14,
-                          borderColor: const Color(0xFFAD7541),
-                          borderOpacity: 0.4,
-                          borderWidth: 1.0,
-                          lineHeight: 2.0,
-                          onPress: () {
-                            addReviewOutletDegree = 1;
-                            setState(() {});
-                          }),
-                      const SizedBoxWidth6(),
-                      SelectButton(
-                          height: 40,
-                          padding: 14,
-                          bgColor: addReviewOutletDegree == 0
-                              ? const Color(0xFF6B4D38)
-                              : Colors.white,
-                          radius: 1000,
-                          text: '# 많아요',
-                          textColor: addReviewOutletDegree == 0
-                              ? Colors.white
-                              : const Color(0xFF6B4D38),
-                          textSize: 14,
-                          borderColor: const Color(0xFFAD7541),
-                          borderOpacity: 0.4,
-                          borderWidth: 1.0,
-                          lineHeight: 2.0,
-                          onPress: () {
-                            addReviewOutletDegree = 0;
-                            setState(() {});
-                          })
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 24,
-                  ),
-                  const ListBorderLine(),
-                  const SizedBox(
-                    height: 24,
-                  ),
-                  const Row(
-                    children: [
-                      Text('추가적으로 어떤 태그가 어울릴까요? (pass)'),
-                    ],
-                  ),
-                  //추가 태그 선택 (생략)
-                  const SizedBox(
-                    height: 56,
-                  ),
-                  //줄글 리뷰
-                  const Row(
-                    children: [
-                      Text('줄글리뷰'),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 4,
-                  ),
-                  const Row(
-                    children: [
-                      Text('줄글리뷰 작성시 1젤리를 추가로 더 드려요!!'),
-                    ],
-                  ),
-                  const SizedBox(
-                    height: 16,
-                  ),
-                  //줄글리뷰 입력칸(생략)
-                  TextField(
-                    controller: addReviewTextcontroller,
-                    focusNode: searchFocusNode,
-                    maxLines: 7, // 여러 줄 입력 가능
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: '리뷰를 입력하세요',
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 48,
-                  ),
-                  //완료버튼(생략)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 11.0),
-                    child: ButtonMain(
-                        text: "완료",
-                        bgcolor: const Color(0xFF6B4D38),
-                        textColor: Colors.white,
-                        borderColor: const Color(0xFF6B4D38),
-                        opacity: 1.0,
-                        onPress: () {}),
-                  ),
-                  const SizedBox(
-                    height: 56,
-                  ),
-                ]),
-              ),
-            );
-          },
-        ),
-      )
-    ]);
-  }
+  // Widget reviewMode() {
+  //   return Column(children: [
+  //     // 스크롤되지 않는 부분[bar, arrow]
+  //     Column(
+  //       children: [
+  //         // 바
+  //         const Bar(),
+  //         const SizedBox(
+  //           height: 4.0,
+  //         ),
+  //         // 뒤로가기 아이콘
+  //         Padding(
+  //           padding: const EdgeInsets.symmetric(horizontal: 20.0),
+  //           child: Row(
+  //             children: [
+  //               GestureDetector(
+  //                   onTap: () {
+  //                     //초기화 해야하는 변수들
+  //                     addReviewScore = 0;
+  //                     addReviewWidenessDegree = -1;
+  //                     addReviewChairDegree = -1;
+  //                     addReviewOutletDegree = -1;
+  //                     addReviewTextcontroller.text = '';
+  //                     //
+  //                     reloadDetailspace = true;
+  //                     bottomsheetMode = 'detail';
+  //                     setState(() {});
+  //                   },
+  //                   child: SvgPicture.asset('assets/icons/back_icon.svg')),
+  //             ],
+  //           ),
+  //         ),
+  //         const SizedBox(
+  //           height: 28.0,
+  //         )
+  //       ],
+  //     ),
+  //     //스크롤 되는 부분
+  //     Expanded(
+  //       child: ListView.builder(
+  //         padding: const EdgeInsets.only(top: 0.0),
+  //         itemCount: 1,
+  //         itemBuilder: (context, index) {
+  //           return GestureDetector(
+  //             // *** 빈 공간까지 터치 감지 ***
+  //             behavior: HitTestBehavior.opaque,
+  //             // 리뷰가 아닌 다른 공간 터치시 unfocus
+  //             onTap: () {
+  //               FocusScope.of(context).unfocus();
+  //             },
+  //             child: Padding(
+  //               padding: const EdgeInsets.symmetric(horizontal: 20.0),
+  //               child: Column(children: [
+  //                 //리뷰 작성
+  //                 const Row(
+  //                   children: [
+  //                     Padding(
+  //                       padding: EdgeInsets.only(left: 4.0),
+  //                       child: Text('리뷰 작성'),
+  //                     ),
+  //                   ],
+  //                 ),
+  //                 const SizedBox(
+  //                   height: 42,
+  //                 ),
+  //                 const Row(
+  //                   children: [
+  //                     Text('별점'),
+  //                   ],
+  //                 ),
+  //                 const SizedBox(
+  //                   height: 16,
+  //                 ),
+  //                 //별 아이콘
+  //                 Row(
+  //                   children: [
+  //                     // 별점
+  //                     for (int i = 0; i < addReviewScore.round(); i++) ...[
+  //                       GestureDetector(
+  //                           onTap: () {
+  //                             addReviewScore = i + 1;
+  //                             setState(() {});
+  //                           },
+  //                           child: SvgPicture.asset(
+  //                               'assets/icons/star_fill_big_icon.svg')),
+  //                     ],
+  //                     for (int i = 0; i < 5 - addReviewScore.round(); i++) ...[
+  //                       GestureDetector(
+  //                           onTap: () {
+  //                             addReviewScore = addReviewScore.round() + i + 1;
+  //                             setState(() {});
+  //                           },
+  //                           child: SvgPicture.asset(
+  //                               'assets/icons/star_unfill_big_icon.svg')),
+  //                     ],
+  //                     const SizedBox(
+  //                       width: 4.0,
+  //                     ),
+  //                   ],
+  //                 ),
+  //                 const SizedBox(
+  //                   height: 56,
+  //                 ),
+  //                 //태그 선택
+  //                 const Row(
+  //                   children: [
+  //                     Text('태그'),
+  //                   ],
+  //                 ),
+  //                 const SizedBox(
+  //                   height: 8,
+  //                 ),
+  //                 const Row(
+  //                   children: [
+  //                     Text('해당 공간에 어울리는 태그를 골라주세요!'),
+  //                   ],
+  //                 ),
+  //                 const SizedBox(
+  //                   height: 24,
+  //                 ),
+  //                 const Row(
+  //                   children: [
+  //                     Text('공간'),
+  //                   ],
+  //                 ),
+  //                 const SizedBox(
+  //                   height: 12,
+  //                 ),
+  //                 Row(
+  //                   children: [
+  //                     SelectButton(
+  //                         height: 40,
+  //                         padding: 14,
+  //                         bgColor: addReviewWidenessDegree == 2
+  //                             ? const Color(0xFF6B4D38)
+  //                             : Colors.white,
+  //                         radius: 1000,
+  //                         text: '# 좁아요',
+  //                         textColor: addReviewWidenessDegree == 2
+  //                             ? Colors.white
+  //                             : const Color(0xFF6B4D38),
+  //                         textSize: 14,
+  //                         borderColor: const Color(0xFFAD7541),
+  //                         borderOpacity: 0.4,
+  //                         borderWidth: 1.0,
+  //                         lineHeight: 2.0,
+  //                         onPress: () {
+  //                           addReviewWidenessDegree = 2;
+  //                           setState(() {});
+  //                         }),
+  //                     const SizedBoxWidth6(),
+  //                     SelectButton(
+  //                         height: 40,
+  //                         padding: 14,
+  //                         bgColor: addReviewWidenessDegree == 1
+  //                             ? const Color(0xFF6B4D38)
+  //                             : Colors.white,
+  //                         radius: 1000,
+  //                         text: '# 보통이에요',
+  //                         textColor: addReviewWidenessDegree == 1
+  //                             ? Colors.white
+  //                             : const Color(0xFF6B4D38),
+  //                         textSize: 14,
+  //                         borderColor: const Color(0xFFAD7541),
+  //                         borderOpacity: 0.4,
+  //                         borderWidth: 1.0,
+  //                         lineHeight: 2.0,
+  //                         onPress: () {
+  //                           addReviewWidenessDegree = 1;
+  //                           setState(() {});
+  //                         }),
+  //                     const SizedBoxWidth6(),
+  //                     SelectButton(
+  //                         height: 40,
+  //                         padding: 14,
+  //                         bgColor: addReviewWidenessDegree == 0
+  //                             ? const Color(0xFF6B4D38)
+  //                             : Colors.white,
+  //                         radius: 1000,
+  //                         text: '# 넓어요',
+  //                         textColor: addReviewWidenessDegree == 0
+  //                             ? Colors.white
+  //                             : const Color(0xFF6B4D38),
+  //                         textSize: 14,
+  //                         borderColor: const Color(0xFFAD7541),
+  //                         borderOpacity: 0.4,
+  //                         borderWidth: 1.0,
+  //                         lineHeight: 2.0,
+  //                         onPress: () {
+  //                           addReviewWidenessDegree = 0;
+  //                           setState(() {});
+  //                         })
+  //                   ],
+  //                 ),
+  //                 const SizedBox(
+  //                   height: 18,
+  //                 ),
+  //                 const Row(
+  //                   children: [
+  //                     Text('좌석 수'),
+  //                   ],
+  //                 ),
+  //                 const SizedBox(
+  //                   height: 12,
+  //                 ),
+  //                 Row(
+  //                   children: [
+  //                     SelectButton(
+  //                         height: 40,
+  //                         padding: 14,
+  //                         bgColor: addReviewChairDegree == 2
+  //                             ? const Color(0xFF6B4D38)
+  //                             : Colors.white,
+  //                         radius: 1000,
+  //                         text: '# 적어요',
+  //                         textColor: addReviewChairDegree == 2
+  //                             ? Colors.white
+  //                             : const Color(0xFF6B4D38),
+  //                         textSize: 14,
+  //                         borderColor: const Color(0xFFAD7541),
+  //                         borderOpacity: 0.4,
+  //                         borderWidth: 1.0,
+  //                         lineHeight: 2.0,
+  //                         onPress: () {
+  //                           addReviewChairDegree = 2;
+  //                           setState(() {});
+  //                         }),
+  //                     const SizedBoxWidth6(),
+  //                     SelectButton(
+  //                         height: 40,
+  //                         padding: 14,
+  //                         bgColor: addReviewChairDegree == 1
+  //                             ? const Color(0xFF6B4D38)
+  //                             : Colors.white,
+  //                         radius: 1000,
+  //                         text: '# 보통이에요',
+  //                         textColor: addReviewChairDegree == 1
+  //                             ? Colors.white
+  //                             : const Color(0xFF6B4D38),
+  //                         textSize: 14,
+  //                         borderColor: const Color(0xFFAD7541),
+  //                         borderOpacity: 0.4,
+  //                         borderWidth: 1.0,
+  //                         lineHeight: 2.0,
+  //                         onPress: () {
+  //                           addReviewChairDegree = 1;
+  //                           setState(() {});
+  //                         }),
+  //                     const SizedBoxWidth6(),
+  //                     SelectButton(
+  //                         height: 40,
+  //                         padding: 14,
+  //                         bgColor: addReviewChairDegree == 0
+  //                             ? const Color(0xFF6B4D38)
+  //                             : Colors.white,
+  //                         radius: 1000,
+  //                         text: '# 많아요',
+  //                         textColor: addReviewChairDegree == 0
+  //                             ? Colors.white
+  //                             : const Color(0xFF6B4D38),
+  //                         textSize: 14,
+  //                         borderColor: const Color(0xFFAD7541),
+  //                         borderOpacity: 0.4,
+  //                         borderWidth: 1.0,
+  //                         lineHeight: 2.0,
+  //                         onPress: () {
+  //                           addReviewChairDegree = 0;
+  //                           setState(() {});
+  //                         })
+  //                   ],
+  //                 ),
+  //                 const SizedBox(
+  //                   height: 18,
+  //                 ),
+  //                 const Row(
+  //                   children: [
+  //                     Text('콘센트 수'),
+  //                   ],
+  //                 ),
+  //                 const SizedBox(
+  //                   height: 12,
+  //                 ),
+  //                 Row(
+  //                   children: [
+  //                     SelectButton(
+  //                         height: 40,
+  //                         padding: 14,
+  //                         bgColor: addReviewOutletDegree == 2
+  //                             ? const Color(0xFF6B4D38)
+  //                             : Colors.white,
+  //                         radius: 1000,
+  //                         text: '# 적어요',
+  //                         textColor: addReviewOutletDegree == 2
+  //                             ? Colors.white
+  //                             : const Color(0xFF6B4D38),
+  //                         textSize: 14,
+  //                         borderColor: const Color(0xFFAD7541),
+  //                         borderOpacity: 0.4,
+  //                         borderWidth: 1.0,
+  //                         lineHeight: 2.0,
+  //                         onPress: () {
+  //                           addReviewOutletDegree = 2;
+  //                           setState(() {});
+  //                         }),
+  //                     const SizedBoxWidth6(),
+  //                     SelectButton(
+  //                         height: 40,
+  //                         padding: 14,
+  //                         bgColor: addReviewOutletDegree == 1
+  //                             ? const Color(0xFF6B4D38)
+  //                             : Colors.white,
+  //                         radius: 1000,
+  //                         text: '# 보통이에요',
+  //                         textColor: addReviewOutletDegree == 1
+  //                             ? Colors.white
+  //                             : const Color(0xFF6B4D38),
+  //                         textSize: 14,
+  //                         borderColor: const Color(0xFFAD7541),
+  //                         borderOpacity: 0.4,
+  //                         borderWidth: 1.0,
+  //                         lineHeight: 2.0,
+  //                         onPress: () {
+  //                           addReviewOutletDegree = 1;
+  //                           setState(() {});
+  //                         }),
+  //                     const SizedBoxWidth6(),
+  //                     SelectButton(
+  //                         height: 40,
+  //                         padding: 14,
+  //                         bgColor: addReviewOutletDegree == 0
+  //                             ? const Color(0xFF6B4D38)
+  //                             : Colors.white,
+  //                         radius: 1000,
+  //                         text: '# 많아요',
+  //                         textColor: addReviewOutletDegree == 0
+  //                             ? Colors.white
+  //                             : const Color(0xFF6B4D38),
+  //                         textSize: 14,
+  //                         borderColor: const Color(0xFFAD7541),
+  //                         borderOpacity: 0.4,
+  //                         borderWidth: 1.0,
+  //                         lineHeight: 2.0,
+  //                         onPress: () {
+  //                           addReviewOutletDegree = 0;
+  //                           setState(() {});
+  //                         })
+  //                   ],
+  //                 ),
+  //                 const SizedBox(
+  //                   height: 24,
+  //                 ),
+  //                 const ListBorderLine(),
+  //                 const SizedBox(
+  //                   height: 24,
+  //                 ),
+  //                 const Row(
+  //                   children: [
+  //                     Text('추가적으로 어떤 태그가 어울릴까요? (pass)'),
+  //                   ],
+  //                 ),
+  //                 //추가 태그 선택 (생략)
+  //                 const SizedBox(
+  //                   height: 56,
+  //                 ),
+  //                 //줄글 리뷰
+  //                 const Row(
+  //                   children: [
+  //                     Text('줄글리뷰'),
+  //                   ],
+  //                 ),
+  //                 const SizedBox(
+  //                   height: 4,
+  //                 ),
+  //                 const Row(
+  //                   children: [
+  //                     Text('줄글리뷰 작성시 1젤리를 추가로 더 드려요!!'),
+  //                   ],
+  //                 ),
+  //                 const SizedBox(
+  //                   height: 16,
+  //                 ),
+  //                 //줄글리뷰 입력칸(생략)
+  //                 TextField(
+  //                   controller: addReviewTextcontroller,
+  //                   focusNode: searchFocusNode,
+  //                   maxLines: 7, // 여러 줄 입력 가능
+  //                   decoration: const InputDecoration(
+  //                     border: OutlineInputBorder(),
+  //                     hintText: '리뷰를 입력하세요',
+  //                   ),
+  //                 ),
+  //                 const SizedBox(
+  //                   height: 48,
+  //                 ),
+  //                 //완료버튼(생략)
+  //                 Padding(
+  //                   padding: const EdgeInsets.symmetric(horizontal: 11.0),
+  //                   child: ButtonMain(
+  //                       text: "완료",
+  //                       bgcolor: const Color(0xFF6B4D38),
+  //                       textColor: Colors.white,
+  //                       borderColor: const Color(0xFF6B4D38),
+  //                       opacity: 1.0,
+  //                       onPress: () {}),
+  //                 ),
+  //                 const SizedBox(
+  //                   height: 56,
+  //                 ),
+  //               ]),
+  //             ),
+  //           );
+  //         },
+  //       ),
+  //     )
+  //   ]);
+  // }
 
   Widget showWorkspace(
     TextEditingController controller, // 입력값 controller
