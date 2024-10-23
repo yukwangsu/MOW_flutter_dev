@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class SwitchButton extends StatefulWidget {
-  const SwitchButton({super.key});
+  final Function onPress; // 콜백 함수
+
+  const SwitchButton({super.key, required this.onPress});
 
   @override
   State<SwitchButton> createState() => _SwitchButtonState();
@@ -14,6 +16,7 @@ class _SwitchButtonState extends State<SwitchButton> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onHorizontalDragEnd: (details) {
+        widget.onPress();
         setState(() {
           isSwitched = !isSwitched;
         });

@@ -68,7 +68,6 @@ class _MapScreenState extends State<MapScreen> {
           reloadWorkspaces = false;
           setState(() {
             //키보드가 올라가기 때문에 높이를 0.936으로 설정;
-            minbottomSheetHeight = screenHeight * 0.936;
             bottomSheetHeightLevel = 3;
             bottomSheetHeight =
                 screenHeight * 0.936; // 키보드가 나타났을 때 bottomSheetHeight 조정
@@ -77,14 +76,7 @@ class _MapScreenState extends State<MapScreen> {
         else if (!searchFocusNode.hasFocus) {
           // 검색할 텍스트 입력을 완료했기 때문에 Workspace 검색
           reloadWorkspaces = true;
-          setState(() {
-            //키보드가 내려갔기 때문에 최소 높이를 원래대로 복원
-            minbottomSheetHeight = bottomsheetMode == 'normal'
-                ? minBottomSheetHeightNormal
-                : bottomsheetMode == 'detail'
-                    ? minBottomSheetHeightDetail
-                    : minBottomSheetHeightDetail;
-          });
+          setState(() {});
         }
       });
     });
@@ -98,6 +90,18 @@ class _MapScreenState extends State<MapScreen> {
     searchController.dispose();
     searchFocusNode.dispose(); // 포커스 노드 해제
     super.dispose();
+  }
+
+  // map <-> curation 전환 함수
+  void handleSwitchButtonTap() {
+    print("큐레이션 전환!!!!!!!!!!");
+    setState(() {
+      if (bottomsheetMode == 'normal' || bottomsheetMode == 'detail') {
+        bottomsheetMode = 'curation_normal';
+      } else {
+        bottomsheetMode = 'normal';
+      }
+    });
   }
 
   // 검색 태그 저장
@@ -237,7 +241,10 @@ class _MapScreenState extends State<MapScreen> {
             ),
 
           // Map, Curation 전환 버튼
-          const Positioned(right: 20, top: 66, child: SwitchButton()),
+          Positioned(
+              right: 20,
+              top: 66,
+              child: SwitchButton(onPress: handleSwitchButtonTap)),
 
           // bottomsheet
           Positioned(
@@ -248,17 +255,14 @@ class _MapScreenState extends State<MapScreen> {
               onVerticalDragUpdate: (details) {
                 // textfield focus 해제
                 FocusScope.of(context).unfocus();
-                // bottomsheet height 조절로 인한 workspace reload 방지
-                reloadWorkspaces = false;
                 setState(() {
                   bottomSheetHeight -= details.primaryDelta!;
                   // 최소 높이 설정(모드에 따라 다름), 최대 높이는 화면 높이의 0.936
                   bottomSheetHeight = bottomSheetHeight.clamp(
-                      bottomsheetMode == 'normal'
+                      bottomsheetMode == 'normal' ||
+                              bottomsheetMode == 'curation_normal'
                           ? minBottomSheetHeightNormal
-                          : bottomsheetMode == 'detail'
-                              ? minBottomSheetHeightDetail
-                              : minBottomSheetHeightDetail,
+                          : minBottomSheetHeightDetail,
                       screenHeight * 0.936);
                 });
               },
@@ -279,11 +283,10 @@ class _MapScreenState extends State<MapScreen> {
                       bottomSheetHeight = screenHeight * 0.6;
                     } else if (bottomSheetHeightLevel == 2) {
                       bottomSheetHeightLevel = 1;
-                      bottomSheetHeight = bottomsheetMode == 'normal'
+                      bottomSheetHeight = bottomsheetMode == 'normal' ||
+                              bottomsheetMode == 'curation_normal'
                           ? minBottomSheetHeightNormal
-                          : bottomsheetMode == 'detail'
-                              ? minBottomSheetHeightDetail
-                              : minBottomSheetHeightDetail;
+                          : minBottomSheetHeightDetail;
                     }
                   } else {
                     // 2. 드래그가 멈췄을 경우 위치로 판단
@@ -291,7 +294,8 @@ class _MapScreenState extends State<MapScreen> {
                       bottomSheetHeightLevel = 3;
                       bottomSheetHeight = screenHeight * 0.936;
                     } else {
-                      if (bottomsheetMode == 'normal') {
+                      if (bottomsheetMode == 'normal' ||
+                          bottomsheetMode == 'curation_normal') {
                         if (bottomSheetHeight > screenHeight * 0.3) {
                           bottomSheetHeightLevel = 2;
                           bottomSheetHeight = screenHeight * 0.6;
@@ -299,7 +303,8 @@ class _MapScreenState extends State<MapScreen> {
                           bottomSheetHeightLevel = 1;
                           bottomSheetHeight = minBottomSheetHeightNormal;
                         }
-                      } else if (bottomsheetMode == 'detail') {
+                      } else {
+                        // bottomsheetMode가 'detail' 이거나 'curation_detail' 일 때
                         if (bottomSheetHeight > screenHeight * 0.5) {
                           bottomSheetHeightLevel = 2;
                           bottomSheetHeight = screenHeight * 0.6;
@@ -338,7 +343,9 @@ class _MapScreenState extends State<MapScreen> {
                     ? normalMode()
                     : bottomsheetMode == 'detail'
                         ? detailMode()
-                        : detailMode(),
+                        : bottomsheetMode == 'curation_normal'
+                            ? curationNormalMode()
+                            : curationDetailMode(),
               ),
             ),
           ),
@@ -600,7 +607,6 @@ class _MapScreenState extends State<MapScreen> {
                 children: [
                   GestureDetector(
                       onTap: () {
-                        reloadWorkspaces = false;
                         bottomsheetMode = 'normal';
                         bottomSheetHeight = screenHeight * 0.936;
                         bottomSheetHeightLevel = 3;
@@ -1017,422 +1023,13 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  // Widget reviewMode() {
-  //   return Column(children: [
-  //     // 스크롤되지 않는 부분[bar, arrow]
-  //     Column(
-  //       children: [
-  //         // 바
-  //         const Bar(),
-  //         const SizedBox(
-  //           height: 4.0,
-  //         ),
-  //         // 뒤로가기 아이콘
-  //         Padding(
-  //           padding: const EdgeInsets.symmetric(horizontal: 20.0),
-  //           child: Row(
-  //             children: [
-  //               GestureDetector(
-  //                   onTap: () {
-  //                     //초기화 해야하는 변수들
-  //                     addReviewScore = 0;
-  //                     addReviewWidenessDegree = -1;
-  //                     addReviewChairDegree = -1;
-  //                     addReviewOutletDegree = -1;
-  //                     addReviewTextcontroller.text = '';
-  //                     //
-  //                     reloadDetailspace = true;
-  //                     bottomsheetMode = 'detail';
-  //                     setState(() {});
-  //                   },
-  //                   child: SvgPicture.asset('assets/icons/back_icon.svg')),
-  //             ],
-  //           ),
-  //         ),
-  //         const SizedBox(
-  //           height: 28.0,
-  //         )
-  //       ],
-  //     ),
-  //     //스크롤 되는 부분
-  //     Expanded(
-  //       child: ListView.builder(
-  //         padding: const EdgeInsets.only(top: 0.0),
-  //         itemCount: 1,
-  //         itemBuilder: (context, index) {
-  //           return GestureDetector(
-  //             // *** 빈 공간까지 터치 감지 ***
-  //             behavior: HitTestBehavior.opaque,
-  //             // 리뷰가 아닌 다른 공간 터치시 unfocus
-  //             onTap: () {
-  //               FocusScope.of(context).unfocus();
-  //             },
-  //             child: Padding(
-  //               padding: const EdgeInsets.symmetric(horizontal: 20.0),
-  //               child: Column(children: [
-  //                 //리뷰 작성
-  //                 const Row(
-  //                   children: [
-  //                     Padding(
-  //                       padding: EdgeInsets.only(left: 4.0),
-  //                       child: Text('리뷰 작성'),
-  //                     ),
-  //                   ],
-  //                 ),
-  //                 const SizedBox(
-  //                   height: 42,
-  //                 ),
-  //                 const Row(
-  //                   children: [
-  //                     Text('별점'),
-  //                   ],
-  //                 ),
-  //                 const SizedBox(
-  //                   height: 16,
-  //                 ),
-  //                 //별 아이콘
-  //                 Row(
-  //                   children: [
-  //                     // 별점
-  //                     for (int i = 0; i < addReviewScore.round(); i++) ...[
-  //                       GestureDetector(
-  //                           onTap: () {
-  //                             addReviewScore = i + 1;
-  //                             setState(() {});
-  //                           },
-  //                           child: SvgPicture.asset(
-  //                               'assets/icons/star_fill_big_icon.svg')),
-  //                     ],
-  //                     for (int i = 0; i < 5 - addReviewScore.round(); i++) ...[
-  //                       GestureDetector(
-  //                           onTap: () {
-  //                             addReviewScore = addReviewScore.round() + i + 1;
-  //                             setState(() {});
-  //                           },
-  //                           child: SvgPicture.asset(
-  //                               'assets/icons/star_unfill_big_icon.svg')),
-  //                     ],
-  //                     const SizedBox(
-  //                       width: 4.0,
-  //                     ),
-  //                   ],
-  //                 ),
-  //                 const SizedBox(
-  //                   height: 56,
-  //                 ),
-  //                 //태그 선택
-  //                 const Row(
-  //                   children: [
-  //                     Text('태그'),
-  //                   ],
-  //                 ),
-  //                 const SizedBox(
-  //                   height: 8,
-  //                 ),
-  //                 const Row(
-  //                   children: [
-  //                     Text('해당 공간에 어울리는 태그를 골라주세요!'),
-  //                   ],
-  //                 ),
-  //                 const SizedBox(
-  //                   height: 24,
-  //                 ),
-  //                 const Row(
-  //                   children: [
-  //                     Text('공간'),
-  //                   ],
-  //                 ),
-  //                 const SizedBox(
-  //                   height: 12,
-  //                 ),
-  //                 Row(
-  //                   children: [
-  //                     SelectButton(
-  //                         height: 40,
-  //                         padding: 14,
-  //                         bgColor: addReviewWidenessDegree == 2
-  //                             ? const Color(0xFF6B4D38)
-  //                             : Colors.white,
-  //                         radius: 1000,
-  //                         text: '# 좁아요',
-  //                         textColor: addReviewWidenessDegree == 2
-  //                             ? Colors.white
-  //                             : const Color(0xFF6B4D38),
-  //                         textSize: 14,
-  //                         borderColor: const Color(0xFFAD7541),
-  //                         borderOpacity: 0.4,
-  //                         borderWidth: 1.0,
-  //                         lineHeight: 2.0,
-  //                         onPress: () {
-  //                           addReviewWidenessDegree = 2;
-  //                           setState(() {});
-  //                         }),
-  //                     const SizedBoxWidth6(),
-  //                     SelectButton(
-  //                         height: 40,
-  //                         padding: 14,
-  //                         bgColor: addReviewWidenessDegree == 1
-  //                             ? const Color(0xFF6B4D38)
-  //                             : Colors.white,
-  //                         radius: 1000,
-  //                         text: '# 보통이에요',
-  //                         textColor: addReviewWidenessDegree == 1
-  //                             ? Colors.white
-  //                             : const Color(0xFF6B4D38),
-  //                         textSize: 14,
-  //                         borderColor: const Color(0xFFAD7541),
-  //                         borderOpacity: 0.4,
-  //                         borderWidth: 1.0,
-  //                         lineHeight: 2.0,
-  //                         onPress: () {
-  //                           addReviewWidenessDegree = 1;
-  //                           setState(() {});
-  //                         }),
-  //                     const SizedBoxWidth6(),
-  //                     SelectButton(
-  //                         height: 40,
-  //                         padding: 14,
-  //                         bgColor: addReviewWidenessDegree == 0
-  //                             ? const Color(0xFF6B4D38)
-  //                             : Colors.white,
-  //                         radius: 1000,
-  //                         text: '# 넓어요',
-  //                         textColor: addReviewWidenessDegree == 0
-  //                             ? Colors.white
-  //                             : const Color(0xFF6B4D38),
-  //                         textSize: 14,
-  //                         borderColor: const Color(0xFFAD7541),
-  //                         borderOpacity: 0.4,
-  //                         borderWidth: 1.0,
-  //                         lineHeight: 2.0,
-  //                         onPress: () {
-  //                           addReviewWidenessDegree = 0;
-  //                           setState(() {});
-  //                         })
-  //                   ],
-  //                 ),
-  //                 const SizedBox(
-  //                   height: 18,
-  //                 ),
-  //                 const Row(
-  //                   children: [
-  //                     Text('좌석 수'),
-  //                   ],
-  //                 ),
-  //                 const SizedBox(
-  //                   height: 12,
-  //                 ),
-  //                 Row(
-  //                   children: [
-  //                     SelectButton(
-  //                         height: 40,
-  //                         padding: 14,
-  //                         bgColor: addReviewChairDegree == 2
-  //                             ? const Color(0xFF6B4D38)
-  //                             : Colors.white,
-  //                         radius: 1000,
-  //                         text: '# 적어요',
-  //                         textColor: addReviewChairDegree == 2
-  //                             ? Colors.white
-  //                             : const Color(0xFF6B4D38),
-  //                         textSize: 14,
-  //                         borderColor: const Color(0xFFAD7541),
-  //                         borderOpacity: 0.4,
-  //                         borderWidth: 1.0,
-  //                         lineHeight: 2.0,
-  //                         onPress: () {
-  //                           addReviewChairDegree = 2;
-  //                           setState(() {});
-  //                         }),
-  //                     const SizedBoxWidth6(),
-  //                     SelectButton(
-  //                         height: 40,
-  //                         padding: 14,
-  //                         bgColor: addReviewChairDegree == 1
-  //                             ? const Color(0xFF6B4D38)
-  //                             : Colors.white,
-  //                         radius: 1000,
-  //                         text: '# 보통이에요',
-  //                         textColor: addReviewChairDegree == 1
-  //                             ? Colors.white
-  //                             : const Color(0xFF6B4D38),
-  //                         textSize: 14,
-  //                         borderColor: const Color(0xFFAD7541),
-  //                         borderOpacity: 0.4,
-  //                         borderWidth: 1.0,
-  //                         lineHeight: 2.0,
-  //                         onPress: () {
-  //                           addReviewChairDegree = 1;
-  //                           setState(() {});
-  //                         }),
-  //                     const SizedBoxWidth6(),
-  //                     SelectButton(
-  //                         height: 40,
-  //                         padding: 14,
-  //                         bgColor: addReviewChairDegree == 0
-  //                             ? const Color(0xFF6B4D38)
-  //                             : Colors.white,
-  //                         radius: 1000,
-  //                         text: '# 많아요',
-  //                         textColor: addReviewChairDegree == 0
-  //                             ? Colors.white
-  //                             : const Color(0xFF6B4D38),
-  //                         textSize: 14,
-  //                         borderColor: const Color(0xFFAD7541),
-  //                         borderOpacity: 0.4,
-  //                         borderWidth: 1.0,
-  //                         lineHeight: 2.0,
-  //                         onPress: () {
-  //                           addReviewChairDegree = 0;
-  //                           setState(() {});
-  //                         })
-  //                   ],
-  //                 ),
-  //                 const SizedBox(
-  //                   height: 18,
-  //                 ),
-  //                 const Row(
-  //                   children: [
-  //                     Text('콘센트 수'),
-  //                   ],
-  //                 ),
-  //                 const SizedBox(
-  //                   height: 12,
-  //                 ),
-  //                 Row(
-  //                   children: [
-  //                     SelectButton(
-  //                         height: 40,
-  //                         padding: 14,
-  //                         bgColor: addReviewOutletDegree == 2
-  //                             ? const Color(0xFF6B4D38)
-  //                             : Colors.white,
-  //                         radius: 1000,
-  //                         text: '# 적어요',
-  //                         textColor: addReviewOutletDegree == 2
-  //                             ? Colors.white
-  //                             : const Color(0xFF6B4D38),
-  //                         textSize: 14,
-  //                         borderColor: const Color(0xFFAD7541),
-  //                         borderOpacity: 0.4,
-  //                         borderWidth: 1.0,
-  //                         lineHeight: 2.0,
-  //                         onPress: () {
-  //                           addReviewOutletDegree = 2;
-  //                           setState(() {});
-  //                         }),
-  //                     const SizedBoxWidth6(),
-  //                     SelectButton(
-  //                         height: 40,
-  //                         padding: 14,
-  //                         bgColor: addReviewOutletDegree == 1
-  //                             ? const Color(0xFF6B4D38)
-  //                             : Colors.white,
-  //                         radius: 1000,
-  //                         text: '# 보통이에요',
-  //                         textColor: addReviewOutletDegree == 1
-  //                             ? Colors.white
-  //                             : const Color(0xFF6B4D38),
-  //                         textSize: 14,
-  //                         borderColor: const Color(0xFFAD7541),
-  //                         borderOpacity: 0.4,
-  //                         borderWidth: 1.0,
-  //                         lineHeight: 2.0,
-  //                         onPress: () {
-  //                           addReviewOutletDegree = 1;
-  //                           setState(() {});
-  //                         }),
-  //                     const SizedBoxWidth6(),
-  //                     SelectButton(
-  //                         height: 40,
-  //                         padding: 14,
-  //                         bgColor: addReviewOutletDegree == 0
-  //                             ? const Color(0xFF6B4D38)
-  //                             : Colors.white,
-  //                         radius: 1000,
-  //                         text: '# 많아요',
-  //                         textColor: addReviewOutletDegree == 0
-  //                             ? Colors.white
-  //                             : const Color(0xFF6B4D38),
-  //                         textSize: 14,
-  //                         borderColor: const Color(0xFFAD7541),
-  //                         borderOpacity: 0.4,
-  //                         borderWidth: 1.0,
-  //                         lineHeight: 2.0,
-  //                         onPress: () {
-  //                           addReviewOutletDegree = 0;
-  //                           setState(() {});
-  //                         })
-  //                   ],
-  //                 ),
-  //                 const SizedBox(
-  //                   height: 24,
-  //                 ),
-  //                 const ListBorderLine(),
-  //                 const SizedBox(
-  //                   height: 24,
-  //                 ),
-  //                 const Row(
-  //                   children: [
-  //                     Text('추가적으로 어떤 태그가 어울릴까요? (pass)'),
-  //                   ],
-  //                 ),
-  //                 //추가 태그 선택 (생략)
-  //                 const SizedBox(
-  //                   height: 56,
-  //                 ),
-  //                 //줄글 리뷰
-  //                 const Row(
-  //                   children: [
-  //                     Text('줄글리뷰'),
-  //                   ],
-  //                 ),
-  //                 const SizedBox(
-  //                   height: 4,
-  //                 ),
-  //                 const Row(
-  //                   children: [
-  //                     Text('줄글리뷰 작성시 1젤리를 추가로 더 드려요!!'),
-  //                   ],
-  //                 ),
-  //                 const SizedBox(
-  //                   height: 16,
-  //                 ),
-  //                 //줄글리뷰 입력칸(생략)
-  //                 TextField(
-  //                   controller: addReviewTextcontroller,
-  //                   focusNode: searchFocusNode,
-  //                   maxLines: 7, // 여러 줄 입력 가능
-  //                   decoration: const InputDecoration(
-  //                     border: OutlineInputBorder(),
-  //                     hintText: '리뷰를 입력하세요',
-  //                   ),
-  //                 ),
-  //                 const SizedBox(
-  //                   height: 48,
-  //                 ),
-  //                 //완료버튼(생략)
-  //                 Padding(
-  //                   padding: const EdgeInsets.symmetric(horizontal: 11.0),
-  //                   child: ButtonMain(
-  //                       text: "완료",
-  //                       bgcolor: const Color(0xFF6B4D38),
-  //                       textColor: Colors.white,
-  //                       borderColor: const Color(0xFF6B4D38),
-  //                       opacity: 1.0,
-  //                       onPress: () {}),
-  //                 ),
-  //                 const SizedBox(
-  //                   height: 56,
-  //                 ),
-  //               ]),
-  //             ),
-  //           );
-  //         },
-  //       ),
-  //     )
-  //   ]);
-  // }
+  Widget curationNormalMode() {
+    return const Text("curationNormalMode");
+  }
+
+  Widget curationDetailMode() {
+    return const Text("curationDetailMode");
+  }
 
   Widget showWorkspace(
     TextEditingController controller, // 입력값 controller
@@ -1484,6 +1081,7 @@ class _MapScreenState extends State<MapScreen> {
         } else {
           // 데이터가 성공적으로 로드되었을 때
           print("!!!!!!!!!!!!장소 리스트 로딩 완료!!!!!!!!!!!!!!!");
+          reloadWorkspaces = false;
           final workspaceList = snapshot.data;
           copyWorkspaceList = workspaceList; //데이터 복사
           print('----------rebuild showWorkspace search result----------');
@@ -1533,7 +1131,6 @@ class _MapScreenState extends State<MapScreen> {
                 behavior: HitTestBehavior.opaque, // *** 빈 공간까지 터치 감지 ***
                 onTap: () {
                   bottomsheetMode = 'detail';
-                  reloadWorkspaces = false;
                   reloadDetailspace = true;
                   workspaceId = id;
                   print('workspaceId: $id');
