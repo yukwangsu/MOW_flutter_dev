@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mow/models/place_detail_model.dart';
+import 'package:flutter_mow/models/simple_curation_model.dart';
 import 'package:flutter_mow/screens/map/add_review.dart';
 import 'package:flutter_mow/screens/map/edit_tag.dart';
+import 'package:flutter_mow/services/curation_service.dart';
 import 'package:flutter_mow/services/search_service.dart';
 import 'package:flutter_mow/widgets/button_main.dart';
 import 'package:flutter_mow/widgets/curation_list.dart';
@@ -29,7 +31,6 @@ class _MapScreenState extends State<MapScreen> {
   late double longitude; // 현 위치 경도
   bool isLoadingMap = true; // 지도가 로딩중인지 기록
   double bottomSheetHeight = 134; // 초기 높이 (134픽셀)
-  double minbottomSheetHeight = 134; // 최소 높이 (134픽셀)
   final double minBottomSheetHeightNormal = 134;
   final double minBottomSheetHeightDetail = 300;
   int bottomSheetHeightLevel = 1; // 1: 최소높이, 2: 중간높이, 3: 최고높이
@@ -52,6 +53,28 @@ class _MapScreenState extends State<MapScreen> {
   int addReviewChairDegree = -1;
   int addReviewOutletDegree = -1;
   final TextEditingController addReviewTextcontroller = TextEditingController();
+  //curation normal
+  bool reloadCurations = true;
+  int curationOrder = 0; //0(최신 순), 1(오래된 순), 2(좋아요 순, 인기순)
+  final List<String> curationSearchTagList = [
+    '감성적인',
+    '자연적인',
+    '모던한',
+    '차분한',
+    '빈티지',
+    '커피 맛집',
+    '디저트 맛집',
+    '한적한',
+    '아기자기한',
+    '아늑한',
+    '재미있는',
+    '웨커이션',
+    '작업하기 좋은',
+    '볼거리가 많은',
+  ];
+  List<String> curationSelectedSearchTag = [];
+  late SimpleCurationsModel? simpleCuration;
+  late List<SimpleCurationDtoModel>? simpleCurationList;
 
   @override
   void initState() {
@@ -74,8 +97,9 @@ class _MapScreenState extends State<MapScreen> {
           });
         } // TextField에 포커스가 풀렸을 때
         else if (!searchFocusNode.hasFocus) {
-          // 검색할 텍스트 입력을 완료했기 때문에 Workspace 검색
+          // 검색할 텍스트 입력을 완료했기 때문에 Workspace혹은 Curation 검색
           reloadWorkspaces = true;
+          reloadCurations = true;
           setState(() {});
         }
       });
@@ -94,12 +118,16 @@ class _MapScreenState extends State<MapScreen> {
 
   // map <-> curation 전환 함수
   void handleSwitchButtonTap() {
-    print("큐레이션 전환!!!!!!!!!!");
+    print("지도 <-> 큐레이션 전환!!!!!!!!!!");
     setState(() {
+      // 검색 텍스트 초기화
+      searchController.text = '';
       if (bottomsheetMode == 'normal' || bottomsheetMode == 'detail') {
         bottomsheetMode = 'curation_normal';
+        reloadCurations = true;
       } else {
         bottomsheetMode = 'normal';
+        reloadWorkspaces = true;
       }
     });
   }
@@ -142,6 +170,18 @@ class _MapScreenState extends State<MapScreen> {
       taggedList =
           prefs.getStringList('taggedList') ?? []; // 저장된 리스트가 없으면 빈 리스트 사용
     });
+  }
+
+  // curation 검색 태그 수정
+  void toogleCurationSearchTags(String tagContent) async {
+    if (curationSelectedSearchTag.contains(tagContent)) {
+      curationSelectedSearchTag.remove(tagContent);
+    } else {
+      curationSelectedSearchTag.add(tagContent);
+    }
+    reloadCurations = true;
+    // 수정이 완료되면 setState
+    setState(() {});
   }
 
   // 현위치 가져오기 (좌표가 이상할 경우 -> 신촌으로 고정)
@@ -354,6 +394,7 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
+  // 1. bottomsheet mode: normalMode
   Widget normalMode() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -558,6 +599,7 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
+  // 2. bottomsheet mode: detailMode
   Widget detailMode() {
     // //테스트용
     // late String name;
@@ -1023,10 +1065,129 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
+  // 3. bottomsheet mode: curationNormalMode
   Widget curationNormalMode() {
-    return const Text("curationNormalMode");
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        //스크롤되지 않는 부분(바, 검색창, 버튼)
+        Column(
+          children: [
+            const Bar(),
+            //검색창
+            searchBar(
+              searchController,
+            ),
+            const SizedBox(height: 20),
+            //카테고리, 태그 선택
+            Padding(
+              padding: const EdgeInsets.only(
+                left: 10.0,
+                right: 10.0,
+              ),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    //최신순 정렬 버튼
+                    SelectButton(
+                      height: 32.0,
+                      padding: 14.0,
+                      bgColor: curationOrder == 0
+                          ? const Color(0xFF6B4D38)
+                          : Colors.white,
+                      radius: 1000,
+                      text: '최신순',
+                      textColor: curationOrder == 0
+                          ? Colors.white
+                          : const Color(0xFF6B4D38),
+                      textSize: 14.0,
+                      borderWidth: curationOrder == 0 ? null : 1.0,
+                      borderColor:
+                          curationOrder == 0 ? null : const Color(0xFFAD7541),
+                      borderOpacity: curationOrder == 0 ? null : 0.4,
+                      onPress: () {
+                        if (curationOrder != 0) {
+                          setState(() {
+                            curationOrder = 0;
+                            reloadCurations = true;
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBoxWidth10(),
+                    //인기순 정렬 버튼
+                    SelectButton(
+                      height: 32.0,
+                      padding: 14.0,
+                      bgColor: curationOrder == 2
+                          ? const Color(0xFF6B4D38)
+                          : Colors.white,
+                      radius: 1000,
+                      text: '인기순',
+                      textColor: curationOrder == 2
+                          ? Colors.white
+                          : const Color(0xFF6B4D38),
+                      textSize: 14.0,
+                      borderWidth: curationOrder == 2 ? null : 1.0,
+                      borderColor:
+                          curationOrder == 2 ? null : const Color(0xFFAD7541),
+                      borderOpacity: curationOrder == 2 ? null : 0.4,
+                      onPress: () {
+                        if (curationOrder != 2) {
+                          setState(() {
+                            curationOrder = 2;
+                            reloadCurations = true;
+                          });
+                        }
+                      },
+                    ),
+                    // curationSearchTag 버튼
+                    for (int n = 0; n < curationSearchTagList.length; n++) ...[
+                      const SizedBoxWidth10(),
+                      curationSearchTagButtonWidget(curationSearchTagList[n]),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 20.0,
+            ),
+          ],
+        ),
+
+        // 스크롤되는 부분(큐레이션 리스트)
+        // 1. 큐레이션를 reload하는 setstate 일 경우 showCurations 진행
+        if (reloadCurations)
+          showCurations(
+            searchController,
+            curationOrder,
+            curationSelectedSearchTag,
+          ),
+        // 2. bottomsheet을 올리는 setstate 일 경우 (복사본 데이터 사용)
+        // 보류
+        if (!reloadCurations)
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.only(top: 0.0),
+              itemCount: simpleCurationList!.length,
+              itemBuilder: (context, index) {
+                return curationList(
+                  simpleCurationList![index].curationId,
+                  simpleCurationList![index].curationTitle,
+                  simpleCurationList![index].workSpaceName,
+                  simpleCurationList![index].likes,
+                  simpleCurationList![index].curationPhoto,
+                );
+              },
+            ),
+          )
+      ],
+    );
   }
 
+  // 4. bottomsheet mode: curationDetailMode
   Widget curationDetailMode() {
     return const Text("curationDetailMode");
   }
@@ -1235,6 +1396,159 @@ class _MapScreenState extends State<MapScreen> {
                               const SizedBoxWidth4(),
                               SvgPicture.asset(
                                   'assets/icons/dropdown_down_padding.svg'),
+                            ],
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              //list padding
+              const SizedBox(
+                height: 24.0,
+              ),
+              const ListBorderLine(),
+              const SizedBox(
+                height: 24.0,
+              ),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget showCurations(
+    TextEditingController searchController, // 입력값 controller
+    int curationOrder,
+    List<String> curationSelectedSearchTag,
+  ) {
+    final Future<SimpleCurationsModel> curation =
+        CurationService.searchCuration(searchController.text,
+            curationSelectedSearchTag, curationOrder, 0, 20);
+    return FutureBuilder<SimpleCurationsModel>(
+      future: curation, // 비동기 데이터 호출
+      builder:
+          (BuildContext context, AsyncSnapshot<SimpleCurationsModel> snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // 데이터가 로드 중일 때 로딩 표시
+          return Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.only(top: 0.0),
+              itemCount: 1,
+              itemBuilder: (context, index) {
+                return const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      color: Color(0xFFAD7541),
+                    ),
+                  ],
+                );
+              },
+            ),
+          );
+        } else if (snapshot.hasError) {
+          // 오류가 발생했을 때
+          return Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.only(top: 0.0),
+              itemCount: 1,
+              itemBuilder: (context, index) {
+                return Text('Error: ${snapshot.error}');
+              },
+            ),
+          );
+        } else {
+          // 데이터가 성공적으로 로드되었을 때
+          print("!!!!!!!!!!!!큐레이션 로딩 완료!!!!!!!!!!!!!!!");
+          reloadCurations = false;
+          simpleCuration = snapshot.data;
+          simpleCurationList = simpleCuration!.simpleCurationList;
+          print('----------(rebuild) showCurations search result----------');
+          return Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.only(top: 0.0),
+              itemCount: simpleCurationList!.length,
+              itemBuilder: (context, index) {
+                return curationList(
+                  simpleCurationList![index].curationId,
+                  simpleCurationList![index].curationTitle,
+                  simpleCurationList![index].workSpaceName,
+                  simpleCurationList![index].likes,
+                  simpleCurationList![index].curationPhoto,
+                );
+              },
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  Widget curationList(
+    int curationId,
+    String curationTitle,
+    String workSpaceName,
+    int likes,
+    String curationPhoto,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        children: [
+          // place list
+          Column(
+            children: [
+              // 장소 클릭시 detail 화면으로 넘어감.
+              GestureDetector(
+                behavior: HitTestBehavior.opaque, // *** 빈 공간까지 터치 감지 ***
+                onTap: () {
+                  bottomsheetMode = 'curation_detail';
+                  // reloadCurationDetail = true;
+                  //curationId = curationId;
+                  // print('curationId: $curationId');
+                  setState(() {});
+                },
+                child: Row(
+                  children: [
+                    //큐레이션 이미지 (보류)
+                    Container(
+                      decoration: const BoxDecoration(color: Colors.black),
+                      width: 80.0,
+                      height: 80.0,
+                    ),
+                    const SizedBox(
+                      width: 14.0,
+                    ),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          //큐레이션 제목
+                          Text(
+                            curationTitle.length > 9 //가큐레이션 제목 길이 제한
+                                ? '${curationTitle.substring(0, 9)}...'
+                                : curationTitle,
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                          // 큐레이션 상호명
+                          Text(
+                            workSpaceName,
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+
+                          const SizedBox(height: 12.0),
+                          // 큐레이션 좋아요 개수
+                          Row(
+                            children: [
+                              SvgPicture.asset(
+                                  'assets/icons/dropdown_down_padding.svg'),
+                              const SizedBoxWidth4(),
+                              Text(
+                                '$likes',
+                                style: Theme.of(context).textTheme.titleSmall,
+                              ),
                             ],
                           ),
                         ],
@@ -1476,8 +1790,9 @@ class _MapScreenState extends State<MapScreen> {
           // TextField내부에 아이콘 추가
           suffixIcon: GestureDetector(
             onTap: () async {
-              // 돋보기 클릭시 setState를 통해 workspace를 다시 불러온다.
+              // 돋보기 클릭시 setState를 통해 workspace 혹은 curation를 다시 불러온다.
               reloadWorkspaces = true;
+              reloadCurations = true;
               setState(() {});
             },
             child: Padding(
@@ -1511,6 +1826,30 @@ class _MapScreenState extends State<MapScreen> {
       borderOpacity: appliedSearchTags.contains(tagName) ? null : 0.4,
       onPress: () {
         toogleAppliedSearchTags(tagName);
+      },
+    );
+  }
+
+  Widget curationSearchTagButtonWidget(String tagName) {
+    return SelectButton(
+      height: 32.0,
+      padding: 14.0,
+      bgColor: curationSelectedSearchTag.contains(tagName)
+          ? const Color(0xFF6B4D38)
+          : Colors.white,
+      radius: 1000,
+      text: tagName,
+      textColor: curationSelectedSearchTag.contains(tagName)
+          ? Colors.white
+          : const Color(0xFF6B4D38),
+      textSize: 14.0,
+      borderWidth: curationSelectedSearchTag.contains(tagName) ? null : 1.0,
+      borderColor: curationSelectedSearchTag.contains(tagName)
+          ? null
+          : const Color(0xFFAD7541),
+      borderOpacity: curationSelectedSearchTag.contains(tagName) ? null : 0.4,
+      onPress: () {
+        toogleCurationSearchTags(tagName);
       },
     );
   }

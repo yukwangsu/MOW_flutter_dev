@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter_mow/secrets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+//model을 사용하지 않음. 추후 수정필요
 class SearchService {
   static Future<List?> searchPlace(
     String keyword,
@@ -96,6 +97,7 @@ class SearchService {
     }
   }
 
+  //model을 사용함.
   static Future<PlaceDetailModel> getPlaceById(int id) async {
     final prefs = await SharedPreferences.getInstance();
     int? userId = prefs.getInt('userId');
