@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_mow/screens/map/curation_detail.dart';
+import 'package:flutter_mow/screens/map/curation_page.dart';
 
 class CurationList extends StatelessWidget {
   final String title;
@@ -25,9 +25,8 @@ class CurationList extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => CurationDetail(
+            builder: (context) => CurationPage(
               curationId: curationId,
-              thumb: thumb,
             ),
             fullscreenDialog: true,
           ),
@@ -45,27 +44,24 @@ class CurationList extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            //widget의 ID를 태그로 가진 Hero를 만든다.
+            //widget의 ID를 태그로 가진 Hero를 만든다 (삭제..).
             //CurationDetail으로 이동할 때 동일한 태그를 가진다면 화면이 자연스럽게 전환된다.
-            Hero(
-              tag: curationId,
-              child: Container(
-                decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(10.0),
-                    topRight: Radius.circular(10.0),
-                  ),
+            Container(
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(10.0),
+                  topRight: Radius.circular(10.0),
                 ),
-                width: 228,
-                height: 317,
-                //자르기 -> BorderRadius 반영
-                clipBehavior: Clip.hardEdge,
+              ),
+              width: 228,
+              height: 317,
+              //자르기 -> BorderRadius 반영
+              clipBehavior: Clip.hardEdge,
 
-                //container 내용
-                child: Image.network(
-                  thumb,
-                  fit: BoxFit.cover, // 이미지를 Container에 가득 채우기
-                ),
+              //container 내용
+              child: Image.network(
+                thumb,
+                fit: BoxFit.cover, // 이미지를 Container에 가득 채우기
               ),
             ),
             const SizedBox(

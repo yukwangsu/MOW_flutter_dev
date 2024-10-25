@@ -26,7 +26,7 @@ class SimpleCurationDtoModel {
       : curationId = json['curationId'] ?? 0,
         workspaceId = json['workspaceId'] ?? 0,
         userId = json['userId'] ?? 0,
-        likes = json['userId'] ?? 0,
+        likes = json['likes'] ?? 0,
         userNickname = json['userNickname'] ?? '',
         workSpaceName = json['workSpaceName'] ?? '',
         location = json['location'] ?? '',

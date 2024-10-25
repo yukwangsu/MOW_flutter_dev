@@ -1,3 +1,4 @@
+import 'package:flutter_mow/models/curation_page_model.dart';
 import 'package:flutter_mow/models/place_detail_model.dart';
 import 'package:flutter_mow/models/simple_curation_model.dart';
 import 'package:http/http.dart' as http;
@@ -6,6 +7,7 @@ import 'package:flutter_mow/secrets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CurationService {
+  //큐레이션 리스트 불러오기
   static Future<SimpleCurationsModel> searchCuration(
     String keyword,
     List<String> featureList,
@@ -61,6 +63,44 @@ class CurationService {
       }
     } catch (e) {
       print('Error during searchCuration: $e');
+      throw Error();
+    }
+  }
+
+  //큐레이션 페이지 불러오기
+  static Future<CurationPageModel> getCurationById(
+    int curationId,
+    int order,
+    int page,
+    int size,
+  ) async {
+    //userId 가져오기
+    final prefs = await SharedPreferences.getInstance();
+    int? userId = prefs.getInt('userId');
+
+    final url = Uri.parse(
+        '${Secrets.awsKey}curation/info?curationId=$curationId&commenterId=$userId&order=$order&page=$page&size=$size');
+    var headers = {
+      'Content-Type': 'application/json',
+    };
+    try {
+      final response = await http.get(url, headers: headers);
+      print('----------[service] getCurationById----------');
+      print('Response status: ${response.statusCode}');
+
+      // UTF-8로 응답을 수동 디코딩
+      final utf8Body = utf8.decode(response.bodyBytes);
+      print('Response body: $utf8Body');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final responseData = json.decode(utf8Body);
+        return CurationPageModel.fromJson(responseData);
+      } else {
+        print('Fail getCurationById');
+        throw Error();
+      }
+    } catch (e) {
+      print('Error during getCurationById: $e');
       throw Error();
     }
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mow/models/place_detail_model.dart';
 import 'package:flutter_mow/models/simple_curation_model.dart';
 import 'package:flutter_mow/screens/map/add_review.dart';
+import 'package:flutter_mow/screens/map/curation_page.dart';
 import 'package:flutter_mow/screens/map/edit_tag.dart';
 import 'package:flutter_mow/services/curation_service.dart';
 import 'package:flutter_mow/services/search_service.dart';
@@ -78,7 +79,6 @@ class _MapScreenState extends State<MapScreen> {
   //curation detail
 
   //curation page
-  late int curationPageId;
 
   @override
   void initState() {
@@ -348,7 +348,7 @@ class _MapScreenState extends State<MapScreen> {
                           bottomSheetHeight = minBottomSheetHeightNormal;
                         }
                       } else {
-                        // bottomsheetMode가 'detail' 이거나 'curation_detail' 일 때
+                        // bottomsheetMode가 'detail' 이거나 'curation_place' 일 때
                         if (bottomSheetHeight > screenHeight * 0.5) {
                           bottomSheetHeightLevel = 2;
                           bottomSheetHeight = screenHeight * 0.6;
@@ -1499,9 +1499,13 @@ class _MapScreenState extends State<MapScreen> {
           GestureDetector(
             behavior: HitTestBehavior.opaque, // *** 빈 공간까지 터치 감지 ***
             onTap: () {
-              curationPageId = curationId;
-              print('curationPageId: $curationId');
-              setState(() {});
+              print('curationId: $curationId');
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CurationPage(curationId: curationId),
+                ),
+              );
             },
             child: SizedBox(
               //SizedBox를 사용함으로써 height를 최대 크기로 고정함
@@ -1639,14 +1643,6 @@ class _MapScreenState extends State<MapScreen> {
     // 요일 첫 글자와 함께 반환
     return '$dayInitial $hours';
   }
-
-  // List<String> setTopThreeTag(String tags) {
-  //     List<int> list = tags.split(',')
-  //                     .map(int.parse)
-  //                     .take(3) // 처음 3개의 요소만 가져옴
-  //                     .toList();
-
-  // }
 
   Widget reviewList(dynamic reviewObj) {
     return Column(
