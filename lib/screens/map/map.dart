@@ -75,6 +75,10 @@ class _MapScreenState extends State<MapScreen> {
   List<String> curationSelectedSearchTag = [];
   late SimpleCurationsModel? simpleCuration;
   late List<SimpleCurationDtoModel>? simpleCurationList;
+  //curation detail
+
+  //curation page
+  late int curationPageId;
 
   @override
   void initState() {
@@ -1165,8 +1169,7 @@ class _MapScreenState extends State<MapScreen> {
             curationOrder,
             curationSelectedSearchTag,
           ),
-        // 2. bottomsheet을 올리는 setstate 일 경우 (복사본 데이터 사용)
-        // 보류
+        // 2. 큐레이션를 reload하는 setstate가 아닐 경우 showCurations 진행
         if (!reloadCurations)
           Expanded(
             child: ListView.builder(
@@ -1314,33 +1317,27 @@ class _MapScreenState extends State<MapScreen> {
                         children: [
                           //가게 정보 첫번째 줄: 이름, 카테고리
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Row(
-                                children: [
-                                  //가게 이름
-                                  Text(
-                                    name.length > 9 //가게 이름 크기 제한
-                                        ? '${name.substring(0, 9)}...'
-                                        : name,
-                                    // name,
-                                    style:
-                                        Theme.of(context).textTheme.bodyLarge,
-                                  ),
-                                  const SizedBoxWidth10(),
-                                  //가게 카테고리
-                                  Text(
-                                    category.length > 8 //가게 카테고리 크기 제한
-                                        ? '${category.substring(0, 8)}...'
-                                        : category,
-                                    // category,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleSmall!
-                                        .copyWith(
-                                            color: const Color(0xFFC3C3C3)),
-                                  ),
-                                ],
+                              //가게 이름
+                              // Expanded를 사용하여 공간을 최대로 활용한뒤 text가 길어서 오버플로우가 발생한 경우 말줄임표(...)로 표시
+                              Expanded(
+                                child: Text(
+                                  name,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.bodyLarge,
+                                ),
+                              ),
+                              //가게 카테고리
+                              Text(
+                                category,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall!
+                                    .copyWith(color: const Color(0xFFC3C3C3)),
+                              ),
+                              // const Spacer(),
+                              const SizedBox(
+                                width: 5,
                               ),
                               SvgPicture.asset('assets/icons/unsave_icon.svg'),
                             ],
@@ -1372,9 +1369,9 @@ class _MapScreenState extends State<MapScreen> {
                           // 가게 정보 세번째 줄: 위치, 거리, 연락처
                           Row(
                             children: [
-                              // 주소
+                              // 주소(단어 두개만 보여줌)
                               Text(
-                                address.substring(0, 7),
+                                address.split(' ').take(2).join(' '),
                                 style: Theme.of(context).textTheme.titleSmall,
                               ),
                               const SizedBoxWidth4(),
@@ -1499,73 +1496,84 @@ class _MapScreenState extends State<MapScreen> {
       child: Column(
         children: [
           // place list
-          Column(
-            children: [
-              // 장소 클릭시 detail 화면으로 넘어감.
-              GestureDetector(
-                behavior: HitTestBehavior.opaque, // *** 빈 공간까지 터치 감지 ***
-                onTap: () {
-                  bottomsheetMode = 'curation_detail';
-                  // reloadCurationDetail = true;
-                  //curationId = curationId;
-                  // print('curationId: $curationId');
-                  setState(() {});
-                },
-                child: Row(
-                  children: [
-                    //큐레이션 이미지 (보류)
-                    Container(
-                      decoration: const BoxDecoration(color: Colors.black),
-                      width: 80.0,
-                      height: 80.0,
-                    ),
-                    const SizedBox(
-                      width: 14.0,
-                    ),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          //큐레이션 제목
-                          Text(
-                            curationTitle.length > 9 //가큐레이션 제목 길이 제한
-                                ? '${curationTitle.substring(0, 9)}...'
-                                : curationTitle,
-                            style: Theme.of(context).textTheme.bodyLarge,
-                          ),
-                          // 큐레이션 상호명
-                          Text(
-                            workSpaceName,
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-
-                          const SizedBox(height: 12.0),
-                          // 큐레이션 좋아요 개수
-                          Row(
+          GestureDetector(
+            behavior: HitTestBehavior.opaque, // *** 빈 공간까지 터치 감지 ***
+            onTap: () {
+              curationPageId = curationId;
+              print('curationPageId: $curationId');
+              setState(() {});
+            },
+            child: SizedBox(
+              //SizedBox를 사용함으로써 height를 최대 크기로 고정함
+              height: 80.0,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 큐레이션 이미지 (보류)
+                  Container(
+                    decoration: const BoxDecoration(color: Colors.black),
+                    width: 80.0,
+                    height: 80.0,
+                  ),
+                  const SizedBox(
+                    width: 14.0,
+                  ),
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // 큐레이션 제목
+                            Text(
+                              '$curationTitle 아주 넓고 자리도 많고 사람이 붐비지 않아서 좋은 곳',
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 2,
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                            const SizedBox(
+                              height: 4,
+                            ),
+                            // 큐레이션 상호명, 좋아요 개수
+                            Text(
+                              workSpaceName,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall!
+                                  .copyWith(color: const Color(0xFFC3C3C3)),
+                            ),
+                          ],
+                        ),
+                        Positioned(
+                          right: 0, // 오른쪽 끝에 배치
+                          bottom: 0, // 아래쪽 끝에 배치
+                          child: Row(
                             children: [
                               SvgPicture.asset(
-                                  'assets/icons/dropdown_down_padding.svg'),
-                              const SizedBoxWidth4(),
+                                  'assets/icons/curation_simple_heart.svg'),
+                              const SizedBox(width: 2.5),
                               Text(
                                 '$likes',
                                 style: Theme.of(context).textTheme.titleSmall,
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    )
-                  ],
-                ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              //list padding
-              const SizedBox(
-                height: 24.0,
-              ),
-              const ListBorderLine(),
-              const SizedBox(
-                height: 24.0,
-              ),
-            ],
+            ),
+          ),
+          //list padding
+          const SizedBox(
+            height: 24.0,
+          ),
+          const ListBorderLine(),
+          const SizedBox(
+            height: 24.0,
           )
         ],
       ),

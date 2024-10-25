@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: const SplashScreen(),
+      home: const MapScreen(),
       theme: ThemeData(
         textTheme: const TextTheme(
           titleLarge: TextStyle(
@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
             fontSize: 16.0,
             fontWeight: FontWeight.bold,
             fontFamily: 'SF_Pro',
-            height: 1.2,
+            height: 21 / 16,
           ),
           headlineMedium: TextStyle(
             fontSize: 14.0,
