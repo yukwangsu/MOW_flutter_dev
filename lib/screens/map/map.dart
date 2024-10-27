@@ -1177,6 +1177,7 @@ class _MapScreenState extends State<MapScreen> {
               itemCount: simpleCurationList!.length,
               itemBuilder: (context, index) {
                 return curationList(
+                  simpleCurationList![index].workspaceId,
                   simpleCurationList![index].curationId,
                   simpleCurationList![index].curationTitle,
                   simpleCurationList![index].workSpaceName,
@@ -1470,6 +1471,7 @@ class _MapScreenState extends State<MapScreen> {
               itemCount: simpleCurationList!.length,
               itemBuilder: (context, index) {
                 return curationList(
+                  simpleCurationList![index].workspaceId,
                   simpleCurationList![index].curationId,
                   simpleCurationList![index].curationTitle,
                   simpleCurationList![index].workSpaceName,
@@ -1485,6 +1487,7 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   Widget curationList(
+    int workspaceId,
     int curationId,
     String curationTitle,
     String workSpaceName,
@@ -1503,7 +1506,8 @@ class _MapScreenState extends State<MapScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => CurationPage(curationId: curationId),
+                  builder: (context) => CurationPage(
+                      curationId: curationId, workspaceId: workspaceId),
                 ),
               );
             },

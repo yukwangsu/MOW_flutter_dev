@@ -18,20 +18,21 @@ class CurationList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        print('curationId: $curationId');
+      // onTap: () {
+      //   print('curationId: $curationId');
 
-        //MaterialPageRoute: statelessWidget을 route로 감싸서 다른 스크린처럼 보이게한다.
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CurationPage(
-              curationId: curationId,
-            ),
-            fullscreenDialog: true,
-          ),
-        );
-      },
+      //   //MaterialPageRoute: statelessWidget을 route로 감싸서 다른 스크린처럼 보이게한다.
+      //   Navigator.push(
+      //     context,
+      //     MaterialPageRoute(
+      //       builder: (context) => CurationPage(
+      //         curationId: curationId,
+      //          workspaceId: workspaceId,
+      //       ),
+      //       fullscreenDialog: true,
+      //     ),
+      //   );
+      // },
       child: Container(
         width: 228,
         height: 390,

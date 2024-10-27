@@ -25,6 +25,12 @@ class MyApp extends StatelessWidget {
       home: const MapScreen(),
       theme: ThemeData(
         textTheme: const TextTheme(
+          headlineLarge: TextStyle(
+            fontSize: 28.0,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'SF_Pro',
+            height: 37 / 28,
+          ),
           titleLarge: TextStyle(
             fontSize: 22.0,
             fontWeight: FontWeight.bold,
@@ -53,7 +59,13 @@ class MyApp extends StatelessWidget {
             fontSize: 14.0,
             fontWeight: FontWeight.normal,
             fontFamily: 'SF_Pro',
-            height: 1.2,
+            height: 20 / 14,
+          ),
+          bodySmall: TextStyle(
+            fontSize: 12.0,
+            fontWeight: FontWeight.normal,
+            fontFamily: 'SF_Pro',
+            height: 16 / 12,
           ),
         ),
       ),
