@@ -80,6 +80,10 @@ class _MapScreenState extends State<MapScreen> {
 
   //curation page
 
+  //naver map
+  bool isNaverMapLoaded = false;
+  late NaverMapController naverMapController;
+
   @override
   void initState() {
     super.initState();
@@ -279,8 +283,13 @@ class _MapScreenState extends State<MapScreen> {
                 // 현위치로 이동하는 버튼 비/활성화
                 locationButtonEnable: false,
               ),
-              onMapReady: (controller) {
+              onMapReady: (NaverMapController mapController) {
                 print("네이버 맵 로딩됨!");
+                setState(() {
+                  reloadWorkspaces = true;
+                  isNaverMapLoaded = true;
+                  naverMapController = mapController;
+                });
               },
             ),
 
@@ -1258,6 +1267,18 @@ class _MapScreenState extends State<MapScreen> {
               padding: const EdgeInsets.only(top: 0.0),
               itemCount: workspaceList!.length,
               itemBuilder: (context, index) {
+                //지도에 마커 추가
+                if (isNaverMapLoaded &&
+                    workspaceList[index]['workspaceLatitude'] != null &&
+                    workspaceList[index]['workspaceLongitude'] != null) {
+                  NLatLng location = NLatLng(
+                      workspaceList[index]['workspaceLatitude'],
+                      workspaceList[index]['workspaceLongitude']);
+                  var marker = NMarker(
+                      id: workspaceList[index]['workspaceId'].toString(),
+                      position: location);
+                  naverMapController.addOverlay(marker);
+                }
                 return placeList(
                   workspaceList[index]['workspaceId'],
                   workspaceList[index]['workspaceName'],
