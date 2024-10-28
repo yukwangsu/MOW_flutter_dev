@@ -1,4 +1,8 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_mow/models/place_detail_model.dart';
 import 'package:flutter_mow/models/simple_curation_model.dart';
 import 'package:flutter_mow/screens/map/add_review.dart';
@@ -81,8 +85,10 @@ class _MapScreenState extends State<MapScreen> {
   //curation page
 
   //naver map
-  bool isNaverMapLoaded = false;
-  late NaverMapController naverMapController;
+  bool isNaverMapLoaded = false; //네이버 지도 로딩이 완료됐는지 저장
+  late NaverMapController naverMapController; //네이버 지도 컨트롤러(로딩완료시 할당)
+  Set<NAddableOverlay> markerSet = {}; //지도 화면 위에 띄어줄 마커들 저장
+  NOverlayImage? markerIcon; //마커 아이콘
 
   @override
   void initState() {
@@ -115,6 +121,17 @@ class _MapScreenState extends State<MapScreen> {
 
     // 위치 정보 가져오기
     getCurrentLocation();
+
+    // //지도 마커 아이콘 불러오기
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      NOverlayImage.fromWidget(
+              widget: markerIconWidget(),
+              size: const Size(28, 28),
+              context: context)
+          .then((value) {
+        markerIcon = value;
+      });
+    });
   }
 
   @override
@@ -284,6 +301,7 @@ class _MapScreenState extends State<MapScreen> {
                 locationButtonEnable: false,
               ),
               onMapReady: (NaverMapController mapController) {
+                //네이버 지도 로딩이 끝났을 때 지도에 마커를 추가하기 위한 준비
                 print("네이버 맵 로딩됨!");
                 setState(() {
                   reloadWorkspaces = true;
@@ -655,7 +673,7 @@ class _MapScreenState extends State<MapScreen> {
             const SizedBox(
               height: 4.0,
             ),
-            // 뒤로가기 아이콘
+            // 뒤로가기 아이콘(detail mode -> normal mode)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
@@ -663,8 +681,11 @@ class _MapScreenState extends State<MapScreen> {
                   GestureDetector(
                       onTap: () {
                         bottomsheetMode = 'normal';
-                        bottomSheetHeight = screenHeight * 0.936;
-                        bottomSheetHeightLevel = 3;
+                        //detail mode에서 heightLevel이 1이면 2로 변경. 나머지는 그대로
+                        if (bottomSheetHeightLevel == 1) {
+                          bottomSheetHeightLevel = 2;
+                          bottomSheetHeight = screenHeight * 0.6;
+                        }
                         setState(() {});
                       },
                       child: SvgPicture.asset('assets/icons/back_arrow.svg')),
@@ -1255,30 +1276,60 @@ class _MapScreenState extends State<MapScreen> {
         } else {
           // 데이터가 성공적으로 로드되었을 때
           print("!!!!!!!!!!!!장소 리스트 로딩 완료!!!!!!!!!!!!!!!");
-          reloadWorkspaces = false;
+          reloadWorkspaces = false; // 다른 setState가 발생했을 시 장소리스트를 로딩하지 않도록 설정
           final workspaceList = snapshot.data;
           copyWorkspaceList = workspaceList; //데이터 복사
           print('----------rebuild showWorkspace search result----------');
           print('workspaceList: $workspaceList');
           print('your keyword: ${controller.text}');
           print('your order: $order');
+          //markerSet 초기화
+          // markerSet.clear();
+          markerSet = {};
+          // markerSet에 마커 추가
+          if (isNaverMapLoaded) {
+            for (var workspace in workspaceList!) {
+              if (workspace['workspaceLatitude'] != null &&
+                  workspace['workspaceLongitude'] != null) {
+                NLatLng location = NLatLng(
+                  workspace['workspaceLatitude'],
+                  workspace['workspaceLongitude'],
+                );
+                var marker = NMarker(
+                    id: workspace['workspaceId'].toString(),
+                    position: location,
+                    icon: markerIcon);
+                // 마커가 클릭됐을 때
+                marker.setOnTapListener((NMarker marker) {
+                  print("마커가 터치되었습니다. id: ${marker.info.id}");
+                  // 1. 카메라가 이동할 위치 설정
+                  final cameraUpdate =
+                      NCameraUpdate.scrollAndZoomTo(target: location);
+                  // 2. 카메라가 이동할 때 마커를 왼쪽에서 1/2, 위에서 1/3에 위치시키도록 설정
+                  cameraUpdate.setPivot(const NPoint(1 / 2, 1 / 3));
+                  // 3. 카메라 시점 업데이트
+                  naverMapController.updateCamera(cameraUpdate);
+                  if (bottomsheetMode == 'normal' ||
+                      bottomsheetMode == 'detail') {
+                    bottomSheetHeightLevel = 1;
+                    bottomSheetHeight = minBottomSheetHeightDetail;
+                    workspaceId = workspace['workspaceId'];
+                    reloadDetailspace = true;
+                    bottomsheetMode = 'detail';
+                    setState(() {});
+                  } else {}
+                });
+                markerSet.add(marker);
+              }
+            }
+            // 모든 마커를 지도에 추가
+            naverMapController.addOverlayAll(markerSet);
+          }
           return Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.only(top: 0.0),
               itemCount: workspaceList!.length,
               itemBuilder: (context, index) {
-                //지도에 마커 추가
-                if (isNaverMapLoaded &&
-                    workspaceList[index]['workspaceLatitude'] != null &&
-                    workspaceList[index]['workspaceLongitude'] != null) {
-                  NLatLng location = NLatLng(
-                      workspaceList[index]['workspaceLatitude'],
-                      workspaceList[index]['workspaceLongitude']);
-                  var marker = NMarker(
-                      id: workspaceList[index]['workspaceId'].toString(),
-                      position: location);
-                  naverMapController.addOverlay(marker);
-                }
                 return placeList(
                   workspaceList[index]['workspaceId'],
                   workspaceList[index]['workspaceName'],
@@ -1882,6 +1933,72 @@ class _MapScreenState extends State<MapScreen> {
       },
     );
   }
+
+//   Widget markerIconWidget() {
+//     return Container(
+//       width: 50,
+//       height: 50,
+//       color: Colors.black,
+//       child: Row(
+//         children: [
+//           Container(
+//             width: 5,
+//             height: 5,
+//             color: Colors.white,
+//           ),
+//           SvgPicture.asset('assets/icons/marker_icon.svg'),
+//         ],
+//       ),
+//     );
+//   }
+// }
+
+  // 마커.... 최후의 수단...
+  Widget markerIconWidget() {
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: const BoxDecoration(
+        color: Color(0xFF6B4D38), // 원형 배경 색상
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: CustomPaint(
+        size: const Size(28, 28), // 전체 원 크기
+        painter: _IconPainter(),
+      ),
+    );
+  }
+}
+
+class _IconPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    Paint paint = Paint()
+      ..color = const Color(0xFFFFFCF8) // 경로 색상
+      ..style = PaintingStyle.fill;
+
+    // 경로를 그리기 전에 캔버스를 중심으로 이동
+    canvas.translate(size.width / 2 - 8.9, size.height / 2 - 8.5);
+
+    Path path = Path()
+      ..moveTo(4.4808, 4.243)
+      ..cubicTo(4.5324, 3.3358, 5.6694, 2.962, 6.2492, 3.6617)
+      ..lineTo(8.2302, 6.0525)
+      ..cubicTo(8.6301, 6.5351, 9.3703, 6.5351, 9.7702, 6.0525)
+      ..lineTo(11.7512, 3.6617)
+      ..cubicTo(12.331, 2.962, 13.468, 3.3358, 13.5196, 4.243)
+      ..lineTo(13.9402, 11.6451)
+      ..cubicTo(13.9727, 12.2187, 13.5163, 12.7018, 12.9418, 12.7018)
+      ..lineTo(5.0586, 12.7018)
+      ..cubicTo(4.484, 12.7018, 4.0276, 12.2187, 4.0602, 11.6451)
+      ..lineTo(4.4808, 4.243);
+
+    canvas.drawPath(path, paint); // 경로 그리기
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
 
 class ListBorderLine extends StatelessWidget {
