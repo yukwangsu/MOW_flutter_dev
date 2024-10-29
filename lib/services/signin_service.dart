@@ -1,3 +1,4 @@
+import 'package:flutter_mow/services/signout_service.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -5,9 +6,21 @@ import 'package:flutter_mow/secrets.dart';
 
 class SigninService {
   static Future<bool> signin(String email, String passwd) async {
+    // 로그인 시도시 로그아웃 먼저 진행
+    bool isLogout = await SignoutService.signout();
+    if (isLogout) {
+      print('기존에 로그인 되어 있어서 로그아웃 되었습니다.');
+    } else {
+      print('기존에 로그인 되지 않아서 로그아웃 불필요. 혹은 로그아웃 실패.');
+    }
+
+    print('입력 이메일: $email  비밀번호: $passwd');
+
     final url = Uri.parse(
         '${Secrets.awsKey}auth/signin/password?email=$email&password=$passwd');
+
     var headers = {
+      'accessToken': 'null', //처음 로그인한 유저라면 값이 null
       'Content-Type': 'application/json',
     };
     try {
@@ -15,17 +28,19 @@ class SigninService {
       print('----------sign in----------');
       print('Response status: ${response.statusCode}');
       print('Response body: ${response.body}');
+      print('Response header: ${response.headers}');
 
       //accessToken 저장시 에러 발생 -> 해결
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final Map<String, dynamic> responseData = json.decode(response.body);
         String accessToken = responseData['accessToken'];
-        int userId = responseData['userId'];
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('accessToken', accessToken);
-        await prefs.setInt('userId', userId);
         print('AccessToken saved: $accessToken');
-        print('userId saved: $userId');
+        // // userId 저장X
+        // int userId = responseData['userId'];
+        // await prefs.setInt('userId', userId);
+        // print('userId saved: $userId');
         return true;
       } else {
         return false;

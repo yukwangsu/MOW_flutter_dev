@@ -1,4 +1,5 @@
 import 'package:flutter_mow/models/curation_page_model.dart';
+import 'package:flutter_mow/models/curation_place_model.dart';
 import 'package:flutter_mow/models/place_detail_model.dart';
 import 'package:flutter_mow/models/simple_curation_model.dart';
 import 'package:http/http.dart' as http;
@@ -17,7 +18,13 @@ class CurationService {
   ) async {
     final url = Uri.parse(
         '${Secrets.awsKey}curation?order=$order&page=$page&size=$size');
+
+    //토큰 가져오기
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('accessToken');
+
     var headers = {
+      'accessToken': '$token',
       'Content-Type': 'application/json',
     };
     // 태그 변수 map
@@ -67,6 +74,47 @@ class CurationService {
     }
   }
 
+  //큐레이션 리스트 불러오기
+  static Future<CurationPlaceModel> getCurationPlace(
+    int workspaceId,
+    int order, // 0(최신 순), 1(오래된 순), 2(좋아요 순)
+    int page,
+    int size,
+  ) async {
+    final url = Uri.parse(
+        '${Secrets.awsKey}curation/by/space?workspaceId=$workspaceId&order=$order&page=$page&size=$size');
+
+    //토큰 가져오기
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('accessToken');
+
+    var headers = {
+      'accessToken': '$token',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final response = await http.post(url, headers: headers);
+      print('----------[service] getCurationPlace----------');
+      print('Response status: ${response.statusCode}');
+
+      // UTF-8로 응답을 수동 디코딩
+      final utf8Body = utf8.decode(response.bodyBytes);
+      print('Response body: $utf8Body');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final responseData = json.decode(utf8Body);
+        return CurationPlaceModel.fromJson(responseData);
+      } else {
+        print('Fail CurationPlaceModel');
+        throw Error();
+      }
+    } catch (e) {
+      print('Error during CurationPlaceModel: $e');
+      throw Error();
+    }
+  }
+
   //큐레이션 페이지 불러오기
   static Future<CurationPageModel> getCurationById(
     int curationId,
@@ -74,13 +122,15 @@ class CurationService {
     int page,
     int size,
   ) async {
-    //userId 가져오기
-    final prefs = await SharedPreferences.getInstance();
-    int? userId = prefs.getInt('userId');
-
     final url = Uri.parse(
-        '${Secrets.awsKey}curation/info?curationId=$curationId&commenterId=$userId&order=$order&page=$page&size=$size');
+        '${Secrets.awsKey}curation/info?curationId=$curationId&order=$order&page=$page&size=$size');
+
+    //토큰 가져오기
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('accessToken');
+
     var headers = {
+      'accessToken': '$token',
       'Content-Type': 'application/json',
     };
     try {

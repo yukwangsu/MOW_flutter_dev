@@ -12,9 +12,16 @@ class ReviewService {
     double stars,
   ) async {
     final url = Uri.parse('${Secrets.awsKey}review/update');
+
+    //토큰 가져오기
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('accessToken');
+
     var headers = {
+      'accessToken': '$token',
       'Content-Type': 'application/json',
     };
+
     // 태그 변수 map
     Map<String, int> tagMap = {
       '# 공간이 넓어요': 1,
@@ -58,16 +65,16 @@ class ReviewService {
     List<int> tagNumbers = featureTags.map((tag) => tagMap[tag]!).toList();
     String tags = tagNumbers.join(',');
 
-    //userId 가져오기
-    final prefs = await SharedPreferences.getInstance();
-    int? userId = prefs.getInt('userId');
+    // //userId 가져오기
+    // final prefs = await SharedPreferences.getInstance();
+    // int? userId = prefs.getInt('userId');
 
     //현재시간 가져오기(ISO 8601 형식)
     String createdAt = DateTime.now().toUtc().toIso8601String();
 
     var data = {
       "workspaceId": workspaceId,
-      "userId": userId,
+      // "userId": userId,
       "stars": stars,
       "reviewText": reviewText,
       "featureTags": tags,

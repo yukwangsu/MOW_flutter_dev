@@ -16,9 +16,16 @@ class SearchService {
   ) async {
     final url =
         Uri.parse('${Secrets.awsKey}workspace?order=$order&page=0&size=20');
+
+    //토큰 가져오기
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('accessToken');
+
     var headers = {
+      'accessToken': '$token',
       'Content-Type': 'application/json',
     };
+
     // 태그 변수 map
     Map<String, int> tagMap = {
       '# 공간이 넓어요': 1,
@@ -99,14 +106,23 @@ class SearchService {
 
   //model을 사용함.
   static Future<PlaceDetailModel> getPlaceById(int id) async {
-    final prefs = await SharedPreferences.getInstance();
-    int? userId = prefs.getInt('userId');
+    // final prefs = await SharedPreferences.getInstance();
+    // int? userId = prefs.getInt('userId');
 
+    // final url = Uri.parse(
+    //     '${Secrets.awsKey}workspace/info?workspaceId=$id&userId=$userId&order=1&page=0&size=20');
     final url = Uri.parse(
-        '${Secrets.awsKey}workspace/info?workspaceId=$id&userId=$userId&order=1&page=0&size=20');
+        '${Secrets.awsKey}workspace/info?workspaceId=$id&order=1&page=0&size=20');
+
+    //토큰 가져오기
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('accessToken');
+
     var headers = {
+      'accessToken': '$token',
       'Content-Type': 'application/json',
     };
+
     try {
       final response = await http.get(url, headers: headers);
       print('----------[service] getPlaceById----------');

@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: const MapScreen(),
+      home: const LoginScreen(),
       theme: ThemeData(
         textTheme: const TextTheme(
           headlineLarge: TextStyle(
