@@ -79,21 +79,24 @@ class _CurationPageState extends State<CurationPage> {
                               mainAxisAlignment: MainAxisAlignment.end,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                //태그
-                                Row(
-                                  children: [
-                                    for (int n = 0;
-                                        n <
-                                            snapshot
-                                                .data!.featureTagsList.length;
-                                        n++) ...[
-                                      curationPageTagWidget(
-                                          snapshot.data!.featureTagsList[n]),
-                                      const SizedBox(
-                                        width: 6.0,
-                                      ),
+                                //태그 (최대 2개이긴 하지만 좌우로 스크롤 가능하게)
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: [
+                                      for (int n = 0;
+                                          n <
+                                              snapshot
+                                                  .data!.featureTagsList.length;
+                                          n++) ...[
+                                        curationPageTagWidget(
+                                            snapshot.data!.featureTagsList[n]),
+                                        const SizedBox(
+                                          width: 6.0,
+                                        ),
+                                      ],
                                     ],
-                                  ],
+                                  ),
                                 ),
                                 const SizedBox(
                                   height: 10.0,
