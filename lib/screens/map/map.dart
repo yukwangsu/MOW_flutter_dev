@@ -13,6 +13,7 @@ import 'package:flutter_mow/screens/map/edit_tag.dart';
 import 'package:flutter_mow/services/bookmark_service.dart';
 import 'package:flutter_mow/services/curation_service.dart';
 import 'package:flutter_mow/services/search_service.dart';
+import 'package:flutter_mow/widgets/bookmark_list.dart';
 import 'package:flutter_mow/widgets/button_main.dart';
 import 'package:flutter_mow/widgets/curation_list.dart';
 import 'package:flutter_mow/widgets/select_button.dart';
@@ -40,7 +41,8 @@ class _MapScreenState extends State<MapScreen> {
   bool isLoadingMap = true; // 지도가 로딩중인지 기록
   double bottomSheetHeight = 134; // 초기 높이 (134픽셀)
   final double minBottomSheetHeightNormal = 134;
-  final double minBottomSheetHeightDetail = 300;
+  final double minBottomSheetHeightDetail = 321;
+  final double minBottomSheetHeightCurationPlace = 254;
   int bottomSheetHeightLevel = 1; // 1: 최소높이, 2: 중간높이, 3: 최고높이
   final TextEditingController searchController = TextEditingController();
   FocusNode searchFocusNode = FocusNode(); // 포커스 노드 추가, 가게 이름으로 검색 중인지 확인
@@ -154,9 +156,18 @@ class _MapScreenState extends State<MapScreen> {
       // 검색 텍스트 초기화
       searchController.text = '';
       if (bottomsheetMode == 'normal' || bottomsheetMode == 'detail') {
+        if (bottomsheetMode == 'detail' && bottomSheetHeightLevel == 1) {
+          bottomSheetHeightLevel = 2;
+          bottomSheetHeight = screenHeight * 0.6;
+        }
         bottomsheetMode = 'curation_normal';
         reloadCurations = true;
       } else {
+        if (bottomsheetMode == 'curation_place' &&
+            bottomSheetHeightLevel == 1) {
+          bottomSheetHeightLevel = 2;
+          bottomSheetHeight = screenHeight * 0.6;
+        }
         bottomsheetMode = 'normal';
         reloadWorkspaces = true;
       }
@@ -342,7 +353,9 @@ class _MapScreenState extends State<MapScreen> {
                       bottomsheetMode == 'normal' ||
                               bottomsheetMode == 'curation_normal'
                           ? minBottomSheetHeightNormal
-                          : minBottomSheetHeightDetail,
+                          : bottomsheetMode == 'detail'
+                              ? minBottomSheetHeightDetail
+                              : minBottomSheetHeightCurationPlace,
                       screenHeight * 0.936);
                 });
               },
@@ -366,7 +379,9 @@ class _MapScreenState extends State<MapScreen> {
                       bottomSheetHeight = bottomsheetMode == 'normal' ||
                               bottomsheetMode == 'curation_normal'
                           ? minBottomSheetHeightNormal
-                          : minBottomSheetHeightDetail;
+                          : bottomsheetMode == 'detail'
+                              ? minBottomSheetHeightDetail
+                              : minBottomSheetHeightCurationPlace;
                     }
                   } else {
                     // 2. 드래그가 멈췄을 경우 위치로 판단
@@ -390,7 +405,9 @@ class _MapScreenState extends State<MapScreen> {
                           bottomSheetHeight = screenHeight * 0.6;
                         } else {
                           bottomSheetHeightLevel = 1;
-                          bottomSheetHeight = minBottomSheetHeightDetail;
+                          bottomSheetHeight = bottomsheetMode == 'detail'
+                              ? minBottomSheetHeightDetail
+                              : minBottomSheetHeightCurationPlace;
                         }
                       }
                     }
@@ -1416,56 +1433,6 @@ class _MapScreenState extends State<MapScreen> {
                               ],
                             ),
                           ),
-                          const SizedBox(
-                            height: 20.0,
-                          ),
-                          // Top3 태그
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 21.5),
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: [
-                                  SelectButton(
-                                    height: 37.0,
-                                    padding: 8.0,
-                                    bgColor: const Color(0xFFFFF8F1),
-                                    radius: 12.0,
-                                    text:
-                                        '# 콘센트 ${placeDetail.outletDegree == 0 ? '많아요' : placeDetail.outletDegree == 1 ? '보통이에요' : '적어요'}',
-                                    textColor: const Color(0xFF6B4D38),
-                                    textSize: 16.0,
-                                    onPress: () {},
-                                  ),
-                                  const SizedBoxWidth6(),
-                                  SelectButton(
-                                    height: 37.0,
-                                    padding: 8.0,
-                                    bgColor: const Color(0xFFFFF8F1),
-                                    radius: 12.0,
-                                    text:
-                                        '# 공간 ${placeDetail.widenessDegree == 0 ? '넓어요' : placeDetail.widenessDegree == 1 ? '보통이에요' : '좁아요'}',
-                                    textColor: const Color(0xFF6B4D38),
-                                    textSize: 16.0,
-                                    onPress: () {},
-                                  ),
-                                  const SizedBoxWidth6(),
-                                  SelectButton(
-                                    height: 37.0,
-                                    padding: 8.0,
-                                    bgColor: const Color(0xFFFFF8F1),
-                                    radius: 12.0,
-                                    text:
-                                        '# 좌석 ${placeDetail.chairDegree == 0 ? '많아요' : placeDetail.chairDegree == 1 ? '보통이에요' : '적어요'}',
-                                    textColor: const Color(0xFF6B4D38),
-                                    textSize: 16.0,
-                                    onPress: () {},
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
                           const SizedBoxHeight20(),
                           // 저장하기, 길찾기 버튼
                           Row(
@@ -1657,7 +1624,10 @@ class _MapScreenState extends State<MapScreen> {
                   // 3. 카메라 시점 업데이트
                   naverMapController.updateCamera(cameraUpdate);
                   bottomSheetHeightLevel = 1;
-                  bottomSheetHeight = minBottomSheetHeightDetail;
+                  bottomSheetHeight = (bottomsheetMode == 'normal' ||
+                          bottomsheetMode == 'detail')
+                      ? minBottomSheetHeightDetail
+                      : minBottomSheetHeightCurationPlace;
                   workspaceId = workspace['workspaceId'];
                   if (bottomsheetMode == 'normal' ||
                       bottomsheetMode == 'detail') {
@@ -2415,120 +2385,226 @@ class _MapScreenState extends State<MapScreen> {
           ),
           backgroundColor: Colors.white,
           builder: (BuildContext context) {
-            Future<BookmarkListModel> bookmarkList =
-                BookmarkService.getBookmarkList();
-            return Container(
-              height: 544.0,
-              padding: const EdgeInsets.only(
-                  left: 31.0, right: 31.0, top: 40.0, bottom: 56.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8.0, bottom: 34.0),
-                    child: Text(
-                      '어디에 저장할까요?',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ),
-                  // 북마크 리스트 불러오기
-                  FutureBuilder<BookmarkListModel>(
-                    future: bookmarkList,
-                    builder: (BuildContext context,
-                        AsyncSnapshot<BookmarkListModel> snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        // 데이터가 로드 중일 때 로딩 표시
-                        return Expanded(
-                          child: ListView.builder(
-                            padding: const EdgeInsets.only(top: 0.0),
-                            itemCount: 1,
-                            itemBuilder: (context, index) {
-                              return const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  CircularProgressIndicator(
-                                    color: Color(0xFFAD7541),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        );
-                      } else if (snapshot.hasError) {
-                        // 오류가 발생했을 때
-                        return Expanded(
-                          child: ListView.builder(
-                            padding: const EdgeInsets.only(top: 0.0),
-                            itemCount: 1,
-                            itemBuilder: (context, index) {
-                              return Text('Error: ${snapshot.error}');
-                            },
-                          ),
-                        );
-                      } else {
-                        return Expanded(
-                          child: ListView.builder(
-                            padding: const EdgeInsets.only(top: 0.0),
-                            itemCount: snapshot.data!.bookmarkList.length,
-                            itemBuilder: (context, index) {
-                              return bookmarkListWidget(
-                                  context, snapshot.data!.bookmarkList[index]);
-                            },
-                          ),
-                        );
-                      }
-                    },
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 46.0),
-                    child: ButtonMain(
-                        text: '확인',
-                        bgcolor: Colors.white,
-                        textColor: const Color(0xFF6B4D38),
-                        borderColor: const Color(0xFF6B4D38),
-                        opacity: 1.0,
-                        onPress: () {}),
-                  )
-                ],
-              ),
-            );
+            return BookmarkList(workspaceId: workspaceId);
           },
         );
       },
     );
   }
 
-  Widget bookmarkListWidget(BuildContext context, BookmarkModel bookmark) {
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12.0),
-        border: Border.all(
-          color: const Color(0xFFF3F3F3),
-          width: 2.0,
-        ),
-      ),
-      padding: const EdgeInsets.only(
-          top: 12.0, right: 14.0, bottom: 12.0, left: 14.0),
-      child: Row(
-        children: [
-          //아이콘
-          SvgPicture.asset('assets/icons/bookmark_list_icon.svg'),
-          const SizedBox(
-            width: 14.0,
-          ),
-          //제목, 장소 개수
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(bookmark.bookmarkListTitle),
-              Text('공간 ${bookmark.bookmarkCnt}곳')
-            ],
-          )
-        ],
-      ),
-    );
-  }
+  // Widget bookmarkButtonWidget() {
+  //   return SelectButton(
+  //     height: 36.0,
+  //     padding: 10.0,
+  //     bgColor: const Color(0xFFFFFCF8),
+  //     radius: 12.0,
+  //     text: '저장하기',
+  //     textColor: const Color(0xFF6B4D38),
+  //     textSize: 16.0,
+  //     borderColor: const Color(0xFF6B4D38),
+  //     borderOpacity: 1.0,
+  //     borderWidth: 1.0,
+  //     lineHeight: 1.5,
+  //     svgIconPath: "assets/icons/unsave_icon.svg",
+  //     isIconFirst: true,
+  //     onPress: () {
+  //       showModalBottomSheet(
+  //         context: context,
+  //         //showModalBottomSheet의 높이가 화면의 절반으로 제한
+  //         //그러나 isScrollControlled를 사용하면 높이 제한이 풀리고 스크롤이 가능해짐
+  //         //여기서 listview를 사용하기 때문에 스크롤은 사용하지 않음.
+  //         isScrollControlled: true,
+  //         // shape를 사용해서 BorderRadius 설정.
+  //         shape: const RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.vertical(
+  //             top: Radius.circular(25.0),
+  //           ),
+  //         ),
+  //         backgroundColor: Colors.white,
+  //         builder: (BuildContext context) {
+  //           Future<BookmarkListModel> bookmarkList =
+  //               BookmarkService.getBookmarkList();
+  //           return Container(
+  //             height: 544.0,
+  //             padding: const EdgeInsets.only(
+  //                 left: 31.0, right: 31.0, top: 40.0, bottom: 56.0),
+  //             child: Column(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               children: [
+  //                 Padding(
+  //                   padding: const EdgeInsets.only(left: 8.0, bottom: 34.0),
+  //                   child: Text(
+  //                     '어디에 저장할까요?',
+  //                     style: Theme.of(context).textTheme.titleLarge,
+  //                   ),
+  //                 ),
+  //                 // 북마크 리스트 불러오기
+  //                 FutureBuilder<BookmarkListModel>(
+  //                   future: bookmarkList,
+  //                   builder: (BuildContext context,
+  //                       AsyncSnapshot<BookmarkListModel> snapshot) {
+  //                     if (snapshot.connectionState == ConnectionState.waiting) {
+  //                       // 데이터가 로드 중일 때 로딩 표시
+  //                       return Expanded(
+  //                         child: ListView.builder(
+  //                           padding: const EdgeInsets.only(top: 0.0),
+  //                           itemCount: 1,
+  //                           itemBuilder: (context, index) {
+  //                             return const Row(
+  //                               mainAxisAlignment: MainAxisAlignment.center,
+  //                               children: [
+  //                                 CircularProgressIndicator(
+  //                                   color: Color(0xFFAD7541),
+  //                                 ),
+  //                               ],
+  //                             );
+  //                           },
+  //                         ),
+  //                       );
+  //                     } else if (snapshot.hasError) {
+  //                       // 오류가 발생했을 때
+  //                       return Expanded(
+  //                         child: ListView.builder(
+  //                           padding: const EdgeInsets.only(top: 0.0),
+  //                           itemCount: 1,
+  //                           itemBuilder: (context, index) {
+  //                             return Text('Error: ${snapshot.error}');
+  //                           },
+  //                         ),
+  //                       );
+  //                     } else {
+  //                       return Expanded(
+  //                         child: ListView.separated(
+  //                           padding: const EdgeInsets.only(top: 0.0),
+  //                           itemCount: snapshot.data!.bookmarkList.length,
+  //                           itemBuilder: (context, index) {
+  //                             //북마크 리스트 새로 만들기
+  //                             if (index == 0) {
+  //                               return Column(
+  //                                 children: [
+  //                                   bookmarkListAddWidget(),
+  //                                   const SizedBox(
+  //                                     height: 12.0,
+  //                                   ),
+  //                                   bookmarkListWidget(context,
+  //                                       snapshot.data!.bookmarkList[index]),
+  //                                 ],
+  //                               );
+  //                             } else {
+  //                               return bookmarkListWidget(context,
+  //                                   snapshot.data!.bookmarkList[index]);
+  //                             }
+  //                           },
+  //                           separatorBuilder: (context, index) =>
+  //                               const SizedBox(height: 12.0),
+  //                         ),
+  //                       );
+  //                     }
+  //                   },
+  //                 ),
+  //                 Padding(
+  //                   padding: const EdgeInsets.only(top: 46.0),
+  //                   child: ButtonMain(
+  //                       text: '확인',
+  //                       bgcolor: Colors.white,
+  //                       textColor: const Color(0xFF6B4D38),
+  //                       borderColor: const Color(0xFF6B4D38),
+  //                       opacity: 1.0,
+  //                       onPress: () {}),
+  //                 )
+  //               ],
+  //             ),
+  //           );
+  //         },
+  //       );
+  //     },
+  //   );
+  // }
+
+  // //북마크 리스트 새로 만들기
+  // Widget bookmarkListAddWidget() {
+  //   return GestureDetector(
+  //     onTap: () {},
+  //     child: Container(
+  //       height: 80,
+  //       decoration: BoxDecoration(
+  //         borderRadius: BorderRadius.circular(12.0),
+  //         border: Border.all(
+  //           color: const Color(0xFFF3F3F3),
+  //           width: 2.0,
+  //         ),
+  //       ),
+  //       padding: const EdgeInsets.only(
+  //           top: 12.0, right: 14.0, bottom: 12.0, left: 14.0),
+  //       child: Row(
+  //         crossAxisAlignment: CrossAxisAlignment.center,
+  //         children: [
+  //           //아이콘
+  //           SvgPicture.asset('assets/icons/bookmark_list_add_icon.svg'),
+  //           const SizedBox(
+  //             width: 14.0,
+  //           ),
+  //           Text(
+  //             '새로 만들기',
+  //             style: Theme.of(context).textTheme.bodyLarge,
+  //           )
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+
+  // Widget bookmarkListWidget(BuildContext context, BookmarkModel bookmark) {
+  //   return GestureDetector(
+  //     onTap: () {},
+  //     child: Container(
+  //       height: 80,
+  //       decoration: BoxDecoration(
+  //         borderRadius: BorderRadius.circular(12.0),
+  //         border: Border.all(
+  //           color: const Color(0xFFF3F3F3),
+  //           width: 2.0,
+  //         ),
+  //       ),
+  //       padding: const EdgeInsets.only(
+  //           top: 12.0, right: 14.0, bottom: 12.0, left: 14.0),
+  //       child: Row(
+  //         children: [
+  //           //아이콘
+  //           SvgPicture.asset('assets/icons/bookmark_list_icon.svg'),
+  //           const SizedBox(
+  //             width: 14.0,
+  //           ),
+  //           //제목, 장소 개수
+  //           SizedBox(
+  //             height: 48,
+  //             child: Column(
+  //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               children: [
+  //                 //제목
+  //                 Text(
+  //                   bookmark.bookmarkListTitle,
+  //                   style: Theme.of(context).textTheme.bodyLarge,
+  //                   overflow: TextOverflow.ellipsis,
+  //                   maxLines: 1,
+  //                 ),
+  //                 //장소
+  //                 Text(
+  //                   '공간 ${bookmark.bookmarkCnt}곳',
+  //                   style: Theme.of(context)
+  //                       .textTheme
+  //                       .bodyMedium!
+  //                       .copyWith(color: const Color(0xFFB9B9B9)),
+  //                 )
+  //               ],
+  //             ),
+  //           )
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
 //   Widget markerIconWidget() {
 //     return Container(
