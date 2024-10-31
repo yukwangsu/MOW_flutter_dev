@@ -7,21 +7,21 @@ import 'package:flutter_mow/widgets/appbar_back.dart';
 import 'package:flutter_mow/widgets/select_button.dart';
 import 'package:flutter_svg/svg.dart';
 
-class CurationPage extends StatefulWidget {
+class WriteCurationScreen extends StatefulWidget {
   final int curationId;
   final int workspaceId;
 
-  const CurationPage({
+  const WriteCurationScreen({
     super.key,
     required this.curationId,
     required this.workspaceId,
   });
 
   @override
-  State<CurationPage> createState() => _CurationPageState();
+  State<WriteCurationScreen> createState() => _WriteCurationScreenState();
 }
 
-class _CurationPageState extends State<CurationPage> {
+class _WriteCurationScreenState extends State<WriteCurationScreen> {
   late Future<CurationPageModel> curation;
   late Future<PlaceDetailModel> workspace;
 

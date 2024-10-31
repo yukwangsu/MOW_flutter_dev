@@ -99,7 +99,10 @@ class _AddBookmarkListState extends State<AddBookmarkList> {
             height: 48.0,
           ),
           //색상 선택
-          const Text('색상 선택'),
+          Text(
+            '색상 선택',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
           const SizedBox(
             height: 14.0,
           ),
