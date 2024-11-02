@@ -27,16 +27,22 @@ class SigninService {
       final response = await http.post(url, headers: headers);
       print('----------sign in----------');
       print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
-      print('Response header: ${response.headers}');
+      // UTF-8로 응답을 수동 디코딩
+      final utf8Body = utf8.decode(response.bodyBytes);
+      print('Response body: $utf8Body');
+      // print('Response body: ${response.body}');
 
       //accessToken 저장시 에러 발생 -> 해결
       if (response.statusCode >= 200 && response.statusCode < 300) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
-        String accessToken = responseData['accessToken'];
+        final Map<String, dynamic> responseData = json.decode(utf8Body);
+        //accessToken 저장
         final prefs = await SharedPreferences.getInstance();
+        String accessToken = responseData['accessToken'];
         await prefs.setString('accessToken', accessToken);
         print('AccessToken saved: $accessToken');
+        //유저 닉네임 저장
+        String userNickname = responseData['userNickname'];
+        await prefs.setString('userNickname', userNickname);
         // // userId 저장X
         // int userId = responseData['userId'];
         // await prefs.setInt('userId', userId);

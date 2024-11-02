@@ -11,6 +11,7 @@ import 'package:flutter_mow/widgets/button_main_without_border.dart';
 import 'package:flutter_mow/widgets/curation_tag.dart';
 import 'package:flutter_mow/widgets/select_button.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WriteCurationScreen extends StatefulWidget {
   final int workspaceId;
@@ -25,6 +26,7 @@ class WriteCurationScreen extends StatefulWidget {
 }
 
 class _WriteCurationScreenState extends State<WriteCurationScreen> {
+  late Future<String> userNickname; // 닉네임 저장하는 변수
   final TextEditingController titleController =
       TextEditingController(); // 큐레이션 제목 컨트롤러
   final TextEditingController contentController =
@@ -42,6 +44,14 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
     super.initState();
     //장소 api 호출
     workspace = SearchService.getPlaceById(widget.workspaceId);
+    //사용자(큐레이션 작성자) 닉네임 가져오기
+    userNickname = getUserNickname();
+  }
+
+  Future<String> getUserNickname() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? savedNickname = prefs.getString('userNickname');
+    return savedNickname ?? '{userNickname}';
   }
 
   void onClickButtonHandler() {
@@ -166,14 +176,31 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
                               const SizedBox(
                                 width: 6.0,
                               ),
-                              Text(
-                                // 추후 수정 필요
-                                '작성자 닉네임',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall!
-                                    .copyWith(color: const Color(0xFFC3C3C3)),
-                              )
+                              // 유저 닉네임을 SharedPreferences에서 꺼내와야하기 때문에 FutureBuilder로 보여줌.
+                              FutureBuilder(
+                                  future: userNickname,
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      // 데이터가 로드 중일 때 로딩 표시
+                                      return Text(
+                                        '',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall!
+                                            .copyWith(
+                                                color: const Color(0xFFC3C3C3)),
+                                      );
+                                    }
+                                    return Text(
+                                      snapshot.data!,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall!
+                                          .copyWith(
+                                              color: const Color(0xFFC3C3C3)),
+                                    );
+                                  })
                             ],
                           ),
                           const SizedBox(
