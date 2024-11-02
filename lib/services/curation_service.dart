@@ -158,8 +158,8 @@ class CurationService {
   //큐레이션 작성하기
   static Future<bool> writeCuration(
     String curationTitle,
-    featureTags,
-    text,
+    String text,
+    List<String> featureTags,
     int workspaceId,
     List<String> curationPhotoList,
   ) async {

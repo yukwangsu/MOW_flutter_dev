@@ -10,6 +10,7 @@ import 'package:flutter_mow/models/simple_curation_model.dart';
 import 'package:flutter_mow/screens/map/add_review.dart';
 import 'package:flutter_mow/screens/map/curation_page.dart';
 import 'package:flutter_mow/screens/map/edit_tag.dart';
+import 'package:flutter_mow/screens/map/write_curation.dart';
 import 'package:flutter_mow/services/bookmark_service.dart';
 import 'package:flutter_mow/services/curation_service.dart';
 import 'package:flutter_mow/services/search_service.dart';
@@ -1437,30 +1438,62 @@ class _MapScreenState extends State<MapScreen> {
                           ),
                           const SizedBoxHeight20(),
                           // 저장하기, 길찾기 버튼
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              bookmarkButtonWidget(),
-                              const SizedBox(
-                                width: 8.0,
-                              ),
-                              SelectButton(
-                                height: 36.0,
-                                padding: 10.0,
-                                bgColor: const Color(0xFFFFFCF8),
-                                radius: 12.0,
-                                text: '길찾기',
-                                textColor: const Color(0xFF6B4D38),
-                                textSize: 16.0,
-                                borderColor: const Color(0xFF6B4D38),
-                                borderOpacity: 1.0,
-                                borderWidth: 1.0,
-                                lineHeight: 1.5,
-                                svgIconPath: "assets/icons/navigation_icon.svg",
-                                isIconFirst: true,
-                                onPress: () {},
-                              ),
-                            ],
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                // 북마크에 추가하기 버튼
+                                bookmarkButtonWidget(),
+                                const SizedBox(
+                                  width: 8.0,
+                                ),
+                                SelectButton(
+                                  height: 36.0,
+                                  padding: 10.0,
+                                  bgColor: const Color(0xFFFFFCF8),
+                                  radius: 12.0,
+                                  text: '길찾기',
+                                  textColor: const Color(0xFF6B4D38),
+                                  textSize: 16.0,
+                                  borderColor: const Color(0xFF6B4D38),
+                                  borderOpacity: 1.0,
+                                  borderWidth: 1.0,
+                                  lineHeight: 1.5,
+                                  svgIconPath:
+                                      "assets/icons/navigation_icon.svg",
+                                  isIconFirst: true,
+                                  onPress: () {},
+                                ),
+                                const SizedBox(
+                                  width: 8.0,
+                                ),
+                                SelectButton(
+                                  height: 36.0,
+                                  padding: 10.0,
+                                  bgColor: const Color(0xFFFFFCF8),
+                                  radius: 12.0,
+                                  text: '큐레이션 작성하기',
+                                  textColor: const Color(0xFF6B4D38),
+                                  textSize: 16.0,
+                                  borderColor: const Color(0xFF6B4D38),
+                                  borderOpacity: 1.0,
+                                  borderWidth: 1.0,
+                                  lineHeight: 1.5,
+                                  isIconFirst: true,
+                                  onPress: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            WriteCurationScreen(
+                                                workspaceId: workspaceId),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
                           const SizedBoxHeight30(),
                           // 큐레이션
