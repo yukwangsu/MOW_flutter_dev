@@ -49,7 +49,8 @@ class _CurationPageState extends State<CurationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppbarBackEdit(workspaceId: widget.workspaceId),
+      appBar: AppbarBackEdit(
+          workspaceId: widget.workspaceId, curationId: widget.curationId),
       body: Column(
         children: [
           const SizedBox(
@@ -134,8 +135,7 @@ class _CurationPageState extends State<CurationPage> {
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodySmall!
-                                          .copyWith(
-                                              color: const Color(0xFFC3C3C3)),
+                                          .copyWith(color: Colors.white),
                                     ),
                                   ],
                                 ),

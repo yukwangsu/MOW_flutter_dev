@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mow/screens/map/curation_page.dart';
+import 'package:flutter_mow/screens/map/edit_curation.dart';
 import 'package:flutter_mow/services/curation_service.dart';
 import 'package:flutter_mow/widgets/curation_ask_delete.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class AppbarBackEdit extends StatelessWidget implements PreferredSizeWidget {
   final int workspaceId;
+  final int curationId;
 
   const AppbarBackEdit({
     super.key,
     required this.workspaceId,
+    required this.curationId,
   });
 
   @override
@@ -33,18 +37,41 @@ class AppbarBackEdit extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       actions: [
+        // 수정 아이콘
         Padding(
           padding: const EdgeInsets.only(top: 26.0),
           child: GestureDetector(
             child: SvgPicture.asset(
               'assets/icons/edit_icon.svg',
             ),
-            onTap: () {},
+            onTap: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditCurationScreen(
+                    workspaceId: workspaceId,
+                    curationId: curationId,
+                  ),
+                ),
+              );
+              //수정이 끝나고 돌아왔으면 이전 화면으로 돌아감.
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CurationPage(
+                    workspaceId: workspaceId,
+                    curationId: curationId,
+                  ),
+                ),
+              );
+            },
           ),
         ),
         const SizedBox(
           width: 16.0,
         ),
+        // 삭제 아이콘
         Padding(
           padding: const EdgeInsets.only(top: 22.0),
           child: GestureDetector(
