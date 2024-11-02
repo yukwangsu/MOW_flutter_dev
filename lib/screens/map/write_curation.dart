@@ -75,401 +75,412 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
     return Scaffold(
         backgroundColor: Colors.white,
         appBar: const AppbarBack(),
-        body: Column(
-          children: [
-            const SizedBox(
-              height: 18.0,
-            ),
-            //스크롤 되는 부분
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    //배경 이미지, 태그, 제목, 날짜
-                    Container(
-                      decoration: const BoxDecoration(color: Color(0xFFD9D9D9)),
-                      width: double.infinity,
-                      height: 368,
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                            left: 20.0, right: 20.0, bottom: 10.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            //태그 추가
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: [
-                                  curationAddTagWidget('+ 태그명 선택하기'),
-                                  for (int n = 0;
-                                      n < selectedTagList.length;
-                                      n++) ...[
-                                    const SizedBox(
-                                      width: 6.0,
-                                    ),
-                                    curationTagWidget(selectedTagList[n]),
+        body: GestureDetector(
+          onTap: () {
+            // 화면의 다른 곳을 터치할 때 포커스 해제
+            FocusScope.of(context).unfocus();
+          },
+          child: Column(
+            children: [
+              const SizedBox(
+                height: 18.0,
+              ),
+              //스크롤 되는 부분
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      //배경 이미지, 태그, 제목, 날짜
+                      Container(
+                        decoration:
+                            const BoxDecoration(color: Color(0xFFD9D9D9)),
+                        width: double.infinity,
+                        height: 368,
+                        child: Padding(
+                          padding: const EdgeInsets.only(
+                              left: 20.0, right: 20.0, bottom: 10.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              //태그 추가
+                              SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: [
+                                    curationAddTagWidget('+ 태그명 선택하기'),
+                                    for (int n = 0;
+                                        n < selectedTagList.length;
+                                        n++) ...[
+                                      const SizedBox(
+                                        width: 6.0,
+                                      ),
+                                      curationTagWidget(selectedTagList[n]),
+                                    ],
                                   ],
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 10.0,
+                              ),
+                              //큐레이션 제목 입력
+                              Column(
+                                children: [
+                                  TextField(
+                                    decoration: InputDecoration(
+                                      border: InputBorder.none, // 테두리 없애기
+                                      hintText:
+                                          '큐레이션 제목을\n입력해주세요', // 두 줄의 placeholder 텍스트
+                                      hintMaxLines: 2, // placeholder 최대 줄 수
+                                      hintStyle: Theme.of(context)
+                                          .textTheme
+                                          .headlineLarge!
+                                          .copyWith(
+                                              color: const Color(0xFF323232)
+                                                  .withOpacity(0.5)),
+                                    ),
+                                    maxLength: 35, // 최대 입력 가능 문자 수
+                                    maxLines: 2, // 입력 필드를 세 줄로 제한
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineLarge,
+                                    controller: titleController,
+                                  ),
                                 ],
                               ),
-                            ),
-                            const SizedBox(
-                              height: 10.0,
-                            ),
-                            //큐레이션 제목 입력
-                            Column(
-                              children: [
-                                TextField(
-                                  decoration: InputDecoration(
-                                    border: InputBorder.none, // 테두리 없애기
-                                    hintText:
-                                        '큐레이션 제목을\n입력해주세요', // 두 줄의 placeholder 텍스트
-                                    hintMaxLines: 2, // placeholder 최대 줄 수
-                                    hintStyle: Theme.of(context)
+                              const SizedBox(
+                                height: 8.0,
+                              ),
+                              //오늘 날짜
+                              Row(
+                                children: [
+                                  Text(
+                                    formattedDate,
+                                    style: Theme.of(context)
                                         .textTheme
-                                        .headlineLarge!
-                                        .copyWith(
-                                            color: const Color(0xFF323232)
-                                                .withOpacity(0.5)),
+                                        .bodySmall!
+                                        .copyWith(color: Colors.white),
                                   ),
-                                  maxLength: 35, // 최대 입력 가능 문자 수
-                                  maxLines: 2, // 입력 필드를 세 줄로 제한
-                                  style:
-                                      Theme.of(context).textTheme.headlineLarge,
-                                  controller: titleController,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 8.0,
-                            ),
-                            //오늘 날짜
-                            Row(
-                              children: [
-                                Text(
-                                  formattedDate,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall!
-                                      .copyWith(color: Colors.white),
-                                ),
-                              ],
-                            ),
-                          ],
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 18,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          //큐레이션 작성자 정보
-                          Row(
-                            children: [
-                              SvgPicture.asset(
-                                  'assets/icons/curation_user_default_img.svg'),
-                              const SizedBox(
-                                width: 6.0,
-                              ),
-                              // 유저 닉네임을 SharedPreferences에서 꺼내와야하기 때문에 FutureBuilder로 보여줌.
-                              FutureBuilder(
-                                  future: userNickname,
-                                  builder: (context, snapshot) {
-                                    if (snapshot.connectionState ==
-                                        ConnectionState.waiting) {
-                                      // 데이터가 로드 중일 때 로딩 표시
+                      const SizedBox(
+                        height: 18,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            //큐레이션 작성자 정보
+                            Row(
+                              children: [
+                                SvgPicture.asset(
+                                    'assets/icons/curation_user_default_img.svg'),
+                                const SizedBox(
+                                  width: 6.0,
+                                ),
+                                // 유저 닉네임을 SharedPreferences에서 꺼내와야하기 때문에 FutureBuilder로 보여줌.
+                                FutureBuilder(
+                                    future: userNickname,
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        // 데이터가 로드 중일 때 로딩 표시
+                                        return Text(
+                                          '',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall!
+                                              .copyWith(
+                                                  color:
+                                                      const Color(0xFFC3C3C3)),
+                                        );
+                                      }
                                       return Text(
-                                        '',
+                                        snapshot.data!,
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodySmall!
                                             .copyWith(
                                                 color: const Color(0xFFC3C3C3)),
                                       );
-                                    }
-                                    return Text(
-                                      snapshot.data!,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall!
-                                          .copyWith(
-                                              color: const Color(0xFFC3C3C3)),
-                                    );
-                                  })
-                            ],
-                          ),
-                          const SizedBox(
-                            height: 40.0,
-                          ),
-                          //이미지(최대 열장)
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: [
-                                // 이미지 추가하는 container
-                                GestureDetector(
-                                  onTap: () {
-                                    //이미지 선택하기
-                                  },
-                                  child: Container(
-                                    width: 167,
-                                    height: 223,
-                                    color: const Color(0xFFF4F4F4),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        SvgPicture.asset(
-                                            'assets/icons/curation_add_image_icon.svg'),
-                                        const SizedBox(
-                                          height: 10.0,
-                                        ),
-                                        Text('사진 추가',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleSmall),
-                                        Text('(10장 이내)',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleSmall),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                // 이미지들
-                                for (int n = 0;
-                                    n < imageFileList.length;
-                                    n++) ...[
-                                  const SizedBox(
-                                    width: 6.0,
-                                  ),
-                                  Container(
-                                    width: 167,
-                                    height: 223,
-                                    decoration: BoxDecoration(
-                                      image: DecorationImage(
-                                        image: FileImage(
-                                            imageFileList[n]), // 이미지 파일 불러오기
-                                        fit: BoxFit.cover, // 이미지를 컨테이너에 꽉 채우기
-                                      ),
-                                    ),
-                                  )
-                                ],
+                                    })
                               ],
                             ),
-                          ),
-                          const SizedBox(
-                            height: 37.0,
-                          ),
-                          //큐레이션 글
-                          Column(
-                            children: [
-                              TextField(
-                                decoration: InputDecoration(
-                                  border: InputBorder.none, // 테두리 없애기
-                                  hintText:
-                                      '큐레이션 내용을 작성해주세요 (30자 이내)', // placeholder 텍스트
-                                  hintMaxLines: 1, // placeholder 최대 줄 수
-                                  hintStyle: Theme.of(context)
-                                      .textTheme
-                                      .headlineMedium!
-                                      .copyWith(color: const Color(0xFF868686)),
-                                ),
-                                maxLength: 30, // 최대 입력 가능 문자 수
-                                maxLines: 10, // 입력 필드를 세 줄로 제한
-                                style: Theme.of(context).textTheme.titleSmall,
-                                controller: contentController,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(
-                            height: 38.0,
-                          ),
-                          //가게 정보
-                          Container(
-                            height: 2.0,
-                            width: 18.0,
-                            color: const Color(0xFF6B4D38),
-                          ),
-                          const SizedBox(
-                            height: 20.0,
-                          ),
-                          //FutureBuilder로 불러오기
-                          FutureBuilder(
-                              future: workspace,
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  // 데이터가 로드 중일 때 로딩 표시
-                                  return const Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      CircularProgressIndicator(
-                                        color: Color(0xFFAD7541),
-                                      ),
-                                    ],
-                                  );
-                                } else if (snapshot.hasError) {
-                                  // 오류가 발생했을 때
-                                  return Text('Error: ${snapshot.error}');
-                                } else {
-                                  // 장소를 성공적으로 불러왔을 때
-                                  return Column(
-                                    children: [
-                                      // 상호명
-                                      Row(
-                                        children: [
-                                          SizedBox(
-                                            width: 75.0,
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  '상호명',
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .headlineMedium,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          Text(
-                                            snapshot.data!.workspaceName,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleSmall,
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(
-                                        height: 12.0,
-                                      ),
-                                      // 주소
-                                      Row(
-                                        children: [
-                                          SizedBox(
-                                            width: 75.0,
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  '주소',
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .headlineMedium,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          Text(
-                                            snapshot.data!.location,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleSmall,
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(
-                                        height: 12.0,
-                                      ),
-                                      //영업시간
-                                      Row(
+                            const SizedBox(
+                              height: 40.0,
+                            ),
+                            //이미지(최대 열장)
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  // 이미지 추가하는 container
+                                  GestureDetector(
+                                    onTap: () {
+                                      //이미지 선택하기
+                                    },
+                                    child: Container(
+                                      width: 167,
+                                      height: 223,
+                                      color: const Color(0xFFF4F4F4),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
                                         crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                            CrossAxisAlignment.center,
                                         children: [
-                                          SizedBox(
-                                            width: 75.0,
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  '영업시간',
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .headlineMedium,
-                                                ),
-                                              ],
-                                            ),
+                                          SvgPicture.asset(
+                                              'assets/icons/curation_add_image_icon.svg'),
+                                          const SizedBox(
+                                            height: 10.0,
                                           ),
-                                          openHourWidget(snapshot
-                                              .data!.workspaceOperationTime),
+                                          Text('사진 추가',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleSmall),
+                                          Text('(10장 이내)',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleSmall),
                                         ],
                                       ),
-                                      const SizedBox(
-                                        height: 12.0,
+                                    ),
+                                  ),
+                                  // 이미지들
+                                  for (int n = 0;
+                                      n < imageFileList.length;
+                                      n++) ...[
+                                    const SizedBox(
+                                      width: 6.0,
+                                    ),
+                                    Container(
+                                      width: 167,
+                                      height: 223,
+                                      decoration: BoxDecoration(
+                                        image: DecorationImage(
+                                          image: FileImage(
+                                              imageFileList[n]), // 이미지 파일 불러오기
+                                          fit: BoxFit.cover, // 이미지를 컨테이너에 꽉 채우기
+                                        ),
                                       ),
-                                      //가게 URL
-                                      Row(
-                                        children: [
-                                          SizedBox(
-                                            width: 75.0,
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  'URL',
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .headlineMedium,
-                                                ),
-                                              ],
+                                    )
+                                  ],
+                                ],
+                              ),
+                            ),
+                            const SizedBox(
+                              height: 37.0,
+                            ),
+                            //큐레이션 글
+                            Column(
+                              children: [
+                                TextField(
+                                  decoration: InputDecoration(
+                                    border: InputBorder.none, // 테두리 없애기
+                                    hintText:
+                                        '큐레이션 내용을 작성해주세요 (30자 이내)', // placeholder 텍스트
+                                    hintMaxLines: 1, // placeholder 최대 줄 수
+                                    hintStyle: Theme.of(context)
+                                        .textTheme
+                                        .headlineMedium!
+                                        .copyWith(
+                                            color: const Color(0xFF868686)),
+                                  ),
+                                  maxLength: 30, // 최대 입력 가능 문자 수
+                                  maxLines: 10, // 입력 필드를 세 줄로 제한
+                                  style: Theme.of(context).textTheme.titleSmall,
+                                  controller: contentController,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 38.0,
+                            ),
+                            //가게 정보
+                            Container(
+                              height: 2.0,
+                              width: 18.0,
+                              color: const Color(0xFF6B4D38),
+                            ),
+                            const SizedBox(
+                              height: 20.0,
+                            ),
+                            //FutureBuilder로 불러오기
+                            FutureBuilder(
+                                future: workspace,
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    // 데이터가 로드 중일 때 로딩 표시
+                                    return const Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        CircularProgressIndicator(
+                                          color: Color(0xFFAD7541),
+                                        ),
+                                      ],
+                                    );
+                                  } else if (snapshot.hasError) {
+                                    // 오류가 발생했을 때
+                                    return Text('Error: ${snapshot.error}');
+                                  } else {
+                                    // 장소를 성공적으로 불러왔을 때
+                                    return Column(
+                                      children: [
+                                        // 상호명
+                                        Row(
+                                          children: [
+                                            SizedBox(
+                                              width: 75.0,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    '상호명',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .headlineMedium,
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                          Text(
-                                            snapshot.data!.spaceUrl,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleSmall,
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  );
-                                }
-                              })
-                        ],
+                                            Text(
+                                              snapshot.data!.workspaceName,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleSmall,
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(
+                                          height: 12.0,
+                                        ),
+                                        // 주소
+                                        Row(
+                                          children: [
+                                            SizedBox(
+                                              width: 75.0,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    '주소',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .headlineMedium,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Text(
+                                              snapshot.data!.location,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleSmall,
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(
+                                          height: 12.0,
+                                        ),
+                                        //영업시간
+                                        Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            SizedBox(
+                                              width: 75.0,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    '영업시간',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .headlineMedium,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            openHourWidget(snapshot
+                                                .data!.workspaceOperationTime),
+                                          ],
+                                        ),
+                                        const SizedBox(
+                                          height: 12.0,
+                                        ),
+                                        //가게 URL
+                                        Row(
+                                          children: [
+                                            SizedBox(
+                                              width: 75.0,
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    'URL',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .headlineMedium,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Text(
+                                              snapshot.data!.spaceUrl,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleSmall,
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    );
+                                  }
+                                })
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(
-                      height: 92.0,
-                    ),
-                    //작성 완료 버튼
-                    GestureDetector(
-                      onTap: () {
-                        onClickButtonHandler();
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 31.0),
-                        child: ButtonMainWithoutBorder(
-                            text: '작성 완료',
-                            bgcolor: const Color(0xFF6B4D38),
-                            textColor: Colors.white,
-                            opacity: (selectedTagList.isNotEmpty &&
-                                    titleController.text.isNotEmpty &&
-                                    contentController.text.isNotEmpty)
-                                ? 1.0
-                                : 0.5),
+                      const SizedBox(
+                        height: 92.0,
                       ),
-                    ),
-                    const SizedBox(
-                      height: 56.0,
-                    ),
-                  ],
+                      //작성 완료 버튼
+                      GestureDetector(
+                        onTap: () {
+                          onClickButtonHandler();
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 31.0),
+                          child: ButtonMainWithoutBorder(
+                              text: '작성 완료',
+                              bgcolor: const Color(0xFF6B4D38),
+                              textColor: Colors.white,
+                              opacity: (selectedTagList.isNotEmpty &&
+                                      titleController.text.isNotEmpty &&
+                                      contentController.text.isNotEmpty)
+                                  ? 1.0
+                                  : 0.5),
+                        ),
+                      ),
+                      const SizedBox(
+                        height: 56.0,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ));
   }
 
@@ -485,6 +496,7 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
       textSize: 12.0,
       //선택된 태그들을 불러옴
       onPress: () async {
+        print('selected tag: $selectedTagList');
         var result = await showModalBottomSheet(
           context: context,
           isScrollControlled: true,
@@ -498,7 +510,8 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
             return CurationTag(initialSelectedTags: selectedTagList);
           },
         );
-        // result가 null(태그를 선택 안 함)이 아니라면 selectedTagList에 저장
+        // result가 null(버튼을 누르지 않고 윗부분을 눌러서 showModalBottomSheet을 종료한 경우)
+        // 이라면 selectedTagList에 저장
         if (result != null) {
           setState(() {
             selectedTagList = result;

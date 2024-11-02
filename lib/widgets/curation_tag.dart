@@ -42,8 +42,8 @@ class _CurationTagState extends State<CurationTag> {
   @override
   void initState() {
     super.initState();
-    //기존에 선택된 태그들 저장하기
-    selectedTagList = widget.initialSelectedTags;
+    //기존에 선택된 태그들 저장하기(***얕은 복사 방지***)
+    selectedTagList = List.from(widget.initialSelectedTags);
   }
 
   //태그를 선택했을 때
