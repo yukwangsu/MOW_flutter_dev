@@ -4,8 +4,10 @@ import 'package:flutter_mow/models/place_detail_model.dart';
 import 'package:flutter_mow/services/curation_service.dart';
 import 'package:flutter_mow/services/search_service.dart';
 import 'package:flutter_mow/widgets/appbar_back.dart';
+import 'package:flutter_mow/widgets/appbar_back_edit.dart';
 import 'package:flutter_mow/widgets/select_button.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CurationPage extends StatefulWidget {
   final int curationId;
@@ -24,6 +26,7 @@ class CurationPage extends StatefulWidget {
 class _CurationPageState extends State<CurationPage> {
   late Future<CurationPageModel> curation;
   late Future<PlaceDetailModel> workspace;
+  // late Future<String> userNickname; // 닉네임 저장하는 변수
 
   @override
   void initState() {
@@ -32,13 +35,21 @@ class _CurationPageState extends State<CurationPage> {
     curation = CurationService.getCurationById(widget.curationId, 0, 0, 20);
     //장소 api 호출
     workspace = SearchService.getPlaceById(widget.workspaceId);
+    // //사용자(큐레이션 작성자) 닉네임 가져오기
+    // userNickname = getUserNickname();
   }
+
+  // Future<String> getUserNickname() async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   String? savedNickname = prefs.getString('userNickname');
+  //   return savedNickname ?? '{userNickname}';
+  // }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: const AppbarBack(),
+      appBar: AppbarBackEdit(workspaceId: widget.workspaceId),
       body: Column(
         children: [
           const SizedBox(

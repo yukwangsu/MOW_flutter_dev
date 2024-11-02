@@ -496,7 +496,6 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
       textSize: 12.0,
       //선택된 태그들을 불러옴
       onPress: () async {
-        print('selected tag: $selectedTagList');
         var result = await showModalBottomSheet(
           context: context,
           isScrollControlled: true,
