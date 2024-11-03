@@ -39,6 +39,14 @@ class _CurationPageState extends State<CurationPage> {
     // userNickname = getUserNickname();
   }
 
+  // // 수정하고 돌아왔을 경우 화면을 새로고침 하기 위한 함수
+  // void refreshContent() {
+  //   //큐레이션 api 다시 호출
+  //   setState(() {
+  //     curation = CurationService.getCurationById(widget.curationId, 0, 0, 20);
+  //   });
+  // }
+
   // Future<String> getUserNickname() async {
   //   final prefs = await SharedPreferences.getInstance();
   //   String? savedNickname = prefs.getString('userNickname');

@@ -54,17 +54,6 @@ class AppbarBackEdit extends StatelessWidget implements PreferredSizeWidget {
                   ),
                 ),
               );
-              //수정이 끝나고 돌아왔으면 이전 화면으로 돌아감.
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => CurationPage(
-                    workspaceId: workspaceId,
-                    curationId: curationId,
-                  ),
-                ),
-              );
             },
           ),
         ),
@@ -94,7 +83,7 @@ class AppbarBackEdit extends StatelessWidget implements PreferredSizeWidget {
               if (result != null && result) {
                 //삭제 버튼을 눌러서 result가 true일 때
                 print('큐레이션이 삭제되었습니다');
-                CurationService.deleteCurationById(workspaceId);
+                CurationService.deleteCurationById(curationId);
                 Navigator.pop(context);
               }
             },

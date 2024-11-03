@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_mow/models/curation_page_model.dart';
 import 'package:flutter_mow/models/place_detail_model.dart';
+import 'package:flutter_mow/screens/map/curation_page.dart';
 import 'package:flutter_mow/services/curation_service.dart';
 import 'package:flutter_mow/services/search_service.dart';
 import 'package:flutter_mow/widgets/appbar_back.dart';
@@ -55,19 +56,34 @@ class _EditCurationScreenState extends State<EditCurationScreen> {
   }
 
   // 수정완료 버튼을 눌렀을 때
-  void onClickButtonHandler() {
+  void onClickButtonHandler() async {
     if (selectedTagList.isNotEmpty &&
         titleController.text.isNotEmpty &&
         contentController.text.isNotEmpty) {
       // 추후에 이미지 파일을 url로 변환하고 imageUrlList에 추가
-      CurationService.writeCuration(
+
+      //비동기 처리를 함으로써 editCuration 작업이 다 끝난 뒤에 CurationPage로 이동
+      await CurationService.editCuration(
+        widget.curationId,
         titleController.text,
         contentController.text,
         selectedTagList,
         widget.workspaceId,
         imageUrlList,
       );
+      // 1. 현재 화면(EditCurationScreen)을 먼저 제거
       Navigator.pop(context);
+
+      // 2. 이전 CurationPage화면을 새로운 CurationPage로 바꿈(CurationPage를 새로 호출함으로써 변경사항을 반영시킴)
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CurationPage(
+            curationId: widget.curationId,
+            workspaceId: widget.workspaceId,
+          ),
+        ),
+      );
     }
   }
 
