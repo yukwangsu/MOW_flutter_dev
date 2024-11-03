@@ -104,6 +104,41 @@ class SearchService {
     }
   }
 
+  //작업공간 북마크 색 가져오기
+  static Future<Map<String, dynamic>> getWorkspaceBookmarkColor() async {
+    final url = Uri.parse('${Secrets.awsKey}bookmark/workspaces/color');
+
+    //토큰 가져오기
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('accessToken');
+
+    var headers = {
+      'accessToken': '$token',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final response = await http.get(url, headers: headers);
+      print('----------[service] getWorkspaceBookmarkColor----------');
+      print('Response status: ${response.statusCode}');
+
+      // UTF-8로 응답을 수동 디코딩
+      final utf8Body = utf8.decode(response.bodyBytes);
+      print('Response body: $utf8Body');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final responseData = json.decode(utf8Body);
+        return responseData;
+      } else {
+        print('Fail getWorkspaceBookmarkColor');
+        throw Error();
+      }
+    } catch (e) {
+      print('Error during getWorkspaceBookmarkColor: $e');
+      throw Error();
+    }
+  }
+
   //model을 사용함.
   static Future<PlaceDetailModel> getPlaceById(int id) async {
     // final prefs = await SharedPreferences.getInstance();

@@ -14,6 +14,7 @@ import 'package:flutter_mow/screens/map/write_curation.dart';
 import 'package:flutter_mow/services/bookmark_service.dart';
 import 'package:flutter_mow/services/curation_service.dart';
 import 'package:flutter_mow/services/search_service.dart';
+import 'package:flutter_mow/variables.dart';
 import 'package:flutter_mow/widgets/bookmark_list.dart';
 import 'package:flutter_mow/widgets/button_main.dart';
 import 'package:flutter_mow/widgets/curation_list.dart';
@@ -98,6 +99,8 @@ class _MapScreenState extends State<MapScreen> {
   NOverlayImage? markerIcon; //마커 아이콘
   //location
   bool isUserAcceptLocation = true;
+  //workspace bookmark color map
+  late Future<Map<String, dynamic>> workspaceBookmarkColor;
 
   @override
   void initState() {
@@ -1583,6 +1586,8 @@ class _MapScreenState extends State<MapScreen> {
     double latitude,
     double longitute,
   ) {
+    // 북마크 색 가져오기
+    workspaceBookmarkColor = SearchService.getWorkspaceBookmarkColor();
     return FutureBuilder<List<dynamic>?>(
       future: SearchService.searchPlace(
         controller.text,
@@ -1785,7 +1790,33 @@ class _MapScreenState extends State<MapScreen> {
                               const SizedBox(
                                 width: 5,
                               ),
-                              SvgPicture.asset('assets/icons/unsave_icon.svg'),
+                              // 북마크 색 가져오기
+                              FutureBuilder(
+                                  future: workspaceBookmarkColor,
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      // 데이터가 로드 중일 때 로딩 표시
+                                      return const Text('');
+                                    } else if (snapshot.hasError) {
+                                      // 오류가 발생했을 때
+                                      return const Text('err');
+                                    } else {
+                                      // workspaceBookmarkColor 로딩 완료
+                                      if (snapshot.data!
+                                          .containsKey(id.toString())) {
+                                        // 북마크에 저장되어 있는 경우 색 바꾸기
+                                        return SvgPicture.asset(
+                                            'assets/icons/bookmark_icon.svg',
+                                            color: colorList[
+                                                snapshot.data![id.toString()]]);
+                                      } else {
+                                        // 북마크에 저장되어 있지 않은 경우 기본으로
+                                        return SvgPicture.asset(
+                                            'assets/icons/unsave_icon.svg');
+                                      }
+                                    }
+                                  }),
                             ],
                           ),
                           const SizedBox(height: 4.0),

@@ -131,12 +131,7 @@ class _EditCurationScreenState extends State<EditCurationScreen> {
                           // 오류가 발생했을 때
                           return Text('Error: ${snapshot.error}');
                         } else {
-                          // // 큐레이션 정보 로딩 완료
-                          // selectedTagList =
-                          //     snapshot.data!.featureTagsList; // 태그 리스트 저장
-                          // titleController.text = snapshot.data!.curationTitle;
-                          // contentController.text = snapshot.data!.text;
-                          // // imageUrlList = snapshot.data!. // 기존의 이미지 url 저장(추후 수정)
+                          // 큐레이션 정보 로딩 완료
                           return Column(
                             children: [
                               //배경 이미지, 태그, 제목, 날짜
