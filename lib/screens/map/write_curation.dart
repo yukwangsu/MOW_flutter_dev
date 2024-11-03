@@ -12,6 +12,7 @@ import 'package:flutter_mow/widgets/curation_tag.dart';
 import 'package:flutter_mow/widgets/select_button.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart';
 
 class WriteCurationScreen extends StatefulWidget {
   final int workspaceId;
@@ -38,6 +39,10 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
   List<File> imageFileList = []; //이미지 파일을 저장하는 리스트(최대 10개)
   List<String> imageUrlList = []; //이미지 Url을 저장하는 리스트(최대 10개)
   late Future<PlaceDetailModel> workspace; // 가게 정보 불러와서 저장하는 변수
+  //이미지 관련 변수
+  final picker = ImagePicker();
+  List<XFile?> galleryImageList = []; // 갤러리에서 여러 장의 사진을 선택해서 저장할 변수
+  List<XFile?> selectedImageList = []; // 가져온 사진들을 보여주기 위한 변수
 
   @override
   void initState() {
@@ -54,6 +59,7 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
     return savedNickname ?? '{userNickname}';
   }
 
+  // 작성 완료 버튼을 눌렀을 때
   void onClickButtonHandler() {
     if (selectedTagList.isNotEmpty &&
         titleController.text.isNotEmpty &&
@@ -221,8 +227,15 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
                                 children: [
                                   // 이미지 추가하는 container
                                   GestureDetector(
-                                    onTap: () {
+                                    onTap: () async {
                                       //이미지 선택하기
+                                      galleryImageList =
+                                          await picker.pickMultiImage();
+                                      setState(() {
+                                        //pickMultiImage 통해 갤러리에서 가지고 온 사진들은 galleryImageList에 저장되므로 addAll()을 사용해서 selectedImageList와 galleryImageList 를 합쳐줍니다.
+                                        selectedImageList
+                                            .addAll(galleryImageList);
+                                      });
                                     },
                                     child: Container(
                                       width: 167,
@@ -251,23 +264,45 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
                                       ),
                                     ),
                                   ),
-                                  // 이미지들
+                                  // 선택된 이미지들
                                   for (int n = 0;
-                                      n < imageFileList.length;
+                                      n < selectedImageList.length;
                                       n++) ...[
                                     const SizedBox(
                                       width: 6.0,
                                     ),
-                                    Container(
-                                      width: 167,
-                                      height: 223,
-                                      decoration: BoxDecoration(
-                                        image: DecorationImage(
-                                          image: FileImage(
-                                              imageFileList[n]), // 이미지 파일 불러오기
-                                          fit: BoxFit.cover, // 이미지를 컨테이너에 꽉 채우기
+                                    Stack(
+                                      alignment: Alignment.topRight,
+                                      children: [
+                                        //이미지 컨테이너
+                                        Container(
+                                          width: 167,
+                                          height: 223,
+                                          decoration: BoxDecoration(
+                                            image: DecorationImage(
+                                              image: FileImage(File(
+                                                  selectedImageList[n]!
+                                                      .path)), // 이미지 파일 불러오기
+                                              fit: BoxFit
+                                                  .cover, // 이미지를 컨테이너에 꽉 채우기
+                                            ),
+                                          ),
                                         ),
-                                      ),
+                                        //이미지 삭제 버튼(이미지 선택 취소)
+                                        GestureDetector(
+                                          onTap: () {
+                                            setState(() {
+                                              selectedImageList
+                                                  .remove(selectedImageList[n]);
+                                            });
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(2.0),
+                                            child: SvgPicture.asset(
+                                                'assets/icons/cancel_select_icon.svg'),
+                                          ),
+                                        ),
+                                      ],
                                     )
                                   ],
                                 ],
