@@ -7,7 +7,6 @@ import 'package:flutter_mow/widgets/appbar_back.dart';
 import 'package:flutter_mow/widgets/appbar_back_edit.dart';
 import 'package:flutter_mow/widgets/select_button.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class CurationPage extends StatefulWidget {
   final int curationId;
@@ -26,7 +25,6 @@ class CurationPage extends StatefulWidget {
 class _CurationPageState extends State<CurationPage> {
   late Future<CurationPageModel> curation;
   late Future<PlaceDetailModel> workspace;
-  // late Future<String> userNickname; // 닉네임 저장하는 변수
 
   @override
   void initState() {
@@ -35,23 +33,7 @@ class _CurationPageState extends State<CurationPage> {
     curation = CurationService.getCurationById(widget.curationId, 0, 0, 20);
     //장소 api 호출
     workspace = SearchService.getPlaceById(widget.workspaceId);
-    // //사용자(큐레이션 작성자) 닉네임 가져오기
-    // userNickname = getUserNickname();
   }
-
-  // // 수정하고 돌아왔을 경우 화면을 새로고침 하기 위한 함수
-  // void refreshContent() {
-  //   //큐레이션 api 다시 호출
-  //   setState(() {
-  //     curation = CurationService.getCurationById(widget.curationId, 0, 0, 20);
-  //   });
-  // }
-
-  // Future<String> getUserNickname() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   String? savedNickname = prefs.getString('userNickname');
-  //   return savedNickname ?? '{userNickname}';
-  // }
 
   @override
   Widget build(BuildContext context) {

@@ -1792,32 +1792,33 @@ class _MapScreenState extends State<MapScreen> {
                               ),
                               // 북마크 색 가져오기
                               FutureBuilder(
-                                  future: workspaceBookmarkColor,
-                                  builder: (context, snapshot) {
-                                    if (snapshot.connectionState ==
-                                        ConnectionState.waiting) {
-                                      // 데이터가 로드 중일 때 로딩 표시
-                                      return const Text('');
-                                    } else if (snapshot.hasError) {
-                                      // 오류가 발생했을 때
-                                      return const Text('err');
+                                future: workspaceBookmarkColor,
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    // 데이터가 로드 중일 때 로딩 표시
+                                    return const Text('');
+                                  } else if (snapshot.hasError) {
+                                    // 오류가 발생했을 때
+                                    return const Text('err');
+                                  } else {
+                                    // workspaceBookmarkColor 로딩 완료
+                                    if (snapshot.data!
+                                        .containsKey(id.toString())) {
+                                      // 북마크에 저장되어 있는 경우 색 바꾸기
+                                      return SvgPicture.asset(
+                                          'assets/icons/bookmark_icon.svg',
+                                          color: colorList[
+                                              snapshot.data![id.toString()] -
+                                                  1]); //리스트이기 때문에 -1 해야함.
                                     } else {
-                                      // workspaceBookmarkColor 로딩 완료
-                                      if (snapshot.data!
-                                          .containsKey(id.toString())) {
-                                        // 북마크에 저장되어 있는 경우 색 바꾸기
-                                        return SvgPicture.asset(
-                                            'assets/icons/bookmark_icon.svg',
-                                            color: colorList[
-                                                snapshot.data![id.toString()] -
-                                                    1]); //리스트이기 때문에 -1 해야함.
-                                      } else {
-                                        // 북마크에 저장되어 있지 않은 경우 기본으로
-                                        return SvgPicture.asset(
-                                            'assets/icons/unsave_icon.svg');
-                                      }
+                                      // 북마크에 저장되어 있지 않은 경우 기본으로
+                                      return SvgPicture.asset(
+                                          'assets/icons/unsave_icon.svg');
                                     }
-                                  }),
+                                  }
+                                },
+                              ),
                             ],
                           ),
                           const SizedBox(height: 4.0),
@@ -2027,7 +2028,7 @@ class _MapScreenState extends State<MapScreen> {
                             children: [
                               // 큐레이션 제목
                               Text(
-                                '$curationTitle 아주 넓고 자리도 많고 사람이 붐비지 않아서 좋은 곳',
+                                curationTitle,
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 2,
                                 style: Theme.of(context).textTheme.bodyLarge,

@@ -155,6 +155,41 @@ class CurationService {
     }
   }
 
+  // 본인이 작성한 큐레이션Id 불러오기
+  static Future<Map<String, dynamic>> getCurationMine() async {
+    final url = Uri.parse('${Secrets.awsKey}curation/mine');
+
+    //토큰 가져오기
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('accessToken');
+
+    var headers = {
+      'accessToken': '$token',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final response = await http.get(url, headers: headers);
+      print('----------[service] getCurationMine----------');
+      print('Response status: ${response.statusCode}');
+
+      // UTF-8로 응답을 수동 디코딩
+      final utf8Body = utf8.decode(response.bodyBytes);
+      print('Response body: $utf8Body');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final responseData = json.decode(utf8Body);
+        return responseData;
+      } else {
+        print('Fail getCurationMine');
+        throw Error();
+      }
+    } catch (e) {
+      print('Error during getCurationMine: $e');
+      throw Error();
+    }
+  }
+
   //큐레이션 작성하기
   static Future<bool> writeCuration(
     String curationTitle,
