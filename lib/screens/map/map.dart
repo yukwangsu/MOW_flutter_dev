@@ -1809,7 +1809,8 @@ class _MapScreenState extends State<MapScreen> {
                                         return SvgPicture.asset(
                                             'assets/icons/bookmark_icon.svg',
                                             color: colorList[
-                                                snapshot.data![id.toString()]]);
+                                                snapshot.data![id.toString()] -
+                                                    1]); //리스트이기 때문에 -1 해야함.
                                       } else {
                                         // 북마크에 저장되어 있지 않은 경우 기본으로
                                         return SvgPicture.asset(
