@@ -156,7 +156,7 @@ class CurationService {
   }
 
   // 본인이 작성한 큐레이션Id 불러오기
-  static Future<Map<String, dynamic>> getCurationMine() async {
+  static Future<List<dynamic>> getCurationMine() async {
     final url = Uri.parse('${Secrets.awsKey}curation/mine');
 
     //토큰 가져오기

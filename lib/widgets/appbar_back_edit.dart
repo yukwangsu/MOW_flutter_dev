@@ -20,7 +20,7 @@ class AppbarBackEdit extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    late Future<Map<String, dynamic>> myCuration;
+    late Future<List<dynamic>> myCuration;
     //myCuration api 호출
     myCuration = CurationService.getCurationMine();
     return AppBar(
@@ -51,7 +51,7 @@ class AppbarBackEdit extends StatelessWidget implements PreferredSizeWidget {
               return const Text('err');
             } else {
               // myCuration 로딩 완료
-              if (snapshot.data!.containsValue(curationId)) {
+              if (snapshot.data!.contains(curationId)) {
                 // myCuration에 존재하는 curationId인 경우 수정, 삭제 아이콘을 추가함
                 return // 수정 아이콘
                     Row(

@@ -13,6 +13,7 @@ import 'package:flutter_mow/widgets/select_button.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 
 class WriteCurationScreen extends StatefulWidget {
   final int workspaceId;
@@ -59,12 +60,39 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
     return savedNickname ?? '{userNickname}';
   }
 
+  String getContentType(String filePath) {
+    if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+      return 'image/jpeg';
+    } else if (filePath.endsWith('.png')) {
+      return 'image/png';
+    } else if (filePath.endsWith('.gif')) {
+      return 'image/gif';
+    }
+    return 'application/octet-stream'; // 기본값
+  }
+
   // 작성 완료 버튼을 눌렀을 때
-  void onClickButtonHandler() {
+  void onClickButtonHandler() async {
     if (selectedTagList.isNotEmpty &&
         titleController.text.isNotEmpty &&
         contentController.text.isNotEmpty) {
       // 추후에 이미지 파일을 url로 변환하는 작업 추가
+
+      // for (int i = 0; i < selectedImageList.length; i++) {
+      //   // print(selectedImageList[i]!.path);
+      //   // S3 버킷에 이미지 업로드 요청
+      //   var imageByte = await selectedImageList[i]!.readAsBytes();
+      //   var contentType = getContentType(selectedImageList[i]!.path);
+      //   var uploadImageResponse = await http.put(
+      //     Uri.parse(presignedUrl),
+      //     headers: {
+      //       'Content-Type': contentType,
+      //     },
+      //     body: imageByte,
+      //   );
+      // }
+
+      // 큐레이션 작성 api 호출
       CurationService.writeCuration(
         titleController.text,
         contentController.text,
