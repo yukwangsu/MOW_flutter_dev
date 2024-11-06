@@ -101,6 +101,9 @@ class _MapScreenState extends State<MapScreen> {
   bool isUserAcceptLocation = true;
   //workspace bookmark color map
   late Future<Map<String, dynamic>> workspaceBookmarkColor;
+  //show only bookmarked place
+  bool showOnlyBookmarkedPlace = false;
+  bool showBookmarkFilterBotton = true;
 
   @override
   void initState() {
@@ -341,6 +344,23 @@ class _MapScreenState extends State<MapScreen> {
               top: 66,
               child: SwitchButton(onPress: handleSwitchButtonTap)),
 
+          // 북마크 필터 버튼
+          if (showBookmarkFilterBotton)
+            Positioned(
+              right: 20,
+              bottom: minBottomSheetHeightNormal + 12,
+              child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      reloadWorkspaces = true;
+                      showOnlyBookmarkedPlace = !showOnlyBookmarkedPlace;
+                    });
+                  },
+                  child: SvgPicture.asset(showOnlyBookmarkedPlace
+                      ? 'assets/icons/bookmark_filtered_icon.svg'
+                      : 'assets/icons/bookmark_unfiltered_icon.svg')),
+            ),
+
           // bottomsheet
           Positioned(
             left: 0,
@@ -350,6 +370,7 @@ class _MapScreenState extends State<MapScreen> {
               onVerticalDragUpdate: (details) {
                 // textfield focus 해제
                 FocusScope.of(context).unfocus();
+                // showBookmarkFilterBotton = false; // 바텀시트 이동중에는 북마크 필터 버튼 안 보여주기
                 setState(() {
                   bottomSheetHeight -= details.primaryDelta!;
                   // 최소 높이 설정(모드에 따라 다름), 최대 높이는 화면 높이의 0.936
@@ -364,6 +385,7 @@ class _MapScreenState extends State<MapScreen> {
                 });
               },
               onVerticalDragEnd: (details) {
+                // showBookmarkFilterBotton = true; // 바텀시트 이동이 끝나면 북마크 필터 보여주기
                 setState(() {
                   // 1. 속도가 붙을 때
                   if (details.velocity.pixelsPerSecond.dy < 0) {
@@ -1588,16 +1610,9 @@ class _MapScreenState extends State<MapScreen> {
   ) {
     // 북마크 색 가져오기
     workspaceBookmarkColor = SearchService.getWorkspaceBookmarkColor();
-    return FutureBuilder<List<dynamic>?>(
-      future: SearchService.searchPlace(
-        controller.text,
-        order,
-        locationType,
-        appliedSearchTags,
-        latitude,
-        longitute,
-      ), // 비동기 데이터 호출
-      builder: (BuildContext context, AsyncSnapshot<List<dynamic>?> snapshot) {
+    return FutureBuilder(
+      future: workspaceBookmarkColor,
+      builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           // 데이터가 로드 중일 때 로딩 표시
           return Expanded(
@@ -1628,84 +1643,196 @@ class _MapScreenState extends State<MapScreen> {
             ),
           );
         } else {
-          // 데이터가 성공적으로 로드되었을 때
-          print("!!!!!!!!!!!!장소 리스트 로딩 완료!!!!!!!!!!!!!!!");
+          // workspaceBookmarkColor 로딩 완료
           reloadWorkspaces = false; // 다른 setState가 발생했을 시 장소리스트를 로딩하지 않도록 설정
-          final workspaceList = snapshot.data;
-          copyWorkspaceList = workspaceList; //데이터 복사
-          print('----------rebuild showWorkspace search result----------');
-          print('workspaceList: $workspaceList');
-          print('your keyword: ${controller.text}');
-          print('your order: $order');
-          // 마커 오버레이, markerSet 초기화
-          naverMapController.clearOverlays();
-          markerSet.clear();
-          // markerSet에 마커 추가
-          if (isNaverMapLoaded) {
-            for (var workspace in workspaceList!) {
-              if (workspace['workspaceLatitude'] != null &&
-                  workspace['workspaceLongitude'] != null) {
-                NLatLng location = NLatLng(
-                  workspace['workspaceLatitude'],
-                  workspace['workspaceLongitude'],
+          var bookmarkedMap = snapshot.data!;
+          return FutureBuilder<List<dynamic>?>(
+            future: SearchService.searchPlace(
+              controller.text,
+              order,
+              locationType,
+              appliedSearchTags,
+              latitude,
+              longitute,
+            ), // 비동기 데이터 호출
+            builder:
+                (BuildContext context, AsyncSnapshot<List<dynamic>?> snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                // 데이터가 로드 중일 때 로딩 표시
+                return Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(top: 0.0),
+                    itemCount: 1,
+                    itemBuilder: (context, index) {
+                      return const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(
+                            color: Color(0xFFAD7541),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 );
-                var marker = NMarker(
-                    id: workspace['workspaceId'].toString(),
-                    position: location,
-                    icon: markerIcon);
-                // 마커가 클릭됐을 때
-                marker.setOnTapListener((NMarker marker) {
-                  print("마커가 터치되었습니다. id: ${marker.info.id}");
-                  // 1. 카메라가 이동할 위치 설정
-                  final cameraUpdate =
-                      NCameraUpdate.scrollAndZoomTo(target: location);
-                  // 2. 카메라가 이동할 때 마커를 왼쪽에서 1/2, 위에서 1/3에 위치시키도록 설정
-                  cameraUpdate.setPivot(const NPoint(1 / 2, 1 / 3));
-                  // 3. 카메라 시점 업데이트
-                  naverMapController.updateCamera(cameraUpdate);
-                  bottomSheetHeightLevel = 1;
-                  bottomSheetHeight = (bottomsheetMode == 'normal' ||
-                          bottomsheetMode == 'detail')
-                      ? minBottomSheetHeightDetail
-                      : minBottomSheetHeightCurationPlace;
-                  workspaceId = workspace['workspaceId'];
-                  if (bottomsheetMode == 'normal' ||
-                      bottomsheetMode == 'detail') {
-                    setState(() {
-                      reloadDetailspace = true;
-                      bottomsheetMode = 'detail';
-                    });
-                  } else {
-                    //curation normal일 때 (큐레이션용 만들고 추후에 삭제)
-                    setState(() {
-                      reloadCurationPlace = true;
-                      bottomsheetMode = 'curation_place';
-                    });
+              } else if (snapshot.hasError) {
+                // 오류가 발생했을 때
+                return Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(top: 0.0),
+                    itemCount: 1,
+                    itemBuilder: (context, index) {
+                      return Text('Error: ${snapshot.error}');
+                    },
+                  ),
+                );
+              } else {
+                // 데이터가 성공적으로 로드되었을 때
+                print("!!!!!!!!!!!!장소 리스트 로딩 완료!!!!!!!!!!!!!!!");
+                reloadWorkspaces =
+                    false; // 다른 setState가 발생했을 시 장소리스트를 로딩하지 않도록 설정
+                List<dynamic> workspaceList = [];
+                // 1. 북마크 된 리스트만 보여줄 때
+                if (showOnlyBookmarkedPlace) {
+                  print('--------북마크 된 리스트만 보여줍니다.-------');
+                  for (int i = 0; i < snapshot.data!.length; i++) {
+                    if (bookmarkedMap.containsKey(
+                        snapshot.data![i]['workspaceId'].toString())) {
+                      workspaceList.add(snapshot.data![i]);
+                    }
                   }
-                });
-                markerSet.add(marker);
-              }
-            }
-            // 모든 마커를 지도에 추가
-            naverMapController.addOverlayAll(markerSet);
-          }
-          return Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.only(top: 0.0),
-              itemCount: workspaceList!.length,
-              itemBuilder: (context, index) {
-                return placeList(
-                  workspaceList[index],
-                  workspaceList[index]['workspaceId'],
-                  workspaceList[index]['workspaceName'],
-                  workspaceList[index]['workspaceType'],
-                  workspaceList[index]['starscore'],
-                  workspaceList[index]['reviewCnt'],
-                  workspaceList[index]['location'],
-                  workspaceList[index]['distance'],
+                } else {
+                  // 2. 모든 리스트를 다 보여줄 때
+                  print('--------모든 리스트를 다 보여줍니다.-------');
+                  workspaceList = snapshot.data!;
+                }
+                copyWorkspaceList = workspaceList; //데이터 복사
+                print(
+                    '----------rebuild showWorkspace search result----------');
+                print('workspaceList: $workspaceList');
+                print('your keyword: ${controller.text}');
+                print('your order: $order');
+                // 마커 오버레이, markerSet 초기화
+                naverMapController.clearOverlays();
+                markerSet.clear();
+                // markerSet에 마커 추가
+                if (isNaverMapLoaded) {
+                  for (var workspace in workspaceList) {
+                    // 북마크된 공간만 보여줄 때
+                    if (showOnlyBookmarkedPlace) {
+                      if (bookmarkedMap
+                          .containsKey(workspace['workspaceId'].toString())) {
+                        if (workspace['workspaceLatitude'] != null &&
+                            workspace['workspaceLongitude'] != null) {
+                          NLatLng location = NLatLng(
+                            workspace['workspaceLatitude'],
+                            workspace['workspaceLongitude'],
+                          );
+                          var marker = NMarker(
+                              id: workspace['workspaceId'].toString(),
+                              position: location,
+                              icon: markerIcon);
+                          // 마커가 클릭됐을 때
+                          marker.setOnTapListener((NMarker marker) {
+                            print("마커가 터치되었습니다. id: ${marker.info.id}");
+                            // 1. 카메라가 이동할 위치 설정
+                            final cameraUpdate =
+                                NCameraUpdate.scrollAndZoomTo(target: location);
+                            // 2. 카메라가 이동할 때 마커를 왼쪽에서 1/2, 위에서 1/3에 위치시키도록 설정
+                            cameraUpdate.setPivot(const NPoint(1 / 2, 1 / 3));
+                            // 3. 카메라 시점 업데이트
+                            naverMapController.updateCamera(cameraUpdate);
+                            bottomSheetHeightLevel = 1;
+                            bottomSheetHeight = (bottomsheetMode == 'normal' ||
+                                    bottomsheetMode == 'detail')
+                                ? minBottomSheetHeightDetail
+                                : minBottomSheetHeightCurationPlace;
+                            workspaceId = workspace['workspaceId'];
+                            if (bottomsheetMode == 'normal' ||
+                                bottomsheetMode == 'detail') {
+                              setState(() {
+                                reloadDetailspace = true;
+                                bottomsheetMode = 'detail';
+                              });
+                            } else {
+                              //curation normal일 때 (큐레이션용 만들고 추후에 삭제)
+                              setState(() {
+                                reloadCurationPlace = true;
+                                bottomsheetMode = 'curation_place';
+                              });
+                            }
+                          });
+                          markerSet.add(marker);
+                        }
+                      }
+                    } else {
+                      if (workspace['workspaceLatitude'] != null &&
+                          workspace['workspaceLongitude'] != null) {
+                        NLatLng location = NLatLng(
+                          workspace['workspaceLatitude'],
+                          workspace['workspaceLongitude'],
+                        );
+                        var marker = NMarker(
+                            id: workspace['workspaceId'].toString(),
+                            position: location,
+                            icon: markerIcon);
+                        // 마커가 클릭됐을 때
+                        marker.setOnTapListener((NMarker marker) {
+                          print("마커가 터치되었습니다. id: ${marker.info.id}");
+                          // 1. 카메라가 이동할 위치 설정
+                          final cameraUpdate =
+                              NCameraUpdate.scrollAndZoomTo(target: location);
+                          // 2. 카메라가 이동할 때 마커를 왼쪽에서 1/2, 위에서 1/3에 위치시키도록 설정
+                          cameraUpdate.setPivot(const NPoint(1 / 2, 1 / 3));
+                          // 3. 카메라 시점 업데이트
+                          naverMapController.updateCamera(cameraUpdate);
+                          bottomSheetHeightLevel = 1;
+                          bottomSheetHeight = (bottomsheetMode == 'normal' ||
+                                  bottomsheetMode == 'detail')
+                              ? minBottomSheetHeightDetail
+                              : minBottomSheetHeightCurationPlace;
+                          workspaceId = workspace['workspaceId'];
+                          if (bottomsheetMode == 'normal' ||
+                              bottomsheetMode == 'detail') {
+                            setState(() {
+                              reloadDetailspace = true;
+                              bottomsheetMode = 'detail';
+                            });
+                          } else {
+                            //curation normal일 때 (큐레이션용 만들고 추후에 삭제)
+                            setState(() {
+                              reloadCurationPlace = true;
+                              bottomsheetMode = 'curation_place';
+                            });
+                          }
+                        });
+                        markerSet.add(marker);
+                      }
+                    }
+                  }
+                  // 모든 마커를 지도에 추가
+                  naverMapController.addOverlayAll(markerSet);
+                }
+                return Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(top: 0.0),
+                    itemCount: workspaceList.length,
+                    itemBuilder: (context, index) {
+                      return placeList(
+                        workspaceList[index],
+                        workspaceList[index]['workspaceId'],
+                        workspaceList[index]['workspaceName'],
+                        workspaceList[index]['workspaceType'],
+                        workspaceList[index]['starscore'],
+                        workspaceList[index]['reviewCnt'],
+                        workspaceList[index]['location'],
+                        workspaceList[index]['distance'],
+                      );
+                    },
+                  ),
                 );
-              },
-            ),
+              }
+            },
           );
         }
       },

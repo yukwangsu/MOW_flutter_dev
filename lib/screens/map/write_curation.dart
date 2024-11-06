@@ -2,8 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_mow/models/curation_page_model.dart';
+import 'package:flutter_mow/models/image_model.dart';
 import 'package:flutter_mow/models/place_detail_model.dart';
 import 'package:flutter_mow/services/curation_service.dart';
+import 'package:flutter_mow/services/image_service.dart';
 import 'package:flutter_mow/services/search_service.dart';
 import 'package:flutter_mow/widgets/appbar_back.dart';
 import 'package:flutter_mow/widgets/button_main.dart';
@@ -71,26 +73,52 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
     return 'application/octet-stream'; // 기본값
   }
 
+  String getValidFileName(String filePath) {
+    // 파일 이름을 / 기준으로 분리
+    List<String> parts = filePath.split('/');
+
+    if (parts.isNotEmpty) {
+      return parts.last;
+    } else {
+      return filePath; // 파일 이름이 /을 포함하지 않는 경우 원본 반환
+    }
+  }
+
   // 작성 완료 버튼을 눌렀을 때
   void onClickButtonHandler() async {
     if (selectedTagList.isNotEmpty &&
         titleController.text.isNotEmpty &&
         contentController.text.isNotEmpty) {
-      // 추후에 이미지 파일을 url로 변환하는 작업 추가
+      // aws s3 버킷에 업로드하고 url 받아오기
 
-      // for (int i = 0; i < selectedImageList.length; i++) {
-      //   // print(selectedImageList[i]!.path);
-      //   // S3 버킷에 이미지 업로드 요청
-      //   var imageByte = await selectedImageList[i]!.readAsBytes();
-      //   var contentType = getContentType(selectedImageList[i]!.path);
-      //   var uploadImageResponse = await http.put(
-      //     Uri.parse(presignedUrl),
-      //     headers: {
-      //       'Content-Type': contentType,
-      //     },
-      //     body: imageByte,
-      //   );
-      // }
+      try {
+        for (int i = 0; i < selectedImageList.length; i++) {
+          // 1. preSignedUrl 받아오기
+          String validFilename = getValidFileName(selectedImageList[i]!.path);
+          print('수정 전 파일 이름: ${selectedImageList[i]!.path}');
+          print('수정된 파일 이름: $validFilename');
+          ImageModel imageModel = await ImageService.getImageUrl(validFilename);
+
+          // 2. S3 버킷에 이미지 업로드 요청
+          var imageByte = await selectedImageList[i]!.readAsBytes();
+          var contentType = getContentType(selectedImageList[i]!.path);
+          var uploadImageResponse = await http.put(
+            Uri.parse(imageModel.preSignedUrl),
+            headers: {
+              'Content-Type': contentType,
+            },
+            body: imageByte,
+          );
+          print('이미지($i) 업로드 결과: ${uploadImageResponse.statusCode}');
+          print('이미지($i) 업로드 결과: ${uploadImageResponse.body}');
+
+          // 3. imageUrlList에 permanentUrl 저장
+          imageUrlList.add(imageModel.permanentUrl);
+        }
+      } catch (e) {
+        print('Error during upload image: $e');
+        throw Error();
+      }
 
       // 큐레이션 작성 api 호출
       CurationService.writeCuration(
