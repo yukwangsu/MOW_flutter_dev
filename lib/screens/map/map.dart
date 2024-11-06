@@ -104,6 +104,8 @@ class _MapScreenState extends State<MapScreen> {
   //show only bookmarked place
   bool showOnlyBookmarkedPlace = false;
   bool showBookmarkFilterBotton = true;
+  //터치가 불가능하게 하는 변수
+  bool isWaiting = false;
 
   @override
   void initState() {
@@ -258,6 +260,19 @@ class _MapScreenState extends State<MapScreen> {
     return true;
   }
 
+  // 화면 터치를 n초동안 막는 함수
+  void startWaiting() {
+    setState(() {
+      isWaiting = true;
+    });
+
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      setState(() {
+        isWaiting = false;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     screenHeight = MediaQuery.of(context).size.height; //화면 높이
@@ -348,17 +363,24 @@ class _MapScreenState extends State<MapScreen> {
           if (showBookmarkFilterBotton)
             Positioned(
               right: 20,
-              bottom: minBottomSheetHeightNormal + 12,
+              bottom: bottomSheetHeight + 12,
               child: GestureDetector(
                   onTap: () {
-                    setState(() {
-                      reloadWorkspaces = true;
-                      showOnlyBookmarkedPlace = !showOnlyBookmarkedPlace;
-                    });
+                    if (bottomSheetHeight <= screenHeight * 0.6) {
+                      // 북마크 필터 버튼을 클릭했을 때 bottomsheet가 움직이지 않도록(setState 방지)
+                      startWaiting();
+                      setState(() {
+                        reloadWorkspaces = true;
+                        showOnlyBookmarkedPlace = !showOnlyBookmarkedPlace;
+                      });
+                    }
                   },
-                  child: SvgPicture.asset(showOnlyBookmarkedPlace
-                      ? 'assets/icons/bookmark_filtered_icon.svg'
-                      : 'assets/icons/bookmark_unfiltered_icon.svg')),
+                  //bottomSheetHeight의 높이가 screenHeight * 0.6보다 높으면 북마크 필터 버튼을 보여주지 않음
+                  child: bottomSheetHeight <= screenHeight * 0.6
+                      ? SvgPicture.asset(showOnlyBookmarkedPlace
+                          ? 'assets/icons/bookmark_filtered_icon.svg'
+                          : 'assets/icons/bookmark_unfiltered_icon.svg')
+                      : const Text('')),
             ),
 
           // bottomsheet
@@ -366,109 +388,113 @@ class _MapScreenState extends State<MapScreen> {
             left: 0,
             right: 0,
             bottom: 0,
-            child: GestureDetector(
-              onVerticalDragUpdate: (details) {
-                // textfield focus 해제
-                FocusScope.of(context).unfocus();
-                // showBookmarkFilterBotton = false; // 바텀시트 이동중에는 북마크 필터 버튼 안 보여주기
-                setState(() {
-                  bottomSheetHeight -= details.primaryDelta!;
-                  // 최소 높이 설정(모드에 따라 다름), 최대 높이는 화면 높이의 0.936
-                  bottomSheetHeight = bottomSheetHeight.clamp(
-                      bottomsheetMode == 'normal' ||
-                              bottomsheetMode == 'curation_normal'
-                          ? minBottomSheetHeightNormal
-                          : bottomsheetMode == 'detail'
-                              ? minBottomSheetHeightDetail
-                              : minBottomSheetHeightCurationPlace,
-                      screenHeight * 0.936);
-                });
-              },
-              onVerticalDragEnd: (details) {
-                // showBookmarkFilterBotton = true; // 바텀시트 이동이 끝나면 북마크 필터 보여주기
-                setState(() {
-                  // 1. 속도가 붙을 때
-                  if (details.velocity.pixelsPerSecond.dy < 0) {
-                    if (bottomSheetHeightLevel == 1) {
-                      bottomSheetHeightLevel = 2;
-                      bottomSheetHeight = screenHeight * 0.6;
-                    } else if (bottomSheetHeightLevel == 2) {
-                      bottomSheetHeightLevel = 3;
-                      bottomSheetHeight = screenHeight * 0.936;
-                    }
-                  } else if (details.velocity.pixelsPerSecond.dy > 0) {
-                    if (bottomSheetHeightLevel == 3) {
-                      bottomSheetHeightLevel = 2;
-                      bottomSheetHeight = screenHeight * 0.6;
-                    } else if (bottomSheetHeightLevel == 2) {
-                      bottomSheetHeightLevel = 1;
-                      bottomSheetHeight = bottomsheetMode == 'normal' ||
-                              bottomsheetMode == 'curation_normal'
-                          ? minBottomSheetHeightNormal
-                          : bottomsheetMode == 'detail'
-                              ? minBottomSheetHeightDetail
-                              : minBottomSheetHeightCurationPlace;
-                    }
-                  } else {
-                    // 2. 드래그가 멈췄을 경우 위치로 판단
-                    if (bottomSheetHeight > screenHeight * 0.7) {
-                      bottomSheetHeightLevel = 3;
-                      bottomSheetHeight = screenHeight * 0.936;
+            child: AbsorbPointer(
+              // 북마크 필터 버튼을 클릭했을 때 bottomsheet가 움직이지 않도록 터치 방지.
+              absorbing: isWaiting,
+              child: GestureDetector(
+                onVerticalDragUpdate: (details) {
+                  // textfield focus 해제
+                  FocusScope.of(context).unfocus();
+                  // showBookmarkFilterBotton = false; // 바텀시트 이동중에는 북마크 필터 버튼 안 보여주기
+                  setState(() {
+                    bottomSheetHeight -= details.primaryDelta!;
+                    // 최소 높이 설정(모드에 따라 다름), 최대 높이는 화면 높이의 0.936
+                    bottomSheetHeight = bottomSheetHeight.clamp(
+                        bottomsheetMode == 'normal' ||
+                                bottomsheetMode == 'curation_normal'
+                            ? minBottomSheetHeightNormal
+                            : bottomsheetMode == 'detail'
+                                ? minBottomSheetHeightDetail
+                                : minBottomSheetHeightCurationPlace,
+                        screenHeight * 0.936);
+                  });
+                },
+                onVerticalDragEnd: (details) {
+                  // showBookmarkFilterBotton = true; // 바텀시트 이동이 끝나면 북마크 필터 보여주기
+                  setState(() {
+                    // 1. 속도가 붙을 때
+                    if (details.velocity.pixelsPerSecond.dy < 0) {
+                      if (bottomSheetHeightLevel == 1) {
+                        bottomSheetHeightLevel = 2;
+                        bottomSheetHeight = screenHeight * 0.6;
+                      } else if (bottomSheetHeightLevel == 2) {
+                        bottomSheetHeightLevel = 3;
+                        bottomSheetHeight = screenHeight * 0.936;
+                      }
+                    } else if (details.velocity.pixelsPerSecond.dy > 0) {
+                      if (bottomSheetHeightLevel == 3) {
+                        bottomSheetHeightLevel = 2;
+                        bottomSheetHeight = screenHeight * 0.6;
+                      } else if (bottomSheetHeightLevel == 2) {
+                        bottomSheetHeightLevel = 1;
+                        bottomSheetHeight = bottomsheetMode == 'normal' ||
+                                bottomsheetMode == 'curation_normal'
+                            ? minBottomSheetHeightNormal
+                            : bottomsheetMode == 'detail'
+                                ? minBottomSheetHeightDetail
+                                : minBottomSheetHeightCurationPlace;
+                      }
                     } else {
-                      if (bottomsheetMode == 'normal' ||
-                          bottomsheetMode == 'curation_normal') {
-                        if (bottomSheetHeight > screenHeight * 0.3) {
-                          bottomSheetHeightLevel = 2;
-                          bottomSheetHeight = screenHeight * 0.6;
-                        } else {
-                          bottomSheetHeightLevel = 1;
-                          bottomSheetHeight = minBottomSheetHeightNormal;
-                        }
+                      // 2. 드래그가 멈췄을 경우 위치로 판단
+                      if (bottomSheetHeight > screenHeight * 0.7) {
+                        bottomSheetHeightLevel = 3;
+                        bottomSheetHeight = screenHeight * 0.936;
                       } else {
-                        // bottomsheetMode가 'detail' 이거나 'curation_place' 일 때
-                        if (bottomSheetHeight > screenHeight * 0.5) {
-                          bottomSheetHeightLevel = 2;
-                          bottomSheetHeight = screenHeight * 0.6;
+                        if (bottomsheetMode == 'normal' ||
+                            bottomsheetMode == 'curation_normal') {
+                          if (bottomSheetHeight > screenHeight * 0.3) {
+                            bottomSheetHeightLevel = 2;
+                            bottomSheetHeight = screenHeight * 0.6;
+                          } else {
+                            bottomSheetHeightLevel = 1;
+                            bottomSheetHeight = minBottomSheetHeightNormal;
+                          }
                         } else {
-                          bottomSheetHeightLevel = 1;
-                          bottomSheetHeight = bottomsheetMode == 'detail'
-                              ? minBottomSheetHeightDetail
-                              : minBottomSheetHeightCurationPlace;
+                          // bottomsheetMode가 'detail' 이거나 'curation_place' 일 때
+                          if (bottomSheetHeight > screenHeight * 0.5) {
+                            bottomSheetHeightLevel = 2;
+                            bottomSheetHeight = screenHeight * 0.6;
+                          } else {
+                            bottomSheetHeightLevel = 1;
+                            bottomSheetHeight = bottomsheetMode == 'detail'
+                                ? minBottomSheetHeightDetail
+                                : minBottomSheetHeightCurationPlace;
+                          }
                         }
                       }
                     }
-                  }
-                });
-              },
-              // 바텀시트 화면 구성
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 130),
-                height: bottomSheetHeight,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(
-                    color: const Color(0xFFE4E3E2), // 경계선 색상
-                    width: 1.0, // 경계선 두께
-                  ),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(25.0),
-                    topRight: Radius.circular(25.0),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 5.0,
-                      offset: const Offset(0, -4),
+                  });
+                },
+                // 바텀시트 화면 구성
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 130),
+                  height: bottomSheetHeight,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(
+                      color: const Color(0xFFE4E3E2), // 경계선 색상
+                      width: 1.0, // 경계선 두께
                     ),
-                  ],
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(25.0),
+                      topRight: Radius.circular(25.0),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 5.0,
+                        offset: const Offset(0, -4),
+                      ),
+                    ],
+                  ),
+                  child: bottomsheetMode == 'normal'
+                      ? normalMode()
+                      : bottomsheetMode == 'detail'
+                          ? detailMode()
+                          : bottomsheetMode == 'curation_normal'
+                              ? curationNormalMode()
+                              : curationPlaceMode(),
                 ),
-                child: bottomsheetMode == 'normal'
-                    ? normalMode()
-                    : bottomsheetMode == 'detail'
-                        ? detailMode()
-                        : bottomsheetMode == 'curation_normal'
-                            ? curationNormalMode()
-                            : curationPlaceMode(),
               ),
             ),
           ),

@@ -92,18 +92,18 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
       // aws s3 버킷에 업로드하고 url 받아오기
 
       try {
-        for (int i = 0; i < selectedImageList.length; i++) {
+        for (int i = 0; i < 1; i++) {
           // 1. preSignedUrl 받아오기
           String validFilename = getValidFileName(selectedImageList[i]!.path);
           print('수정 전 파일 이름: ${selectedImageList[i]!.path}');
-          print('수정된 파일 이름: $validFilename');
-          ImageModel imageModel = await ImageService.getImageUrl(validFilename);
+          print('수정 된 파일 이름: $validFilename');
+          // ImageModel imageModel = await ImageService.getImageUrl(validFilename);
 
           // 2. S3 버킷에 이미지 업로드 요청
           var imageByte = await selectedImageList[i]!.readAsBytes();
           var contentType = getContentType(selectedImageList[i]!.path);
           var uploadImageResponse = await http.put(
-            Uri.parse(imageModel.preSignedUrl),
+            Uri.parse(''),
             headers: {
               'Content-Type': contentType,
             },
@@ -113,22 +113,22 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
           print('이미지($i) 업로드 결과: ${uploadImageResponse.body}');
 
           // 3. imageUrlList에 permanentUrl 저장
-          imageUrlList.add(imageModel.permanentUrl);
+          // imageUrlList.add(imageModel.permanentUrl);
         }
       } catch (e) {
         print('Error during upload image: $e');
         throw Error();
       }
 
-      // 큐레이션 작성 api 호출
-      CurationService.writeCuration(
-        titleController.text,
-        contentController.text,
-        selectedTagList,
-        widget.workspaceId,
-        imageUrlList,
-      );
-      Navigator.pop(context);
+      // // 큐레이션 작성 api 호출
+      // CurationService.writeCuration(
+      //   titleController.text,
+      //   contentController.text,
+      //   selectedTagList,
+      //   widget.workspaceId,
+      //   imageUrlList,
+      // );
+      // Navigator.pop(context);
     }
   }
 
