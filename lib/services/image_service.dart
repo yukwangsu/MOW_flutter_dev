@@ -6,6 +6,7 @@ import 'package:flutter_mow/models/simple_curation_model.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter_mow/secrets.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ImageService {
@@ -42,6 +43,49 @@ class ImageService {
       }
     } catch (e) {
       print('Error during getPreSignedUrl: $e');
+      throw Error();
+    }
+  }
+
+  static String getContentType(String filePath) {
+    if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+      return 'image/jpeg';
+    } else if (filePath.endsWith('.png')) {
+      return 'image/png';
+    } else if (filePath.endsWith('.gif')) {
+      return 'image/gif';
+    }
+    return 'application/octet-stream'; // 기본값
+  }
+
+  // 이미지 upload하기
+  static Future<int> uploadImage(
+    String preSignedUrl,
+    XFile image,
+  ) async {
+    try {
+      var imageByte = await image.readAsBytes();
+      var contentType = getContentType(image.path);
+      var response = await http.put(
+        Uri.parse(preSignedUrl),
+        headers: {
+          'Content-Type': contentType,
+        },
+        body: imageByte,
+      );
+
+      print('----------[service] uploadImage----------');
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return response.statusCode;
+      } else {
+        print('Fail uploadImage');
+        throw Error();
+      }
+    } catch (e) {
+      print('Error during uploadImage: $e');
       throw Error();
     }
   }
