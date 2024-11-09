@@ -68,69 +68,92 @@ class _CurationPageState extends State<CurationPage> {
                     return Column(
                       children: [
                         Container(
-                          decoration:
-                              const BoxDecoration(color: Color(0xFFD9D9D9)),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFD9D9D9),
+                          ),
                           width: double.infinity,
                           height: 368,
-                          child: Padding(
-                            padding: const EdgeInsets.only(
-                                left: 20.0, right: 20.0, bottom: 10.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                //태그 (최대 2개이긴 하지만 좌우로 스크롤 가능하게)
-                                SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: Row(
-                                    children: [
-                                      for (int n = 0;
-                                          n <
-                                              snapshot
-                                                  .data!.featureTagsList.length;
-                                          n++) ...[
-                                        curationPageTagWidget(
-                                            snapshot.data!.featureTagsList[n]),
-                                        const SizedBox(
-                                          width: 6.0,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              Image.network(
+                                snapshot.data!.imageList[0],
+                                fit: BoxFit.cover,
+                                loadingBuilder:
+                                    (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Container(
+                                      color: const Color(
+                                          0xFFD9D9D9)); // 로딩 중일 때 회색 화면 유지
+                                },
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                      color: const Color(
+                                          0xFFD9D9D9)); // 로딩 실패 시 회색 화면 표시
+                                },
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                    left: 20.0, right: 20.0, bottom: 10.0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    //태그 (최대 2개이긴 하지만 혹시 모르니 좌우로 스크롤 가능하게)
+                                    SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: Row(
+                                        children: [
+                                          for (int n = 0;
+                                              n <
+                                                  snapshot.data!.featureTagsList
+                                                      .length;
+                                              n++) ...[
+                                            curationPageTagWidget(snapshot
+                                                .data!.featureTagsList[n]),
+                                            const SizedBox(
+                                              width: 6.0,
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      height: 10.0,
+                                    ),
+                                    //큐레이션 제목
+                                    Column(
+                                      children: [
+                                        Text(
+                                          snapshot.data!.curationTitle,
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 3,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .headlineLarge,
                                         ),
                                       ],
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: 10.0,
-                                ),
-                                //큐레이션 제목
-                                Column(
-                                  children: [
-                                    Text(
-                                      snapshot.data!.curationTitle,
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 3,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineLarge,
+                                    ),
+                                    const SizedBox(
+                                      height: 16.0,
+                                    ),
+                                    //큐레이션 작성일
+                                    Row(
+                                      children: [
+                                        Text(
+                                          formatDateTime(
+                                              snapshot.data!.createdAt),
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall!
+                                              .copyWith(color: Colors.white),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                                const SizedBox(
-                                  height: 16.0,
-                                ),
-                                //큐레이션 작성일
-                                Row(
-                                  children: [
-                                    Text(
-                                      formatDateTime(snapshot.data!.createdAt),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall!
-                                          .copyWith(color: Colors.white),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                         const SizedBox(
@@ -164,33 +187,67 @@ class _CurationPageState extends State<CurationPage> {
                               ),
                               //이미지(최대 열장)
                               SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 186,
-                                      height: 248,
-                                      color: Colors.grey,
-                                    ),
-                                    const SizedBox(
-                                      width: 6.0,
-                                    ),
-                                    Container(
-                                      width: 186,
-                                      height: 248,
-                                      color: Colors.grey,
-                                    ),
-                                    const SizedBox(
-                                      width: 6.0,
-                                    ),
-                                    Container(
-                                      width: 186,
-                                      height: 248,
-                                      color: Colors.grey,
-                                    ),
-                                  ],
-                                ),
-                              ),
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: List.generate(
+                                        snapshot.data!.imageList.length,
+                                        (index) {
+                                      return Padding(
+                                        padding:
+                                            const EdgeInsets.only(right: 8.0),
+                                        child: Container(
+                                          width: 186,
+                                          height: 248,
+                                          color: const Color(0xFFD9D9D9),
+                                          child: Image.network(
+                                            snapshot.data!.imageList[index],
+                                            fit: BoxFit.cover,
+                                            loadingBuilder: (context, child,
+                                                loadingProgress) {
+                                              if (loadingProgress == null)
+                                                return child;
+                                              return Container(
+                                                  color: const Color(
+                                                      0xFFD9D9D9)); // 로딩 중일 때 회색 화면 유지
+                                            },
+                                            errorBuilder:
+                                                (context, error, stackTrace) {
+                                              return const SizedBox
+                                                  .shrink(); // 에러 시 아무것도 표시하지 않음
+                                            },
+                                          ),
+                                        ),
+                                      );
+                                    }),
+                                  )),
+                              // SingleChildScrollView(
+                              //   scrollDirection: Axis.horizontal,
+                              //   child: Row(
+                              //     children: [
+                              //       Container(
+                              //         width: 186,
+                              //         height: 248,
+                              //         color: Colors.grey,
+                              //       ),
+                              //       const SizedBox(
+                              //         width: 6.0,
+                              //       ),
+                              //       Container(
+                              //         width: 186,
+                              //         height: 248,
+                              //         color: Colors.grey,
+                              //       ),
+                              //       const SizedBox(
+                              //         width: 6.0,
+                              //       ),
+                              //       Container(
+                              //         width: 186,
+                              //         height: 248,
+                              //         color: Colors.grey,
+                              //       ),
+                              //     ],
+                              //   ),
+                              // ),
                               const SizedBox(
                                 height: 18.0,
                               ),

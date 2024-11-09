@@ -2164,12 +2164,27 @@ class _MapScreenState extends State<MapScreen> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 큐레이션 이미지 (보류)
+                    // 큐레이션 이미지
                     Container(
-                      decoration: const BoxDecoration(color: Colors.black),
-                      width: 80.0,
-                      height: 80.0,
-                    ),
+                        width: 80.0,
+                        height: 80.0,
+                        color: const Color(0xFFD9D9D9), // 기본 배경색을 회색으로 설정
+                        child: Image.network(
+                          curationPhoto,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                                color: const Color(
+                                    0xFFD9D9D9)); // 로딩 중일 때 회색 화면 유지
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                                color: const Color(
+                                    0xFFD9D9D9)); // 로딩 실패 시 회색 화면 표시
+                          },
+                        )),
+
                     const SizedBox(
                       width: 14.0,
                     ),
@@ -2506,6 +2521,7 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
+  // curationPlace 모드에서 밑에 나오는 큐레이션들
   Widget curationPlaceWidget(CurationPlaceDtoModel data) {
     return GestureDetector(
       onTap: () {
@@ -2547,11 +2563,19 @@ class _MapScreenState extends State<MapScreen> {
               //자르기 -> BorderRadius 반영
               clipBehavior: Clip.hardEdge,
 
-              // 추후 이미지로 변경 수정
+              // 이미지
               child: Image.network(
-                // data.curationPhoto,
-                'https://www.jeongdong.or.kr/static/portal/img/HKPU_04_04_pic1.jpg',
-                fit: BoxFit.cover, // 이미지를 Container에 가득 채우기
+                data.curationPhoto,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                      color: const Color(0xFFD9D9D9)); // 로딩 중일 때 회색 화면 유지
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                      color: const Color(0xFFD9D9D9)); // 로딩 실패 시 검정 화면 표시
+                },
               ),
             ),
             const SizedBox(

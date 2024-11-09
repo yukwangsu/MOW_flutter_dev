@@ -39,11 +39,10 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
   // 현재 날짜 가져오기
   String formattedDate =
       '${DateTime.now().year}.${DateTime.now().month.toString().padLeft(2, '0')}.${DateTime.now().day.toString().padLeft(2, '0')}';
-  List<File> imageFileList = []; //이미지 파일을 저장하는 리스트(최대 10개)
-  List<String> imageUrlList = []; //이미지 Url을 저장하는 리스트(최대 10개)
   late Future<PlaceDetailModel> workspace; // 가게 정보 불러와서 저장하는 변수
   //이미지 관련 변수
   final picker = ImagePicker();
+  List<String> imageUrlList = []; //이미지 Url을 저장하는 리스트(최대 10개)
   List<XFile?> galleryImageList = []; // 갤러리에서 여러 장의 사진을 선택해서 저장할 변수
   List<XFile?> selectedImageList = []; // 가져온 사진들을 보여주기 위한 변수
 
@@ -56,12 +55,28 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
     userNickname = getUserNickname();
   }
 
+  // 사용자 닉네임 가져오는 함수
   Future<String> getUserNickname() async {
     final prefs = await SharedPreferences.getInstance();
     String? savedNickname = prefs.getString('userNickname');
     return savedNickname ?? '{userNickname}';
   }
 
+  // 사진 추가 버튼을 눌렀을 때 호출되는 함수
+  void addImage() async {
+    //이미지 선택하기
+    galleryImageList = await picker.pickMultiImage();
+    //이미지 선택이 끝났을 때
+    //pickMultiImage 통해 갤러리에서 가지고 온 사진들은 galleryImageList에 저장되므로 addAll()을 사용해서 selectedImageList와 galleryImageList 를 합쳐줌
+    selectedImageList.addAll(galleryImageList);
+    //선택된 이미지의 개수가 10개를 초과했을 경우 앞에 이미지를 제거함
+    if (selectedImageList.length > 10) {
+      selectedImageList.removeRange(0, selectedImageList.length - 10);
+    }
+    setState(() {});
+  }
+
+  // 이미지 파일 확장자명 가져오는 함수
   String getContentType(String filePath) {
     if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
       return 'image/jpeg';
@@ -73,18 +88,19 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
     return 'application/octet-stream'; // 기본값
   }
 
+  // 아미지 파일 이름을 간소화시키는 함수
   String getValidFileName(String filePath) {
-    // 파일 이름을 / 기준으로 분리
+    // 파일 이름을 '/' 기준으로 분리
     List<String> parts = filePath.split('/');
 
     if (parts.isNotEmpty) {
       return parts.last;
     } else {
-      return filePath; // 파일 이름이 /을 포함하지 않는 경우 원본 반환
+      return filePath; // 파일 이름이 '/'을 포함하지 않는 경우 원본 반환
     }
   }
 
-  // 작성 완료 버튼을 눌렀을 때
+  // 큐레이션 작성완료 버튼을 눌렀을 때 동작하는 함수
   void onClickButtonHandler() async {
     if (selectedTagList.isNotEmpty &&
         titleController.text.isNotEmpty &&
@@ -158,75 +174,94 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
                             const BoxDecoration(color: Color(0xFFD9D9D9)),
                         width: double.infinity,
                         height: 368,
-                        child: Padding(
-                          padding: const EdgeInsets.only(
-                              left: 20.0, right: 20.0, bottom: 10.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              //태그 추가
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  children: [
-                                    curationAddTagWidget('+ 태그명 선택하기'),
-                                    for (int n = 0;
-                                        n < selectedTagList.length;
-                                        n++) ...[
-                                      const SizedBox(
-                                        width: 6.0,
-                                      ),
-                                      curationTagWidget(selectedTagList[n]),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 10.0,
-                              ),
-                              //큐레이션 제목 입력
-                              Column(
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            // 배경 이미지(선택된 첫번 째 사진)
+                            selectedImageList.isNotEmpty
+                                ? Image.file(
+                                    File(selectedImageList[0]!
+                                        .path), // File로 변환하여 로컬 이미지 불러오기
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const SizedBox
+                                          .shrink(); // 에러 시 아무것도 표시하지 않음
+                                    },
+                                  )
+                                : const SizedBox
+                                    .shrink(), // 선택된 첫번 째 사진이 없다면 아무것도 표시하지 않음
+                            // 배경 이미지를 제외한 나머지 내용
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                  left: 20.0, right: 20.0, bottom: 10.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  TextField(
-                                    decoration: InputDecoration(
-                                      border: InputBorder.none, // 테두리 없애기
-                                      hintText:
-                                          '큐레이션 제목을\n입력해주세요', // 두 줄의 placeholder 텍스트
-                                      hintMaxLines: 2, // placeholder 최대 줄 수
-                                      hintStyle: Theme.of(context)
-                                          .textTheme
-                                          .headlineLarge!
-                                          .copyWith(
-                                              color: const Color(0xFF323232)
-                                                  .withOpacity(0.5)),
+                                  //태그 추가
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: [
+                                        curationAddTagWidget('+ 태그명 선택하기'),
+                                        for (int n = 0;
+                                            n < selectedTagList.length;
+                                            n++) ...[
+                                          const SizedBox(
+                                            width: 6.0,
+                                          ),
+                                          curationTagWidget(selectedTagList[n]),
+                                        ],
+                                      ],
                                     ),
-                                    maxLength: 35, // 최대 입력 가능 문자 수
-                                    maxLines: 2, // 입력 필드를 세 줄로 제한
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .headlineLarge,
-                                    controller: titleController,
+                                  ),
+                                  const SizedBox(
+                                    height: 10.0,
+                                  ),
+                                  //큐레이션 제목 입력
+                                  Column(
+                                    children: [
+                                      TextField(
+                                        decoration: InputDecoration(
+                                          border: InputBorder.none, // 테두리 없애기
+                                          hintText:
+                                              '큐레이션 제목을\n입력해주세요', // 두 줄의 placeholder 텍스트
+                                          hintMaxLines: 2, // placeholder 최대 줄 수
+                                          hintStyle: Theme.of(context)
+                                              .textTheme
+                                              .headlineLarge!
+                                              .copyWith(
+                                                  color: const Color(0xFF323232)
+                                                      .withOpacity(0.5)),
+                                        ),
+                                        maxLength: 35, // 최대 입력 가능 문자 수
+                                        maxLines: 2, // 입력 필드를 세 줄로 제한
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineLarge,
+                                        controller: titleController,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(
+                                    height: 8.0,
+                                  ),
+                                  //오늘 날짜
+                                  Row(
+                                    children: [
+                                      Text(
+                                        formattedDate,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall!
+                                            .copyWith(color: Colors.white),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                              const SizedBox(
-                                height: 8.0,
-                              ),
-                              //오늘 날짜
-                              Row(
-                                children: [
-                                  Text(
-                                    formattedDate,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall!
-                                        .copyWith(color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(
@@ -284,14 +319,7 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
                                   // 이미지 추가하는 container
                                   GestureDetector(
                                     onTap: () async {
-                                      //이미지 선택하기
-                                      galleryImageList =
-                                          await picker.pickMultiImage();
-                                      setState(() {
-                                        //pickMultiImage 통해 갤러리에서 가지고 온 사진들은 galleryImageList에 저장되므로 addAll()을 사용해서 selectedImageList와 galleryImageList 를 합쳐줍니다.
-                                        selectedImageList
-                                            .addAll(galleryImageList);
-                                      });
+                                      addImage();
                                     },
                                     child: Container(
                                       width: 167,

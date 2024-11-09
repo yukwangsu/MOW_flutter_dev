@@ -62,7 +62,14 @@ class CurationList extends StatelessWidget {
               //container 내용
               child: Image.network(
                 thumb,
-                fit: BoxFit.cover, // 이미지를 Container에 가득 채우기
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(color: Colors.grey); // 로딩 중일 때 회색 화면 유지
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(color: Colors.black); // 로딩 실패 시 검정 화면 표시
+                },
               ),
             ),
             const SizedBox(

@@ -2,15 +2,18 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_mow/models/curation_page_model.dart';
+import 'package:flutter_mow/models/image_model.dart';
 import 'package:flutter_mow/models/place_detail_model.dart';
 import 'package:flutter_mow/screens/map/curation_page.dart';
 import 'package:flutter_mow/services/curation_service.dart';
+import 'package:flutter_mow/services/image_service.dart';
 import 'package:flutter_mow/services/search_service.dart';
 import 'package:flutter_mow/widgets/appbar_back.dart';
 import 'package:flutter_mow/widgets/button_main_without_border.dart';
 import 'package:flutter_mow/widgets/curation_tag.dart';
 import 'package:flutter_mow/widgets/select_button.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:image_picker/image_picker.dart';
 
 class EditCurationScreen extends StatefulWidget {
   final int workspaceId;
@@ -34,8 +37,11 @@ class _EditCurationScreenState extends State<EditCurationScreen> {
   final TextEditingController contentController =
       TextEditingController(); // 큐레이션 내용 컨트롤러
   List<String> selectedTagList = []; //선택된 태그들 저장
-  List<File> imageFileList = []; //새로 추가한 이미지 파일을 저장하는 리스트(최대 10개)
+  //이미지 관련 변수
+  final picker = ImagePicker();
   List<String> imageUrlList = []; //기존의 이미지 Url을 저장하는 리스트(최대 10개)
+  List<XFile?> galleryImageList = []; // 갤러리에서 여러 장의 사진을 선택해서 저장할 변수
+  List<XFile?> selectedImageList = []; // 가져온 사진들을 보여주기 위한 변수
 
   @override
   void initState() {
@@ -50,9 +56,43 @@ class _EditCurationScreenState extends State<EditCurationScreen> {
         selectedTagList = value.featureTagsList; // 태그 리스트 저장
         titleController.text = value.curationTitle;
         contentController.text = value.text;
-        // imageUrlList = value. // 기존의 이미지 url 저장(추후 수정)
+        imageUrlList = value.imageList; // 기존의 이미지 url 저장(추후 수정)
       });
     });
+  }
+
+  // 사진 추가 버튼을 눌렀을 때 호출되는 함수
+  void addImage() async {
+    //이미지 선택하기
+    galleryImageList = await picker.pickMultiImage();
+    //이미지 선택이 끝났을 때
+    //pickMultiImage 통해 갤러리에서 가지고 온 사진들은 galleryImageList에 저장되므로 addAll()을 사용해서 selectedImageList와 galleryImageList 를 합쳐줌
+    selectedImageList.addAll(galleryImageList);
+    //기존의 이미지url과 새로 선택된 이미지 파일의 개수의 합이 10개를 초과했을 경우 앞에 이미지부터 제거함
+    if (imageUrlList.length + selectedImageList.length > 10) {
+      while (imageUrlList.length + selectedImageList.length > 10) {
+        // 기존의 이미지 url이 있다면 앞에부터 하나씩 제거
+        if (imageUrlList.isNotEmpty) {
+          imageUrlList.removeAt(0);
+        } else {
+          // 기존의 이미지 url이 남아있지 않다면 새로 선택된 이미지 파일을 촤과한만큼 제거
+          selectedImageList.removeRange(0, selectedImageList.length - 10);
+        }
+      }
+    }
+    setState(() {});
+  }
+
+  // 아미지 파일 이름을 간소화시키는 함수
+  String getValidFileName(String filePath) {
+    // 파일 이름을 '/' 기준으로 분리
+    List<String> parts = filePath.split('/');
+
+    if (parts.isNotEmpty) {
+      return parts.last;
+    } else {
+      return filePath; // 파일 이름이 '/'을 포함하지 않는 경우 원본 반환
+    }
   }
 
   // 수정완료 버튼을 눌렀을 때
@@ -60,7 +100,39 @@ class _EditCurationScreenState extends State<EditCurationScreen> {
     if (selectedTagList.isNotEmpty &&
         titleController.text.isNotEmpty &&
         contentController.text.isNotEmpty) {
-      // 추후에 이미지 파일을 url로 변환하고 imageUrlList에 추가
+      // 새로 추가한 이미지 파일을 url로 변환하고 imageUrlList에 추가
+
+      // aws s3 버킷에 업로드하고 url 받아오기
+      try {
+        for (int i = 0; i < selectedImageList.length; i++) {
+          // 1. preSignedUrl 받아오기(현재시간, 수정된 파일 이름을 사용해서 filename으로 사용)
+          String validFilename =
+              getValidFileName(selectedImageList[i]!.path); //파일 이름 수정
+          DateTime currentTime = DateTime.now();
+          String formattedTime =
+              "${currentTime.year}${currentTime.month.toString().padLeft(2, '0')}${currentTime.day.toString().padLeft(2, '0')}"
+              "${currentTime.hour.toString().padLeft(2, '0')}${currentTime.minute.toString().padLeft(2, '0')}${currentTime.second.toString().padLeft(2, '0')}"; //현재 시간 가져오기
+
+          ImageModel imageModel =
+              await ImageService.getImageUrl('${formattedTime}_$validFilename');
+
+          // 2. S3 버킷에 이미지 업로드 요청
+          int uploadImageResult = await ImageService.uploadImage(
+              imageModel.preSignedUrl, selectedImageList[i]!);
+
+          // 3. imageUrlList에 permanentUrl 저장
+          if (uploadImageResult == 200) {
+            // 성공하면 imageUrlList에 permanentUrl 추가
+            imageUrlList.add(imageModel.permanentUrl);
+          } else {
+            // 실패하면 함수 종료
+            return;
+          }
+        }
+      } catch (e) {
+        print('Error during upload image: $e');
+        throw Error();
+      }
 
       //비동기 처리를 함으로써 editCuration 작업이 다 끝난 뒤에 CurationPage로 이동
       await CurationService.editCuration(
@@ -140,81 +212,122 @@ class _EditCurationScreenState extends State<EditCurationScreen> {
                                     color: Color(0xFFD9D9D9)),
                                 width: double.infinity,
                                 height: 368,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(
-                                      left: 20.0, right: 20.0, bottom: 10.0),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      //태그 추가
-                                      SingleChildScrollView(
-                                        scrollDirection: Axis.horizontal,
-                                        child: Row(
-                                          children: [
-                                            curationAddTagWidget('+ 태그명 수정하기'),
-                                            for (int n = 0;
-                                                n < selectedTagList.length;
-                                                n++) ...[
-                                              const SizedBox(
-                                                width: 6.0,
-                                              ),
-                                              curationTagWidget(
-                                                  selectedTagList[n]),
-                                            ],
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(
-                                        height: 10.0,
-                                      ),
-                                      //큐레이션 제목 입력
-                                      Column(
+                                child: Stack(
+                                  fit: StackFit.expand,
+                                  children: [
+                                    // 배경 이미지(기존에 작성된 큐레이션의 이미지 url 혹은 새로 추가한 이미지 파일)
+                                    imageUrlList.isNotEmpty
+                                        // 1. 기존에 작성된 큐레이션의 이미지 url
+                                        ? Image.network(
+                                            imageUrlList[0],
+                                            fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) {
+                                              return const SizedBox
+                                                  .shrink(); // 에러 시 아무것도 표시하지 않음
+                                            },
+                                          )
+                                        //기존에 작성된 큐레이션의 이미지 url이 없을 경우
+                                        //수정하면서 새로 추가한 이미지 파일을 가져옴
+                                        : selectedImageList.isNotEmpty
+                                            // 2. 새로 추가한 이미지 파일
+                                            ? Image.file(
+                                                File(selectedImageList[0]!
+                                                    .path), // File로 변환하여 로컬 이미지 불러오기
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (context, error,
+                                                    stackTrace) {
+                                                  return const SizedBox
+                                                      .shrink(); // 에러 시 아무것도 표시하지 않음
+                                                },
+                                              )
+                                            // 새로 추가한 이미지도 없다면 아무것도 보여주지 않음
+                                            : const SizedBox.shrink(),
+
+                                    // 배경 이미지를 제외한 나머지 내용
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 20.0,
+                                          right: 20.0,
+                                          bottom: 10.0),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.end,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          TextField(
-                                            decoration: InputDecoration(
-                                              border:
-                                                  InputBorder.none, // 테두리 없애기
-                                              hintText:
-                                                  '큐레이션 제목을\n입력해주세요', // 두 줄의 placeholder 텍스트
-                                              hintMaxLines:
-                                                  2, // placeholder 최대 줄 수
-                                              hintStyle: Theme.of(context)
-                                                  .textTheme
-                                                  .headlineLarge!
-                                                  .copyWith(
-                                                      color: const Color(
-                                                              0xFF323232)
-                                                          .withOpacity(0.5)),
+                                          //태그 추가
+                                          SingleChildScrollView(
+                                            scrollDirection: Axis.horizontal,
+                                            child: Row(
+                                              children: [
+                                                curationAddTagWidget(
+                                                    '+ 태그명 수정하기'),
+                                                for (int n = 0;
+                                                    n < selectedTagList.length;
+                                                    n++) ...[
+                                                  const SizedBox(
+                                                    width: 6.0,
+                                                  ),
+                                                  curationTagWidget(
+                                                      selectedTagList[n]),
+                                                ],
+                                              ],
                                             ),
-                                            maxLength: 35, // 최대 입력 가능 문자 수
-                                            maxLines: 2, // 입력 필드를 세 줄로 제한
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .headlineLarge,
-                                            controller: titleController,
+                                          ),
+                                          const SizedBox(
+                                            height: 10.0,
+                                          ),
+                                          //큐레이션 제목 입력
+                                          Column(
+                                            children: [
+                                              TextField(
+                                                decoration: InputDecoration(
+                                                  border: InputBorder
+                                                      .none, // 테두리 없애기
+                                                  hintText:
+                                                      '큐레이션 제목을\n입력해주세요', // 두 줄의 placeholder 텍스트
+                                                  hintMaxLines:
+                                                      2, // placeholder 최대 줄 수
+                                                  hintStyle: Theme.of(context)
+                                                      .textTheme
+                                                      .headlineLarge!
+                                                      .copyWith(
+                                                          color: const Color(
+                                                                  0xFF323232)
+                                                              .withOpacity(
+                                                                  0.5)),
+                                                ),
+                                                maxLength: 35, // 최대 입력 가능 문자 수
+                                                maxLines: 2, // 입력 필드를 세 줄로 제한
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .headlineLarge,
+                                                controller: titleController,
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(
+                                            height: 8.0,
+                                          ),
+                                          //작성된 날짜
+                                          Row(
+                                            children: [
+                                              Text(
+                                                formatDateTime(
+                                                    snapshot.data!.createdAt),
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall!
+                                                    .copyWith(
+                                                        color: Colors.white),
+                                              )
+                                            ],
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(
-                                        height: 8.0,
-                                      ),
-                                      //작성된 날짜
-                                      Row(
-                                        children: [
-                                          Text(
-                                            formatDateTime(
-                                                snapshot.data!.createdAt),
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodySmall!
-                                                .copyWith(color: Colors.white),
-                                          )
-                                        ],
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               const SizedBox(
@@ -256,8 +369,8 @@ class _EditCurationScreenState extends State<EditCurationScreen> {
                                         children: [
                                           // 이미지 추가하는 container
                                           GestureDetector(
-                                            onTap: () {
-                                              //이미지 선택하기
+                                            onTap: () async {
+                                              addImage();
                                             },
                                             child: Container(
                                               width: 167,
@@ -293,38 +406,81 @@ class _EditCurationScreenState extends State<EditCurationScreen> {
                                             const SizedBox(
                                               width: 6.0,
                                             ),
-                                            Container(
-                                                width: 167,
-                                                height: 223,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.grey[
-                                                      200], // 로딩 중일 때 보이는 배경색
+                                            Stack(
+                                              alignment: Alignment.topRight,
+                                              children: [
+                                                //이미지 컨테이너
+                                                Container(
+                                                    width: 167,
+                                                    height: 223,
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.grey[
+                                                          200], // 로딩 중일 때 보이는 배경색
+                                                    ),
+                                                    child: Image.network(
+                                                      imageUrlList[n],
+                                                      fit: BoxFit.cover,
+                                                    )),
+                                                //이미지 삭제 버튼(이미지 선택 취소)
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    setState(() {
+                                                      imageUrlList.remove(
+                                                          imageUrlList[n]);
+                                                    });
+                                                  },
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            2.0),
+                                                    child: SvgPicture.asset(
+                                                        'assets/icons/cancel_select_icon.svg'),
+                                                  ),
                                                 ),
-                                                child: Image.network(
-                                                  imageUrlList[n],
-                                                  fit: BoxFit.cover,
-                                                ))
+                                              ],
+                                            )
                                           ],
-                                          // 새로 추가할 이미지들 파일
+                                          // 새로 추가된 이미지들 파일
                                           for (int n = 0;
-                                              n < imageFileList.length;
+                                              n < selectedImageList.length;
                                               n++) ...[
                                             const SizedBox(
                                               width: 6.0,
                                             ),
-                                            Container(
-                                              width: 167,
-                                              height: 223,
-                                              decoration: BoxDecoration(
-                                                image: DecorationImage(
-                                                  image: FileImage(
-                                                      imageFileList[
-                                                          n]), // 이미지 파일 불러오기
-                                                  fit: BoxFit
-                                                      .cover, // 이미지를 컨테이너에 꽉 채우기
+                                            Stack(
+                                              alignment: Alignment.topRight,
+                                              children: [
+                                                Container(
+                                                  width: 167,
+                                                  height: 223,
+                                                  decoration: BoxDecoration(
+                                                    image: DecorationImage(
+                                                      image: FileImage(File(
+                                                          selectedImageList[n]!
+                                                              .path)), // 이미지 파일 불러오기
+                                                      fit: BoxFit
+                                                          .cover, // 이미지를 컨테이너에 꽉 채우기
+                                                    ),
+                                                  ),
                                                 ),
-                                              ),
-                                            )
+                                                //이미지 삭제 버튼(이미지 선택 취소)
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    setState(() {
+                                                      selectedImageList.remove(
+                                                          selectedImageList[n]);
+                                                    });
+                                                  },
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            2.0),
+                                                    child: SvgPicture.asset(
+                                                        'assets/icons/cancel_select_icon.svg'),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                           ],
                                         ],
                                       ),

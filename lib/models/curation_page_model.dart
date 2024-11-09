@@ -3,6 +3,7 @@ class CurationPageModel {
   final int curationId, workspaceId, userId, likes;
   final List<String> featureTagsList;
   final DateTime createdAt;
+  final List<String> imageList;
   final List<CurationReviewModel> reviews; // CurationReviewModel 리스트로 수정
 
   CurationPageModel.fromJson(Map<dynamic, dynamic> json)
@@ -19,6 +20,20 @@ class CurationPageModel {
             .split(',')
             .map((tag) => tagMap[int.tryParse(tag) ?? 0] ?? '알 수 없음')
             .toList(),
+//이미지 리스트 만들기
+        imageList = makeImageList([
+          json['curationPhoto'],
+          json['curationPhoto2'],
+          json['curationPhoto3'],
+          json['curationPhoto4'],
+          json['curationPhoto5'],
+          json['curationPhoto6'],
+          json['curationPhoto7'],
+          json['curationPhoto8'],
+          json['curationPhoto9'],
+          json['curationPhoto10']
+        ]),
+
         // 각 리뷰 데이터를 CurationReviewModel로 변환하여 리스트로 저장
         reviews = (json['curationCommentDtoList'] != null)
             ? List<CurationReviewModel>.from(json['curationCommentDtoList']
@@ -68,3 +83,13 @@ Map<int, String> tagMap = {
   13: '작업하기 좋은',
   14: '볼거리가 많은',
 };
+
+List<String> makeImageList(List<String> images) {
+  List<String> result = [];
+  for (int i = 0; i < images.length; i++) {
+    if (images[i].split('.')[0] == 'https://mowimageurlbucket') {
+      result.add(images[i]);
+    }
+  }
+  return result;
+}
