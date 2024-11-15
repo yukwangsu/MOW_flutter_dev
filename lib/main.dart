@@ -37,6 +37,12 @@ class MyApp extends StatelessWidget {
             fontFamily: 'SF_Pro',
             height: 1.2,
           ),
+          titleMedium: TextStyle(
+            fontSize: 20.0,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'SF_Pro',
+            height: 25 / 20,
+          ),
           bodyLarge: TextStyle(
             fontSize: 16.0,
             fontWeight: FontWeight.bold,

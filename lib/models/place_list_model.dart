@@ -13,17 +13,13 @@ class PlaceListModel {
 }
 
 class WorkspaceDtoModel {
-  final int workspaceId,
-      starscore,
-      reviewCnt,
+  final int workspaceId, reviewCnt, widenessDegree, outletDegree, chairDegree;
+  final double starscore,
       distance,
       userLatitude,
       userLongitude,
       workspaceLatitude,
-      workspaceLongitude,
-      widenessDegree,
-      outletDegree,
-      chairDegree;
+      workspaceLongitude;
   final String workspaceName,
       workspaceThumbnailUrl,
       workspaceType,
@@ -34,9 +30,9 @@ class WorkspaceDtoModel {
 
   WorkspaceDtoModel.fromJson(Map<dynamic, dynamic> json)
       : workspaceId = json['workspaceId'] ?? 0,
-        starscore = json['starscore'] ?? 0,
+        starscore = json['starscore'] ?? 0.0,
         reviewCnt = json['reviewCnt'] ?? 0,
-        distance = json['distance'] ?? 0,
+        distance = json['distance'] ?? 0.0,
         userLatitude = json['userLatitude'] ?? 0,
         userLongitude = json['userLongitude'] ?? 0,
         workspaceLatitude = json['workspaceLatitude'] ?? 0,

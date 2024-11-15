@@ -10,7 +10,9 @@ import 'package:flutter_mow/models/simple_curation_model.dart';
 import 'package:flutter_mow/screens/map/add_review.dart';
 import 'package:flutter_mow/screens/map/curation_page.dart';
 import 'package:flutter_mow/screens/map/edit_tag.dart';
+import 'package:flutter_mow/screens/map/search_place.dart';
 import 'package:flutter_mow/screens/map/write_curation.dart';
+import 'package:flutter_mow/screens/user/user_info.dart';
 import 'package:flutter_mow/services/bookmark_service.dart';
 import 'package:flutter_mow/services/curation_service.dart';
 import 'package:flutter_mow/services/search_service.dart';
@@ -358,6 +360,35 @@ class _MapScreenState extends State<MapScreen> {
               right: 20,
               top: 66,
               child: SwitchButton(onPress: handleSwitchButtonTap)),
+
+          // 큐레이션 작성 버튼
+          if (bottomsheetMode == 'curation_normal' ||
+              bottomsheetMode == 'curation_place')
+            Positioned(
+              left: 20,
+              bottom: bottomSheetHeight + 12,
+              child: GestureDetector(
+                  onTap: () {
+                    if (bottomSheetHeight <= screenHeight * 0.6) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SearchPlace(
+                            userLatitude: latitude,
+                            userLongitude: longitude,
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  //bottomSheetHeight의 높이가 screenHeight * 0.6보다 높으면 북마크 필터 버튼을 보여주지 않음
+                  child: bottomSheetHeight <= screenHeight * 0.6
+                      ? Container(
+                          child: SvgPicture.asset(
+                              'assets/icons/write_curation_icon.svg'),
+                        )
+                      : const Text('')),
+            ),
 
           // 북마크 필터 버튼
           if (showBookmarkFilterBotton)
@@ -2420,7 +2451,16 @@ class _MapScreenState extends State<MapScreen> {
           const SizedBox(
             width: 8,
           ),
-          SvgPicture.asset('assets/icons/circle_icon.svg'),
+          GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const UserInfoScreen(),
+                  ),
+                );
+              },
+              child: SvgPicture.asset('assets/icons/circle_icon.svg')),
         ],
       ),
     );
