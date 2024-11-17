@@ -207,15 +207,26 @@ class _SearchPlaceState extends State<SearchPlace> {
         // place list
         GestureDetector(
           behavior: HitTestBehavior.opaque, // *** 빈 공간까지 터치 감지 ***
-          onTap: () {
+          onTap: () async {
             print('workspaceId: ${place.workspaceId}');
-            Navigator.push(
+            // WriteCurationScreen으로 이동했다가 돌아오면 curation_place mode로 돌아감
+            final selectedSpaceId = await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) =>
                     WriteCurationScreen(workspaceId: place.workspaceId),
               ),
             );
+            // 1. 큐레이션을 작성한 경우 작성한 장소의 curation_place mode로 돌아감
+            if (selectedSpaceId != null) {
+              print(
+                  '큐레이션 작성 성공[search_place.dart]: selectedSpaceId: $selectedSpaceId');
+              Navigator.pop(context, selectedSpaceId);
+            } else {
+              print(
+                  '큐레이션 작성 실패[search_place.dart]: selectedSpaceId: $selectedSpaceId');
+              // 2. 장소는 선택했지만 큐레이션을 작성하지 않은경우 다시 장소 선택화면을 보여줌
+            }
           },
           child: Container(
             padding: const EdgeInsets.only(

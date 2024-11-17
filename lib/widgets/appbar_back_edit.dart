@@ -35,7 +35,10 @@ class AppbarBackEdit extends StatelessWidget implements PreferredSizeWidget {
             color: Color(0xFF6B4D38),
           ),
           onPressed: () {
-            Navigator.pop(context);
+            // 본인이 작성한 큐레이션 페이지 방문한 후 뒤로가기를 누르면
+            // 사용자가 큐레이션을 삭제하거나 수정했을 가능성이 있기 때문에 reload를 true로 전달한다.
+            print('본인이 작성한 큐레이션 페이지에서 뒤로가기 버튼을 누름!!');
+            Navigator.pop(context, true);
           },
         ),
       ),
@@ -101,8 +104,10 @@ class AppbarBackEdit extends StatelessWidget implements PreferredSizeWidget {
                           if (result != null && result) {
                             //삭제 버튼을 눌러서 result가 true일 때
                             print('큐레이션이 삭제되었습니다');
-                            CurationService.deleteCurationById(curationId);
-                            Navigator.pop(context);
+                            final deleteResult =
+                                await CurationService.deleteCurationById(
+                                    curationId);
+                            Navigator.pop(context, deleteResult);
                           }
                         },
                       ),

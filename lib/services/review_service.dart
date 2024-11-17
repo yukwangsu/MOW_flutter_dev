@@ -5,7 +5,7 @@ import 'package:flutter_mow/secrets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ReviewService {
-  static void addReview(
+  static Future<void> addReview(
     String reviewText,
     List<String> featureTags,
     int workspaceId,

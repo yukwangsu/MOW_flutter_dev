@@ -44,7 +44,7 @@ class _AddReviewState extends State<AddReview> {
     });
   }
 
-  void onClickButtonHandler() {
+  void onClickButtonHandler() async {
     if (addReviewWidenessDegree > 0) {
       switch (addReviewWidenessDegree) {
         case 0:
@@ -86,8 +86,10 @@ class _AddReviewState extends State<AddReview> {
     }
 
     //api 호출
-    ReviewService.addReview(addReviewTextcontroller.text, selectedTags,
+    await ReviewService.addReview(addReviewTextcontroller.text, selectedTags,
         widget.workspaceId, addReviewScore.toDouble());
+
+    Navigator.pop(context);
   }
 
   @override
@@ -756,7 +758,6 @@ class _AddReviewState extends State<AddReview> {
                             opacity: 1.0,
                             onPress: () {
                               onClickButtonHandler();
-                              Navigator.pop(context);
                             }),
                       ),
                       const SizedBox(
