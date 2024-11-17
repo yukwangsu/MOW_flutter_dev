@@ -101,6 +101,7 @@ class _MapScreenState extends State<MapScreen> {
   NOverlayImage? markerIcon; //마커 아이콘
   //location
   bool isUserAcceptLocation = true;
+  bool isLoadingUserLocation = false;
   //workspace bookmark color map
   late Future<Map<String, dynamic>> workspaceBookmarkColor;
   //show only bookmarked place
@@ -376,6 +377,47 @@ class _MapScreenState extends State<MapScreen> {
               top: 66,
               child: SwitchButton(onPress: handleSwitchButtonTap)),
 
+          // 내 위치로 이동 버튼
+          Positioned(
+            left: 20,
+            bottom: bottomsheetMode == 'curation_normal' ||
+                    bottomsheetMode == 'curation_place'
+                ? bottomSheetHeight + 12 + 60
+                : bottomSheetHeight + 12,
+            child: GestureDetector(
+                onTap: () async {
+                  if (bottomSheetHeight <= screenHeight * 0.6) {
+                    // 로딩 시작
+                    setState(() {
+                      isLoadingUserLocation = true;
+                    });
+
+                    // 0. 사용자 위치 가져오기
+                    await getCurrentLocation();
+                    NLatLng location = NLatLng(
+                      latitude,
+                      longitude,
+                    );
+                    // 1. 카메라가 이동할 위치 설정
+                    final cameraUpdate =
+                        NCameraUpdate.scrollAndZoomTo(target: location);
+                    // 2. 카메라가 이동할 때 마커를 왼쪽에서 1/2, 위에서 1/3에 위치시키도록 설정
+                    cameraUpdate.setPivot(const NPoint(1 / 2, 1 / 3));
+                    // 3. 카메라 시점 업데이트
+                    naverMapController.updateCamera(cameraUpdate);
+
+                    // 로딩 종료
+                    setState(() {
+                      isLoadingUserLocation = false;
+                    });
+                  }
+                },
+                //bottomSheetHeight의 높이가 screenHeight * 0.6보다 높으면 버튼을 보여주지 않음
+                child: bottomSheetHeight <= screenHeight * 0.6
+                    ? SvgPicture.asset('assets/icons/my_location_icon.svg')
+                    : const Text('')),
+          ),
+
           // 큐레이션 작성 버튼
           if (bottomsheetMode == 'curation_normal' ||
               bottomsheetMode == 'curation_place')
@@ -544,6 +586,17 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
           ),
+
+          // 사용자 위치 가져오는 로딩 표시
+          if (isLoadingUserLocation)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.5),
+                child: const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                ),
+              ),
+            ),
         ],
       ),
     );
