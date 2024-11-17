@@ -27,10 +27,12 @@ class _SearchPlaceState extends State<SearchPlace> {
   @override
   void initState() {
     super.initState();
-    if (!searchFocusNode.hasFocus) {
-      // 검색할 텍스트 입력을 완료했기 때문에 다시 검색
-      setState(() {});
-    }
+    searchFocusNode.addListener(() {
+      if (!searchFocusNode.hasFocus) {
+        // 검색할 텍스트 입력을 완료했기 때문에 다시 검색
+        setState(() {});
+      }
+    });
   }
 
   @override

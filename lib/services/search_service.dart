@@ -16,7 +16,7 @@ class SearchService {
     double userLongitude,
   ) async {
     final url =
-        Uri.parse('${Secrets.awsKey}workspace?order=$order&page=0&size=20');
+        Uri.parse('${Secrets.awsKey}workspace?order=$order&page=0&size=40');
 
     //토큰 가져오기
     final prefs = await SharedPreferences.getInstance();
@@ -114,7 +114,7 @@ class SearchService {
     double userLongitude,
   ) async {
     final url =
-        Uri.parse('${Secrets.awsKey}workspace?order=$order&page=0&size=20');
+        Uri.parse('${Secrets.awsKey}workspace?order=$order&page=0&size=40');
 
     //토큰 가져오기
     final prefs = await SharedPreferences.getInstance();
@@ -245,7 +245,7 @@ class SearchService {
     // final url = Uri.parse(
     //     '${Secrets.awsKey}workspace/info?workspaceId=$id&userId=$userId&order=1&page=0&size=20');
     final url = Uri.parse(
-        '${Secrets.awsKey}workspace/info?workspaceId=$id&order=1&page=0&size=20');
+        '${Secrets.awsKey}workspace/info?workspaceId=$id&order=1&page=0&size=40');
 
     //토큰 가져오기
     final prefs = await SharedPreferences.getInstance();

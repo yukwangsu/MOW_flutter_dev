@@ -76,22 +76,29 @@ class _CurationPageState extends State<CurationPage> {
                           child: Stack(
                             fit: StackFit.expand,
                             children: [
-                              Image.network(
-                                snapshot.data!.imageList[0],
-                                fit: BoxFit.cover,
-                                loadingBuilder:
-                                    (context, child, loadingProgress) {
-                                  if (loadingProgress == null) return child;
-                                  return Container(
-                                      color: const Color(
-                                          0xFFD9D9D9)); // 로딩 중일 때 회색 화면 유지
-                                },
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                      color: const Color(
-                                          0xFFD9D9D9)); // 로딩 실패 시 회색 화면 표시
-                                },
-                              ),
+                              // 큐레이션 배경 이미지(첫번 째 사진)
+                              snapshot.data!.imageList.isEmpty
+                                  // 이미지가 없을 경우
+                                  ? Container(color: const Color(0xFFD9D9D9))
+                                  // 이미지가 있을 경우
+                                  : Image.network(
+                                      snapshot.data!.imageList[0],
+                                      fit: BoxFit.cover,
+                                      loadingBuilder:
+                                          (context, child, loadingProgress) {
+                                        if (loadingProgress == null)
+                                          return child;
+                                        return Container(
+                                            color: const Color(
+                                                0xFFD9D9D9)); // 로딩 중일 때 회색 화면 유지
+                                      },
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return Container(
+                                            color: const Color(
+                                                0xFFD9D9D9)); // 로딩 실패 시 회색 화면 표시
+                                      },
+                                    ),
                               Padding(
                                 padding: const EdgeInsets.only(
                                     left: 20.0, right: 20.0, bottom: 10.0),

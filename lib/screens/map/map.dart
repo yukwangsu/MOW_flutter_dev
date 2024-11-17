@@ -284,6 +284,14 @@ class _MapScreenState extends State<MapScreen> {
       backgroundColor: const Color.fromARGB(255, 231, 215, 199),
       body: Stack(
         children: [
+          // 배경 화면
+          // // 테스트 후 삭제 가능
+          // Container(
+          //   height: screenHeight,
+          //   width: screenWidth,
+          //   color: const Color(0xFFAD7541),
+          // ),
+
           // 지도 로딩중 화면
           if (isLoadingMap)
             Center(
@@ -322,6 +330,10 @@ class _MapScreenState extends State<MapScreen> {
             ),
           // 지도 로딩이 끝났을 때 화면
           if (!isLoadingMap)
+            // // 테스트 후 SizedBox 삭제 가능
+            // SizedBox(
+            //   height: screenHeight - bottomSheetHeight + 40.0,
+            //   child:
             NaverMap(
               options: NaverMapViewOptions(
                 initialCameraPosition: NCameraPosition(
@@ -339,10 +351,12 @@ class _MapScreenState extends State<MapScreen> {
                   southWest: NLatLng(31.43, 122.37),
                   northEast: NLatLng(38.35, 132.0),
                 ),
-                // 지도에 표시되는 언어를 영어로 제한
+                // 지도에 표시되는 언어를 한국어로 제한
                 locale: const Locale('ko'),
                 // 현위치로 이동하는 버튼 비/활성화
                 locationButtonEnable: false,
+                logoMargin:
+                    EdgeInsets.only(bottom: bottomSheetHeight, left: 5.0),
               ),
               onMapReady: (NaverMapController mapController) {
                 //네이버 지도 로딩이 끝났을 때 지도에 마커를 추가하기 위한 준비
@@ -354,6 +368,7 @@ class _MapScreenState extends State<MapScreen> {
                 });
               },
             ),
+          // ),
 
           // Map, Curation 전환 버튼
           Positioned(
@@ -1550,30 +1565,6 @@ class _MapScreenState extends State<MapScreen> {
                                 const SizedBox(
                                   width: 8.0,
                                 ),
-                                SelectButton(
-                                  height: 36.0,
-                                  padding: 10.0,
-                                  bgColor: const Color(0xFFFFFCF8),
-                                  radius: 12.0,
-                                  text: '큐레이션 작성하기',
-                                  textColor: const Color(0xFF6B4D38),
-                                  textSize: 16.0,
-                                  borderColor: const Color(0xFF6B4D38),
-                                  borderOpacity: 1.0,
-                                  borderWidth: 1.0,
-                                  lineHeight: 1.5,
-                                  isIconFirst: true,
-                                  onPress: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            WriteCurationScreen(
-                                                workspaceId: workspaceId),
-                                      ),
-                                    );
-                                  },
-                                ),
                               ],
                             ),
                           ),
@@ -1624,20 +1615,30 @@ class _MapScreenState extends State<MapScreen> {
                                         List<CurationPlaceDtoModel>
                                             curationPlaceList =
                                             snapshot.data!.curationPlaceList;
-                                        return Expanded(
-                                            child: ListView.separated(
-                                          scrollDirection: Axis.horizontal,
-                                          itemCount: curationPlaceList.length,
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 18),
-                                          itemBuilder: (context, index) {
-                                            return curationPlaceWidget(
-                                                curationPlaceList[index]);
-                                          },
-                                          //separatorBuilder는 사이에 공간을 만드는 역할.
-                                          separatorBuilder: (context, index) =>
-                                              const SizedBox(width: 8),
-                                        ));
+                                        // 작성된 큐레이션이 없을 때
+                                        if (curationPlaceList.isEmpty) {
+                                          return Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 25.0),
+                                            child: defaultCurationPlaceWidget(),
+                                          );
+                                        } else {
+                                          // 작성된 큐레이션이 있을 때
+                                          return Expanded(
+                                              child: ListView.separated(
+                                            scrollDirection: Axis.horizontal,
+                                            itemCount: curationPlaceList.length,
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 18),
+                                            itemBuilder: (context, index) {
+                                              return curationPlaceWidget(
+                                                  curationPlaceList[index]);
+                                            },
+                                            separatorBuilder:
+                                                (context, index) =>
+                                                    const SizedBox(width: 8),
+                                          ));
+                                        }
                                       }
                                     }),
                               ],
@@ -1796,6 +1797,8 @@ class _MapScreenState extends State<MapScreen> {
                             final cameraUpdate =
                                 NCameraUpdate.scrollAndZoomTo(target: location);
                             // 2. 카메라가 이동할 때 마커를 왼쪽에서 1/2, 위에서 1/3에 위치시키도록 설정
+                            // // 테스트 후 1/3으로 변경 가능
+                            // cameraUpdate.setPivot(const NPoint(1 / 2, 1 / 2));
                             cameraUpdate.setPivot(const NPoint(1 / 2, 1 / 3));
                             // 3. 카메라 시점 업데이트
                             naverMapController.updateCamera(cameraUpdate);
@@ -1839,7 +1842,9 @@ class _MapScreenState extends State<MapScreen> {
                           // 1. 카메라가 이동할 위치 설정
                           final cameraUpdate =
                               NCameraUpdate.scrollAndZoomTo(target: location);
-                          // 2. 카메라가 이동할 때 마커를 왼쪽에서 1/2, 위에서 1/3에 위치시키도록 설정
+                          // 2. 카메라가 이동할 때 마커를 왼쪽에서 1/2, 위에서 1/2에 위치시키도록 설정
+                          // // 테스트 후 1/3으로 변경 가능
+                          // cameraUpdate.setPivot(const NPoint(1 / 2, 1 / 2));
                           cameraUpdate.setPivot(const NPoint(1 / 2, 1 / 3));
                           // 3. 카메라 시점 업데이트
                           naverMapController.updateCamera(cameraUpdate);
@@ -2638,6 +2643,90 @@ class _MapScreenState extends State<MapScreen> {
                   ),
                   Text(
                     data.workSpaceName,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          color: const Color(0XFFC3C3C3),
+                        ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // curationPlace 모드에서 밑에 나오는 큐레이션(작성된 큐레이션이 없을 때)
+  Widget defaultCurationPlaceWidget() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => WriteCurationScreen(
+              workspaceId: workspaceId,
+            ),
+            fullscreenDialog: true,
+          ),
+        );
+      },
+      child: Container(
+        width: 228,
+        height: 390,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10.0),
+          border: Border.all(
+            color: const Color(0XFFE4E3E2),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(10.0),
+                    topRight: Radius.circular(10.0),
+                  ),
+                ),
+                width: 228,
+                height: 317,
+                //자르기 -> BorderRadius 반영
+                clipBehavior: Clip.hardEdge,
+
+                // 이미지
+                child: Container(
+                  color: const Color.fromARGB(255, 247, 247, 247),
+                  child: const Center(
+                    child: Icon(
+                      Icons.add, // 플러스 아이콘
+                      size: 60.0, // 아이콘 크기
+                      color: Colors.grey, // 아이콘 색상
+                    ),
+                  ),
+                )),
+            const SizedBox(
+              height: 14,
+            ),
+            // 큐레이션 제목과 상호명
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '큐레이션을 작성해주세요!',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  const SizedBox(
+                    height: 4.0,
+                  ),
+                  Text(
+                    '클릭해서 작성하기',
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
