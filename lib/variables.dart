@@ -10,3 +10,23 @@ const List<Color> colorList = [
   Color(0xFF77CAF9), // color=7
   Color(0xFFAF93EB), // color=8
 ];
+
+List<String> day = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
+
+Map<String, String> dayMap = {
+  'Sunday': '일',
+  'Monday': '월',
+  'Tuesday': '화',
+  'Wednesday': '수',
+  'Thursday': '목',
+  'Friday': '금',
+  'Saturday': '토',
+};

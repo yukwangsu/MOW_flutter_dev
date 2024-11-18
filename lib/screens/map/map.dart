@@ -856,30 +856,6 @@ class _MapScreenState extends State<MapScreen> {
 
   // 2. bottomsheet mode: detailMode
   Widget detailMode() {
-    // //테스트용
-    // late String name;
-    // late double score;
-    // late int reviewCount;
-    // late String adress;
-    // late String phoneNumber;
-    // late int isOpen;
-    // late String openingHour;
-    // late List<String> topThreeTags;
-    // late String link;
-    // late List<String> reviews;
-
-    // //테스트용
-    // name = "스타벅스 연세로점";
-    // score = 4.3;
-    // reviewCount = 234;
-    // adress = "서울 서대문구 34나길 6";
-    // phoneNumber = "02-123-1231";
-    // isOpen = 2;
-    // openingHour = '수 09:00 - 21:00';
-    // topThreeTags = ['# 콘센트 많아요', '# 콘센트 많아요', '# 콘센트 많아요'];
-    // link = "https://www.yonsei.com";
-    // reviews = ['좋아요', '멋있어요', '깔끔해요', '좋아요', '멋있어요', '깔끔해요'];
-
     //처음 들어왔을 때만 api요청하기. bottomsheet을 조절하면서 발생하는 setstate로는
     //api를 요청하지 않는다.
     if (reloadDetailspace) {
@@ -1048,14 +1024,17 @@ class _MapScreenState extends State<MapScreen> {
                                             children: [
                                               Text(
                                                 placeDetail.location
-                                                    .substring(0, 7),
+                                                    .split(' ')
+                                                    .take(2)
+                                                    .join(' '),
                                                 style: Theme.of(context)
                                                     .textTheme
                                                     .titleSmall,
                                               ),
                                               const SizedBoxWidth4(),
-                                              SvgPicture.asset(
-                                                  'assets/icons/dropdown_down_padding.svg'),
+                                              SvgPicture.asset(detailShowAddress
+                                                  ? 'assets/icons/dropdown_up_padding.svg'
+                                                  : 'assets/icons/dropdown_down_padding.svg'),
                                             ],
                                           ),
                                         ),
@@ -1082,8 +1061,9 @@ class _MapScreenState extends State<MapScreen> {
                                                     .titleSmall,
                                               ),
                                               const SizedBoxWidth4(),
-                                              SvgPicture.asset(
-                                                  'assets/icons/dropdown_down_padding.svg'),
+                                              SvgPicture.asset(detailShowNumber
+                                                  ? 'assets/icons/dropdown_up_padding.svg'
+                                                  : 'assets/icons/dropdown_down_padding.svg'),
                                             ],
                                           ),
                                         ),
@@ -1144,8 +1124,9 @@ class _MapScreenState extends State<MapScreen> {
                                                     .titleSmall,
                                               ),
                                               const SizedBoxWidth4(),
-                                              SvgPicture.asset(
-                                                  'assets/icons/dropdown_down_padding.svg'),
+                                              SvgPicture.asset(detailShowOpenHour
+                                                  ? 'assets/icons/dropdown_up_padding.svg'
+                                                  : 'assets/icons/dropdown_down_padding.svg'),
                                             ],
                                           ),
                                         ),
@@ -1363,81 +1344,23 @@ class _MapScreenState extends State<MapScreen> {
                           Positioned(
                             top: 85.0,
                             left: 20.0,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(10.0),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black
-                                          .withOpacity(0.25), // 그림자 색상
-                                      offset:
-                                          const Offset(0, 3), // 그림자 위치 (x, y)
-                                      blurRadius: 5.0, // 블러 정도
-                                      spreadRadius: 0.1, // 확산 정도
-                                    ),
-                                  ]),
-                              padding: const EdgeInsets.only(
-                                top: 12.0,
-                                right: 14.0,
-                                bottom: 12.0,
-                                left: 14.0,
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                        color: const Color(0xFFAD7541),
-                                        borderRadius:
-                                            BorderRadius.circular(5.0)),
-                                    padding: const EdgeInsets.only(
-                                        top: 2.0,
-                                        right: 6.0,
-                                        bottom: 2.0,
-                                        left: 6.0),
-                                    child: Text(
-                                      '주소',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall!
-                                          .copyWith(color: Colors.white),
-                                    ),
-                                  ),
-                                  const SizedBox(
-                                    width: 6.0,
-                                  ),
-                                  Text(
-                                    placeDetail.location,
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall,
-                                  ),
-                                ],
-                              ),
-                            ),
+                            child: placeDetailInfo('주소', placeDetail.location),
                           ),
                         // 2. 연락처
                         if (detailShowNumber)
                           Positioned(
                             top: 85.0,
-                            left: 150.0,
-                            child: Container(
-                              width: 100.0,
-                              height: 100.0,
-                              color: Colors.black,
-                              child: const Text('test'),
-                            ),
+                            left: 100.0,
+                            child: placeDetailInfo(
+                                '전화번호', placeDetail.phoneNumber),
                           ),
                         // 3. 운영시간
                         if (detailShowOpenHour)
                           Positioned(
                             top: 115.0,
-                            left: 90.0,
-                            child: Container(
-                              width: 100.0,
-                              height: 100.0,
-                              color: Colors.black,
-                              child: const Text('test'),
-                            ),
+                            left: 82.0,
+                            child: placeDetailOpenHour(
+                                placeDetail.workspaceOperationTime),
                           ),
                       ],
                     );
@@ -1584,6 +1507,9 @@ class _MapScreenState extends State<MapScreen> {
       place = SearchService.getPlaceById(workspaceId);
       curationPlace = CurationService.getCurationPlace(workspaceId, 0, 0, 20);
       reloadCurationPlace = false;
+      detailShowAddress = false;
+      detailShowNumber = false;
+      detailShowOpenHour = false;
     }
 
     return Column(
@@ -1661,225 +1587,342 @@ class _MapScreenState extends State<MapScreen> {
                     padding: const EdgeInsets.only(top: 0.0),
                     itemCount: 1,
                     itemBuilder: (context, index) {
-                      return Column(
+                      return Stack(
                         children: [
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 20.0),
+                          GestureDetector(
+                            //화면 다른 곳을 클릭했을 때 추가 정보를 띄워주는 창이 없어지도록
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () {
+                              setState(() {
+                                detailShowAddress = false;
+                                detailShowNumber = false;
+                                detailShowOpenHour = false;
+                              });
+                            },
                             child: Column(
                               children: [
-                                // 가게 이름
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      placeDetail.workspaceName,
-                                      style:
-                                          Theme.of(context).textTheme.bodyLarge,
-                                    ),
-                                    SvgPicture.asset(
-                                        'assets/icons/share_icon.svg')
-                                  ],
-                                ),
-                                const SizedBox(height: 4.0),
-                                // 가게 별점, 리뷰
-                                Row(
-                                  children: [
-                                    // 별점
-                                    for (int i = 0;
-                                        i < placeDetail.starscore.round();
-                                        i++) ...[
-                                      SvgPicture.asset(
-                                          'assets/icons/star_fill_icon.svg'),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20.0),
+                                  child: Column(
+                                    children: [
+                                      // 가게 이름
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            placeDetail.workspaceName,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodyLarge,
+                                          ),
+                                          SvgPicture.asset(
+                                              'assets/icons/share_icon.svg')
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4.0),
+                                      // 가게 별점, 리뷰
+                                      Row(
+                                        children: [
+                                          // 별점
+                                          for (int i = 0;
+                                              i < placeDetail.starscore.round();
+                                              i++) ...[
+                                            SvgPicture.asset(
+                                                'assets/icons/star_fill_icon.svg'),
+                                          ],
+                                          for (int i = 0;
+                                              i < 5 - 4.round();
+                                              i++) ...[
+                                            SvgPicture.asset(
+                                                'assets/icons/star_unfill_icon.svg'),
+                                          ],
+                                          const SizedBox(
+                                            width: 8.0,
+                                          ),
+                                          // 리뷰 개수
+                                          Text(
+                                            '(${placeDetail.reviewCnt})',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleSmall,
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12.0),
+                                      // 가게 위치, 연락처
+                                      Row(
+                                        children: [
+                                          // 주소
+                                          GestureDetector(
+                                            behavior: HitTestBehavior.opaque,
+                                            onTap: () {
+                                              setState(() {
+                                                detailShowAddress =
+                                                    !detailShowAddress;
+                                                detailShowNumber = false;
+                                                detailShowOpenHour = false;
+                                              });
+                                            },
+                                            child: Row(
+                                              children: [
+                                                Text(
+                                                  placeDetail.location
+                                                      .split(' ')
+                                                      .take(2)
+                                                      .join(' '),
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .titleSmall,
+                                                ),
+                                                const SizedBoxWidth4(),
+                                                SvgPicture.asset(detailShowAddress
+                                                    ? 'assets/icons/dropdown_up_padding.svg'
+                                                    : 'assets/icons/dropdown_down_padding.svg'),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(
+                                            width: 58.0,
+                                          ),
+                                          // 연락처
+                                          GestureDetector(
+                                            behavior: HitTestBehavior.opaque,
+                                            onTap: () {
+                                              setState(() {
+                                                detailShowNumber =
+                                                    !detailShowNumber;
+                                                detailShowAddress = false;
+                                                detailShowOpenHour = false;
+                                              });
+                                            },
+                                            child: Row(
+                                              children: [
+                                                Text(
+                                                  '연락처',
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .titleSmall,
+                                                ),
+                                                const SizedBoxWidth4(),
+                                                SvgPicture.asset(detailShowNumber
+                                                    ? 'assets/icons/dropdown_up_padding.svg'
+                                                    : 'assets/icons/dropdown_down_padding.svg'),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(
+                                        height: 8.0,
+                                      ),
+                                      // 현재 영업 유무, 영업 시간 등 표시
+                                      Row(
+                                        children: [
+                                          Text(
+                                            placeDetail.workspaceStatus == 0
+                                                ? '영업중'
+                                                : placeDetail.workspaceStatus ==
+                                                        1
+                                                    ? '브레이크 타임'
+                                                    : placeDetail
+                                                                .workspaceStatus ==
+                                                            2
+                                                        ? '영업종료'
+                                                        : '휴무',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleSmall!
+                                                .copyWith(
+                                                    color: const Color(
+                                                        0xFF6B4D38)),
+                                          ),
+                                          const SizedBoxWidth4(),
+                                          Text(
+                                            '・',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleSmall!
+                                                .copyWith(
+                                                    color: const Color(
+                                                        0xFF6B4D38)),
+                                          ),
+                                          const SizedBoxWidth4(),
+                                          // 요일별 영업시간
+                                          GestureDetector(
+                                            behavior: HitTestBehavior.opaque,
+                                            onTap: () {
+                                              setState(() {
+                                                detailShowOpenHour =
+                                                    !detailShowOpenHour;
+                                                detailShowAddress = false;
+                                                detailShowNumber = false;
+                                              });
+                                            },
+                                            child: Row(
+                                              children: [
+                                                const SizedBoxWidth4(),
+                                                Text(
+                                                  setOpenHour(placeDetail
+                                                      .workspaceOperationTime),
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .titleSmall,
+                                                ),
+                                                const SizedBoxWidth4(),
+                                                SvgPicture.asset(detailShowOpenHour
+                                                    ? 'assets/icons/dropdown_up_padding.svg'
+                                                    : 'assets/icons/dropdown_down_padding.svg'),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ],
-                                    for (int i = 0; i < 5 - 4.round(); i++) ...[
-                                      SvgPicture.asset(
-                                          'assets/icons/star_unfill_icon.svg'),
+                                  ),
+                                ),
+                                const SizedBoxHeight20(),
+                                // 저장하기, 길찾기 버튼
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      // 북마크에 추가하기 버튼
+                                      bookmarkButtonWidget(),
+                                      const SizedBox(
+                                        width: 8.0,
+                                      ),
+                                      // 길찾기 버튼
+                                      findLoadButtonWidget(
+                                          destinationLat,
+                                          destinationLng,
+                                          placeDetail.workspaceName),
                                     ],
-                                    const SizedBox(
-                                      width: 8.0,
-                                    ),
-                                    // 리뷰 개수
-                                    Text(
-                                      '(${placeDetail.reviewCnt})',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleSmall,
-                                    ),
-                                  ],
+                                  ),
                                 ),
-                                const SizedBox(height: 12.0),
-                                // 가게 위치, 연락처
-                                Row(
-                                  children: [
-                                    // 주소
-                                    Text(
-                                      placeDetail.location.substring(0, 7),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleSmall,
-                                    ),
-                                    const SizedBoxWidth4(),
-                                    SvgPicture.asset(
-                                        'assets/icons/dropdown_down_padding.svg'),
-                                    const SizedBox(
-                                      width: 58.0,
-                                    ),
-                                    Text(
-                                      '연락처',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleSmall,
-                                    ),
-                                    const SizedBoxWidth4(),
-                                    SvgPicture.asset(
-                                        'assets/icons/dropdown_down_padding.svg'),
-                                  ],
-                                ),
-                                const SizedBox(
-                                  height: 8.0,
-                                ),
-                                // 현재 영업 유무, 영업 시간 등 표시
-                                Row(
-                                  children: [
-                                    Text(
-                                      placeDetail.workspaceStatus == 0
-                                          ? '영업중'
-                                          : placeDetail.workspaceStatus == 1
-                                              ? '브레이크 타임'
-                                              : placeDetail.workspaceStatus == 2
-                                                  ? '영업종료'
-                                                  : '휴무',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleSmall!
-                                          .copyWith(
-                                              color: const Color(0xFF6B4D38)),
-                                    ),
-                                    const SizedBoxWidth4(),
-                                    Text(
-                                      '・',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleSmall!
-                                          .copyWith(
-                                              color: const Color(0xFF6B4D38)),
-                                    ),
-                                    const SizedBoxWidth4(),
-                                    // 영업시간
-                                    Text(
-                                      setOpenHour(
-                                          placeDetail.workspaceOperationTime),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleSmall,
-                                    ),
-                                    const SizedBoxWidth4(),
-                                    SvgPicture.asset(
-                                        'assets/icons/dropdown_down_padding.svg'),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBoxHeight20(),
-                          // 저장하기, 길찾기 버튼
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                // 북마크에 추가하기 버튼
-                                bookmarkButtonWidget(),
-                                const SizedBox(
-                                  width: 8.0,
-                                ),
-                                // 길찾기 버튼
-                                findLoadButtonWidget(destinationLat,
-                                    destinationLng, placeDetail.workspaceName),
-                              ],
-                            ),
-                          ),
-                          const SizedBoxHeight30(),
-                          // 큐레이션
-                          SizedBox(
-                            height: 390,
-                            child: Row(
-                              children: [
-                                FutureBuilder(
-                                    future: curationPlace,
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        // 데이터가 로드 중일 때 로딩 표시
-                                        return Expanded(
-                                          child: ListView.builder(
-                                            padding:
-                                                const EdgeInsets.only(top: 0.0),
-                                            itemCount: 1,
-                                            itemBuilder: (context, index) {
-                                              return const Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  CircularProgressIndicator(
-                                                    color: Color(0xFFAD7541),
-                                                  ),
-                                                ],
+                                const SizedBoxHeight30(),
+                                // 큐레이션
+                                SizedBox(
+                                  height: 390,
+                                  child: Row(
+                                    children: [
+                                      FutureBuilder(
+                                          future: curationPlace,
+                                          builder: (context, snapshot) {
+                                            if (snapshot.connectionState ==
+                                                ConnectionState.waiting) {
+                                              // 데이터가 로드 중일 때 로딩 표시
+                                              return Expanded(
+                                                child: ListView.builder(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          top: 0.0),
+                                                  itemCount: 1,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    return const Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        CircularProgressIndicator(
+                                                          color:
+                                                              Color(0xFFAD7541),
+                                                        ),
+                                                      ],
+                                                    );
+                                                  },
+                                                ),
                                               );
-                                            },
-                                          ),
-                                        );
-                                      } else if (snapshot.hasError) {
-                                        // 오류가 발생했을 때
-                                        return Expanded(
-                                          child: ListView.builder(
-                                            padding:
-                                                const EdgeInsets.only(top: 0.0),
-                                            itemCount: 1,
-                                            itemBuilder: (context, index) {
-                                              return Text(
-                                                  'Error: ${snapshot.error}');
-                                            },
-                                          ),
-                                        );
-                                      } else {
-                                        List<CurationPlaceDtoModel>
-                                            curationPlaceList =
-                                            snapshot.data!.curationPlaceList;
-                                        // 작성된 큐레이션이 없을 때
-                                        if (curationPlaceList.isEmpty) {
-                                          return Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 25.0),
-                                            child: defaultCurationPlaceWidget(),
-                                          );
-                                        } else {
-                                          // 작성된 큐레이션이 있을 때
-                                          return Expanded(
-                                              child: ListView.separated(
-                                            scrollDirection: Axis.horizontal,
-                                            itemCount: curationPlaceList.length,
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 18),
-                                            itemBuilder: (context, index) {
-                                              return curationPlaceWidget(
-                                                  curationPlaceList[index]);
-                                            },
-                                            separatorBuilder:
-                                                (context, index) =>
-                                                    const SizedBox(width: 8),
-                                          ));
-                                        }
-                                      }
-                                    }),
+                                            } else if (snapshot.hasError) {
+                                              // 오류가 발생했을 때
+                                              return Expanded(
+                                                child: ListView.builder(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          top: 0.0),
+                                                  itemCount: 1,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    return Text(
+                                                        'Error: ${snapshot.error}');
+                                                  },
+                                                ),
+                                              );
+                                            } else {
+                                              List<CurationPlaceDtoModel>
+                                                  curationPlaceList = snapshot
+                                                      .data!.curationPlaceList;
+                                              // 작성된 큐레이션이 없을 때
+                                              if (curationPlaceList.isEmpty) {
+                                                return Padding(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 25.0),
+                                                  child:
+                                                      defaultCurationPlaceWidget(),
+                                                );
+                                              } else {
+                                                // 작성된 큐레이션이 있을 때
+                                                return Expanded(
+                                                    child: ListView.separated(
+                                                  scrollDirection:
+                                                      Axis.horizontal,
+                                                  itemCount:
+                                                      curationPlaceList.length,
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 18),
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    return curationPlaceWidget(
+                                                        curationPlaceList[
+                                                            index]);
+                                                  },
+                                                  separatorBuilder: (context,
+                                                          index) =>
+                                                      const SizedBox(width: 8),
+                                                ));
+                                              }
+                                            }
+                                          }),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(
+                                  height: 60,
+                                )
                               ],
                             ),
                           ),
-                          const SizedBox(
-                            height: 60,
-                          )
+
+                          // 추가정보를 보여주는 화면
+                          // 1. 주소
+                          if (detailShowAddress)
+                            Positioned(
+                              top: 85.0,
+                              left: 20.0,
+                              child:
+                                  placeDetailInfo('주소', placeDetail.location),
+                            ),
+                          // 2. 연락처
+                          if (detailShowNumber)
+                            Positioned(
+                              top: 85.0,
+                              left: 100.0,
+                              child: placeDetailInfo(
+                                  '전화번호', placeDetail.phoneNumber),
+                            ),
+                          // 3. 운영시간
+                          if (detailShowOpenHour)
+                            Positioned(
+                              top: 115.0,
+                              left: 82.0,
+                              child: placeDetailOpenHour(
+                                  placeDetail.workspaceOperationTime),
+                            ),
                         ],
                       );
                     },
@@ -2545,8 +2588,10 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   String setOpenHour(Map<String, String> hour) {
-    // 현재 요일 가져오기 (0: 월요일, 6: 일요일)
-    int currentWeekday = DateTime.now().weekday;
+    // 현재 요일 가져오기 (1: 월요일 ~ 7: 일요일)
+    DateTime nowUtc = DateTime.now().toUtc();
+    DateTime nowKst = nowUtc.add(const Duration(hours: 9));
+    int currentWeekday = nowKst.weekday;
 
     // 요일을 Map의 키와 연결 및 첫 글자 정의
     String day;
@@ -2586,7 +2631,7 @@ class _MapScreenState extends State<MapScreen> {
     }
 
     // 해당 요일의 영업 시간을 반환 (없으면 기본값으로 '정보 없음')
-    String hours = hour[day] ?? '정보 없음';
+    String hours = hour[day] ?? '휴무';
 
     // 요일 첫 글자와 함께 반환
     return '$dayInitial $hours';
@@ -3044,8 +3089,8 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
-  // detail 장소에 주소 자세히보기 창
-  Widget placeDetailAddress(String address) {
+  // detail 장소에 정보 자세히보기 창(주소, 전화번호)
+  Widget placeDetailInfo(String type, String content) {
     return Container(
       decoration: BoxDecoration(
           color: Colors.white,
@@ -3073,7 +3118,7 @@ class _MapScreenState extends State<MapScreen> {
             padding: const EdgeInsets.only(
                 top: 2.0, right: 6.0, bottom: 2.0, left: 6.0),
             child: Text(
-              '주소',
+              type,
               style: Theme.of(context)
                   .textTheme
                   .bodySmall!
@@ -3084,9 +3129,88 @@ class _MapScreenState extends State<MapScreen> {
             width: 6.0,
           ),
           Text(
-            address,
+            content,
             style: Theme.of(context).textTheme.bodySmall,
           ),
+          const SizedBox(
+            width: 4.0,
+          ),
+          // 텍스트 복사 버튼
+          GestureDetector(
+              onTap: () {
+                Clipboard.setData(ClipboardData(text: content));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('$type가 복사되었습니다!')),
+                );
+              },
+              child: SvgPicture.asset('assets/icons/copy_text_icon.svg'))
+        ],
+      ),
+    );
+  }
+
+  // detail 장소에 정보 자세히보기 창(운영시간)
+  Widget placeDetailOpenHour(Map<String, String> hour) {
+    // 현재 요일 가져오기 (1: 월요일 ~ 7: 일요일)
+    DateTime nowUtc = DateTime.now().toUtc();
+    DateTime nowKst = nowUtc.add(const Duration(hours: 9));
+    int currentWeekday = nowKst.weekday;
+    return Container(
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10.0),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.25), // 그림자 색상
+              offset: const Offset(0, 3), // 그림자 위치 (x, y)
+              blurRadius: 5.0, // 블러 정도
+              spreadRadius: 0.1, // 확산 정도
+            ),
+          ]),
+      padding: const EdgeInsets.only(
+        top: 12.0,
+        right: 25.0,
+        bottom: 6.0,
+        left: 14.0,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (int i = currentWeekday; i < currentWeekday + 7; i++) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                // 요일
+                Text(
+                  '${dayMap[day[i % 7]]}',
+                  // 오늘은 텍스트 두껍게 표시
+                  style: i == currentWeekday
+                      ? Theme.of(context).textTheme.labelSmall
+                      : Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(
+                  width: 10.0,
+                ),
+                // 운영시간 (null인지 확인)
+                hour[day[i % 7]] != null
+                    ? Text(
+                        '${hour[day[i % 7]]}',
+                        style: i == currentWeekday
+                            ? Theme.of(context).textTheme.labelSmall
+                            : Theme.of(context).textTheme.bodySmall,
+                      )
+                    : Text(
+                        '휴무',
+                        style: i == currentWeekday
+                            ? Theme.of(context).textTheme.labelSmall
+                            : Theme.of(context).textTheme.bodySmall,
+                      ),
+              ],
+            ),
+            const SizedBox(
+              height: 6.0,
+            )
+          ],
         ],
       ),
     );
