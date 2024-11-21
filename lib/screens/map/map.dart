@@ -1,9 +1,5 @@
-import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_mow/models/bookmark.dart';
 import 'package:flutter_mow/models/curation_place_model.dart';
 import 'package:flutter_mow/models/place_detail_model.dart';
 import 'package:flutter_mow/models/simple_curation_model.dart';
@@ -13,19 +9,15 @@ import 'package:flutter_mow/screens/map/edit_tag.dart';
 import 'package:flutter_mow/screens/map/search_place.dart';
 import 'package:flutter_mow/screens/map/write_curation.dart';
 import 'package:flutter_mow/screens/user/user_info.dart';
-import 'package:flutter_mow/services/bookmark_service.dart';
 import 'package:flutter_mow/services/curation_service.dart';
 import 'package:flutter_mow/services/search_service.dart';
 import 'package:flutter_mow/variables.dart';
 import 'package:flutter_mow/widgets/bookmark_list.dart';
-import 'package:flutter_mow/widgets/button_main.dart';
-import 'package:flutter_mow/widgets/curation_list.dart';
 import 'package:flutter_mow/widgets/select_button.dart';
 import 'package:flutter_mow/widgets/switch_button.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:geolocator/geolocator.dart';
-// import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -253,10 +245,10 @@ class _MapScreenState extends State<MapScreen> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        //사용자가 위치권한 요청을 거부했을 경우 시청으로 설정
+        //사용자가 위치권한 요청을 거부했을 경우 신촌으로 설정
         isUserAcceptLocation = false;
-        latitude = 37.566637964388796;
-        longitude = 126.97838246141094;
+        latitude = 37.5583605;
+        longitude = 126.9368894;
         return true;
       }
     }

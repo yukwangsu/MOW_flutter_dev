@@ -22,7 +22,6 @@ class _DropDownState extends State<DropDown> {
     '직장인',
     '디자이너',
     '개발자',
-    '직접입력',
   ];
   bool isOpen = false;
   bool dropdownMode = true;

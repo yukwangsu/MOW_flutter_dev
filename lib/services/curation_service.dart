@@ -411,4 +411,76 @@ class CurationService {
       return false;
     }
   }
+
+  // 큐레이션 좋아요
+  static Future<bool> likeCuration(
+    int curationId,
+  ) async {
+    final url = Uri.parse(
+        '${Secrets.awsKey}curation/like/increment?curationId=$curationId');
+
+    //토큰 가져오기
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('accessToken');
+
+    var headers = {
+      'accessToken': '$token',
+      'Content-Type': 'application/json',
+    };
+    try {
+      final response = await http.patch(url, headers: headers);
+      print('----------[service] likeCuration----------');
+      print('Response status: ${response.statusCode}');
+
+      // UTF-8로 응답을 수동 디코딩
+      final utf8Body = utf8.decode(response.bodyBytes);
+      print('Response body: $utf8Body');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return true;
+      } else {
+        print('Fail likeCuration');
+        return false;
+      }
+    } catch (e) {
+      print('Error during likeCuration: $e');
+      return false;
+    }
+  }
+
+  // 큐레이션 좋아요 취소
+  static Future<bool> cancelLikeCuration(
+    int curationId,
+  ) async {
+    final url = Uri.parse(
+        '${Secrets.awsKey}curation/like/decrement?curationId=$curationId');
+
+    //토큰 가져오기
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('accessToken');
+
+    var headers = {
+      'accessToken': '$token',
+      'Content-Type': 'application/json',
+    };
+    try {
+      final response = await http.patch(url, headers: headers);
+      print('----------[service] cancelLikeCuration----------');
+      print('Response status: ${response.statusCode}');
+
+      // UTF-8로 응답을 수동 디코딩
+      final utf8Body = utf8.decode(response.bodyBytes);
+      print('Response body: $utf8Body');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return true;
+      } else {
+        print('Fail cancelLikeCuration');
+        return false;
+      }
+    } catch (e) {
+      print('Error during cancelLikeCuration: $e');
+      return false;
+    }
+  }
 }

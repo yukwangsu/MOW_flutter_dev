@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mow/screens/map/add_review.dart';
+import 'package:flutter_mow/screens/user/user_account.dart';
 import 'package:flutter_mow/widgets/appbar_back.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -134,6 +135,38 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
                     ),
                   ],
                 ),
+              ),
+            ),
+            const SizedBox(
+              height: 14.0,
+            ),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 5.0),
+              child: ListBorderLine(),
+            ),
+            const SizedBox(
+              height: 40.0,
+            ),
+            // 계정 정보
+            GestureDetector(
+              behavior: HitTestBehavior.opaque, // *** 빈 공간까지 터치 감지 ***
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const UserAccount(),
+                  ),
+                );
+              },
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '계정 정보',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  SvgPicture.asset('assets/icons/arrow_right_icon.svg'),
+                ],
               ),
             ),
           ],
