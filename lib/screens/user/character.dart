@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mow/models/character_model.dart';
+import 'package:flutter_mow/screens/user/character_shop.dart';
 import 'package:flutter_mow/services/character_service.dart';
 import 'package:flutter_mow/widgets/appbar_back.dart';
 import 'package:flutter_mow/widgets/button_free_width.dart';
-import 'package:flutter_svg/svg.dart';
 
 class Character extends StatefulWidget {
   const Character({
@@ -20,26 +20,63 @@ class _CharacterState extends State<Character> {
   late Future<CharacterModel> character;
   late Future<int> characterComp;
   final TextEditingController characterNameController =
-      TextEditingController(); // 캐릭터 이름 컨테이너
+      TextEditingController(); // 캐릭터 이름 컨트롤러
+  final TextEditingController characterMessageController =
+      TextEditingController(); // 캐릭터 메시지 컨트롤러
 
   @override
   void initState() {
     super.initState();
 
-    // 포커스 풀리면 저장
-    characterNameFocusNode.addListener(() {
+    // 캐릭터 이름 포커스 풀리면 저장
+    characterNameFocusNode.addListener(() async {
       if (!characterNameFocusNode.hasFocus) {
-        setState(() {
-          // 저장하기
+        // 변경한 이름, 메시지가 비어있지 않은지 확인
+        if (characterNameController.text.isNotEmpty &&
+            characterMessageController.text.isNotEmpty) {
+          setState(() {
+            // 변경된 정보 수정하고 다시 불러오기
+            character = CharacterService.editCharacterInfo(
+                characterNameController.text, characterMessageController.text);
+          });
+        }
+      }
+    });
 
-          // 다시 불러오기
-          character = CharacterService.getCharacter();
-        });
+    // 캐릭터 메시지 포커스 풀리면 저장
+    characterMessageFocusNode.addListener(() async {
+      if (!characterMessageFocusNode.hasFocus) {
+        // 변경한 이름, 메시지가 비어있지 않은지 확인
+        if (characterNameController.text.isNotEmpty &&
+            characterMessageController.text.isNotEmpty) {
+          setState(() {
+            // 변경된 정보 수정하고 다시 불러오기
+            character = CharacterService.editCharacterInfo(
+                characterNameController.text, characterMessageController.text);
+          });
+        }
       }
     });
 
     character = CharacterService.getCharacter();
     characterComp = CharacterService.getCharacterComp();
+  }
+
+  // 캐릭터 상점으로 가는 버튼을 눌렀을 때
+  void onClickCharacterShopButton() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CharacterShop(),
+      ),
+    );
+  }
+
+  // 지도로 돌아가는 버튼을 눌렀을 때
+  void onClickBackToMapButton() {
+    // pop을 두번 함으로써 지도화면으로 돌아감
+    Navigator.pop(context);
+    Navigator.pop(context);
   }
 
   @override
@@ -75,6 +112,7 @@ class _CharacterState extends State<Character> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            Text('캐릭터 정보를 불러오는 중입니다...'),
                             CircularProgressIndicator(
                               color: Color(0xFFAD7541),
                             ),
@@ -99,11 +137,12 @@ class _CharacterState extends State<Character> {
                           snapshot.data!.characterDetail,
                         ),
                         const SizedBox(
-                          height: 55.0,
+                          height: 30.0,
                         ),
                         // 2. 상태 메시지
                         Column(
                           children: [
+                            // 말풍선
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 19.0,
@@ -120,16 +159,11 @@ class _CharacterState extends State<Character> {
                                   ),
                                 ],
                               ),
-                              child: Text(
-                                snapshot.data!.characterMessage,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge!
-                                    .copyWith(
-                                        color: const Color.fromARGB(
-                                            255, 155, 154, 154)),
-                              ),
+                              child: characterMessageInput(
+                                  characterMessageController,
+                                  snapshot.data!.characterMessage),
                             ),
+                            // 말풍선 동그라미 1
                             Padding(
                               padding:
                                   const EdgeInsets.only(top: 10.0, left: 60.0),
@@ -152,6 +186,7 @@ class _CharacterState extends State<Character> {
                                 ),
                               ),
                             ),
+                            // 말풍선 동그라미 2
                             Padding(
                               padding:
                                   const EdgeInsets.only(top: 3.0, left: 15.0),
@@ -174,9 +209,6 @@ class _CharacterState extends State<Character> {
                                 ),
                               ),
                             ),
-                            const SizedBox(
-                              height: 30.0,
-                            )
                           ],
                         )
                       ],
@@ -198,13 +230,16 @@ class _CharacterState extends State<Character> {
                   } else {
                     // 데이터가 성공적으로 로드되었을 때
                     // 추후 이미지 고르는 로직 추가
+                    final characterImage = snapshot.data!;
                     return Column(
                       children: [
-                        const SizedBox(
-                          height: 20.0,
-                        ),
-                        const Text('이미지 추가 예정'),
-                        Text('characterComp : ${snapshot.data!.toString()}'),
+                        // const Text('이미지 추가 예정'),
+                        // Text('characterComp : ${snapshot.data!.toString()}'),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 30.0),
+                          child: Image.asset(
+                              'assets/images/character/$characterImage.png'),
+                        )
                       ],
                     );
                   }
@@ -213,18 +248,23 @@ class _CharacterState extends State<Character> {
               // 빈공간 최대(버튼을 화면 아래에 넣기 위해서)
               const Spacer(),
               // 4. 꾸미기 상점 버튼
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 31.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 31.0),
                 child: Row(
                   children: [
                     Expanded(
-                      child: ButtonFreeWidth(
-                        text: '꾸미기 상점',
-                        bgcolor: Colors.white,
-                        textColor: Color(0xFF6B4D38),
-                        borderColor: Color(0xFF6B4D38),
-                        opacity: 1.0,
-                        heightPadding: 11.0,
+                      child: GestureDetector(
+                        onTap: () {
+                          onClickCharacterShopButton();
+                        },
+                        child: const ButtonFreeWidth(
+                          text: '꾸미기 상점',
+                          bgcolor: Colors.white,
+                          textColor: Color(0xFF6B4D38),
+                          borderColor: Color(0xFF6B4D38),
+                          opacity: 1.0,
+                          heightPadding: 11.0,
+                        ),
                       ),
                     )
                   ],
@@ -235,18 +275,23 @@ class _CharacterState extends State<Character> {
               ),
 
               // 5. 지도로 돌아가기 버튼
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 31.0),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 31.0),
                 child: Row(
                   children: [
                     Expanded(
-                      child: ButtonFreeWidth(
-                        text: '지도로 돌아가기',
-                        bgcolor: Color(0xFF6B4D38),
-                        textColor: Colors.white,
-                        borderColor: Color(0xFF6B4D38),
-                        opacity: 1.0,
-                        heightPadding: 11.0,
+                      child: GestureDetector(
+                        onTap: () {
+                          onClickBackToMapButton();
+                        },
+                        child: const ButtonFreeWidth(
+                          text: '지도로 돌아가기',
+                          bgcolor: Color(0xFF6B4D38),
+                          textColor: Colors.white,
+                          borderColor: Color(0xFF6B4D38),
+                          opacity: 1.0,
+                          heightPadding: 11.0,
+                        ),
                       ),
                     )
                   ],
@@ -265,22 +310,42 @@ class _CharacterState extends State<Character> {
   // 캐릭터 이름 입력칸
   Widget characterNameInput(TextEditingController controller, String name) {
     controller.text = name;
-    return TextField(
-      controller: controller,
-      style: Theme.of(context).textTheme.titleLarge,
-      focusNode: characterNameFocusNode,
-      cursorColor: Colors.black, // 커서 색상 설정
-      textAlign: TextAlign.center,
-      decoration: const InputDecoration(
-        border: InputBorder.none, //테두리 없음
-        isDense: true, // 컴팩트하게 설정
+    // IntrinsicWidth를 사용하면 TextField내부에 적힌 text의 길이에 맞게 width가 설정된다.
+    return IntrinsicWidth(
+      child: TextField(
+        controller: controller,
+        style: Theme.of(context).textTheme.titleLarge,
+        focusNode: characterNameFocusNode,
+        cursorColor: Colors.black, // 커서 색상 설정
+        textAlign: TextAlign.center,
+        decoration: const InputDecoration(
+          border: InputBorder.none, //테두리 없음
+          isDense: true, // 컴팩트하게 설정
+        ),
       ),
-      // onTap: () {
-      //   // // 텍스트 필드에 포커스가 갈 때마다 커서를 마지막으로 이동
-      //   // controller.selection = TextSelection.fromPosition(
-      //   //   TextPosition(offset: controller.text.length),
-      //   // );
-      // },
+    );
+  }
+
+  // 캐릭터 메시지 입력칸
+  Widget characterMessageInput(
+      TextEditingController controller, String message) {
+    controller.text = message;
+    // IntrinsicWidth를 사용하면 TextField내부에 적힌 text의 길이에 맞게 width가 설정된다.
+    return IntrinsicWidth(
+      child: TextField(
+        controller: controller,
+        style: Theme.of(context)
+            .textTheme
+            .bodyLarge!
+            .copyWith(color: const Color.fromARGB(255, 155, 154, 154)),
+        focusNode: characterMessageFocusNode,
+        cursorColor: Colors.black, // 커서 색상 설정
+        textAlign: TextAlign.center,
+        decoration: const InputDecoration(
+          border: InputBorder.none, //테두리 없음
+          isDense: true, // 컴팩트하게 설정
+        ),
+      ),
     );
   }
 }
