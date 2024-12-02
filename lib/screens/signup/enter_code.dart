@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mow/screens/signup/set_passwd.dart';
+import 'package:flutter_mow/services/signup_service.dart';
 import 'package:flutter_mow/widgets/appbar_back.dart';
 import 'package:flutter_mow/widgets/button_main.dart';
 import 'package:flutter_mow/widgets/sub_text.dart';
@@ -143,12 +144,13 @@ class _SignUpEnterCode extends State<SignUpEnterCode> {
                       for (var controller in digitControllers) {
                         code += controller.text;
                       }
-                      //인증코드가 맞는지 확인
-                      if (code == widget.authCode) {
+                      // 인증코드가 맞는지 확인하는 api 호출
+                      bool resultCheckCode =
+                          await SignupService.checkCode(widget.email, code);
+
+                      if (resultCheckCode) {
+                        // 인증코드가 맞을 경우
                         codeCorrect();
-                        print('input code is $code');
-                        print('auth code is ${widget.authCode}');
-                        print('info[email: ${widget.email}]');
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -158,8 +160,25 @@ class _SignUpEnterCode extends State<SignUpEnterCode> {
                           ),
                         );
                       } else {
+                        // 인증코드가 틀렸을 경우
                         codeWrong();
                       }
+                      // if (code == widget.authCode) {
+                      //   codeCorrect();
+                      //   print('input code is $code');
+                      //   print('auth code is ${widget.authCode}');
+                      //   print('info[email: ${widget.email}]');
+                      //   Navigator.push(
+                      //     context,
+                      //     MaterialPageRoute(
+                      //       builder: (context) => SignUpSetPw(
+                      //         email: widget.email,
+                      //       ),
+                      //     ),
+                      //   );
+                      // } else {
+                      //   codeWrong();
+                      // }
                     }
                   },
                 ),

@@ -67,8 +67,31 @@ class SignupService {
         return 'error';
       }
     } catch (e) {
-      print('Error during check code: $e');
+      print('Error during sendEmail: $e');
       return 'error';
+    }
+  }
+
+  // 인증코드 확인
+  static Future<bool> checkCode(String email, String code) async {
+    final url = Uri.parse(
+        '${Secrets.awsKey}auth/check/push/code?userEmail=$email&pushCode=$code');
+    var headers = {
+      'Content-Type': 'application/json',
+    };
+    try {
+      final response = await http.get(url, headers: headers);
+      print('----------checkCode----------');
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      print('Error during checkCode: $e');
+      return false;
     }
   }
 

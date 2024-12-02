@@ -240,7 +240,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       GestureDetector(
                         onTap: () {
-                          SignupService.googleSignup();
+                          // SignupService.googleSignup();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('기능 준비 중입니다 ㅠ.ㅠ(회원가입을 이용해주세요)'),
+                            ),
+                          );
                         },
                         child: Image.asset('assets/images/google.png'),
                       ),
@@ -248,7 +253,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: 22,
                       ),
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('기능 준비 중입니다 ㅠ.ㅠ(회원가입을 이용해주세요)'),
+                            ),
+                          );
+                        },
                         child: Image.asset('assets/images/kakao.png'),
                       ),
                     ],

@@ -6,6 +6,7 @@ class ButtonFreeWidth extends StatelessWidget {
   final Color textColor;
   final Color borderColor;
   final double opacity;
+  final double? heightPadding;
 
   const ButtonFreeWidth({
     super.key,
@@ -14,6 +15,7 @@ class ButtonFreeWidth extends StatelessWidget {
     required this.textColor,
     required this.borderColor,
     required this.opacity,
+    this.heightPadding,
   });
 
   @override
@@ -27,7 +29,8 @@ class ButtonFreeWidth extends StatelessWidget {
           color: borderColor,
         ),
       ),
-      padding: const EdgeInsets.symmetric(vertical: 13.5),
+      padding: EdgeInsets.symmetric(
+          vertical: heightPadding == null ? 13.5 : heightPadding!),
       child: Center(
         child: Text(
           text,
