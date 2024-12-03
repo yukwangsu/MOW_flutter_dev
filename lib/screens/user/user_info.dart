@@ -117,32 +117,32 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             const SizedBox(
               height: 14.0,
             ),
-            // 1. 내 저장 장소
-            Opacity(
-              opacity: 0.3,
-              child: GestureDetector(
-                onTap: () {},
-                child: SizedBox(
-                  height: 60.0,
-                  child: Row(
-                    children: [
-                      SvgPicture.asset(
-                          'assets/icons/user_info_my_place_icon.svg'),
-                      const SizedBox(
-                        width: 10.0,
-                      ),
-                      Text(
-                        '내 저장 장소',
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            // // 1. 내 저장 장소
+            // Opacity(
+            //   opacity: 0.3,
+            //   child: GestureDetector(
+            //     onTap: () {},
+            //     child: SizedBox(
+            //       height: 60.0,
+            //       child: Row(
+            //         children: [
+            //           SvgPicture.asset(
+            //               'assets/icons/user_info_my_place_icon.svg'),
+            //           const SizedBox(
+            //             width: 10.0,
+            //           ),
+            //           Text(
+            //             '내 저장 장소',
+            //             style: Theme.of(context).textTheme.bodyLarge,
+            //           ),
+            //         ],
+            //       ),
+            //     ),
+            //   ),
+            // ),
             // 2. 좋아요 한 큐레이션
             Opacity(
-              opacity: 0.3,
+              opacity: 1.0,
               child: GestureDetector(
                 onTap: () {},
                 child: SizedBox(
@@ -165,7 +165,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             ),
             // 3. 내가 쓴 큐레이션
             Opacity(
-              opacity: 0.3,
+              opacity: 1.0,
               child: GestureDetector(
                 onTap: () {},
                 child: SizedBox(

@@ -69,7 +69,10 @@ class _CharacterState extends State<Character> {
       MaterialPageRoute(
         builder: (context) => const CharacterShop(),
       ),
-    );
+    ).then((_) {
+      // 캐릭터 조합 다시 불러오기
+      reloadCharacterComp();
+    });
   }
 
   // 지도로 돌아가는 버튼을 눌렀을 때
@@ -77,6 +80,13 @@ class _CharacterState extends State<Character> {
     // pop을 두번 함으로써 지도화면으로 돌아감
     Navigator.pop(context);
     Navigator.pop(context);
+  }
+
+  // 캐릭터 조합 다시 불러오는 함수
+  void reloadCharacterComp() {
+    setState(() {
+      characterComp = CharacterService.getCharacterComp();
+    });
   }
 
   @override
@@ -127,11 +137,6 @@ class _CharacterState extends State<Character> {
                     // 데이터가 성공적으로 로드되었을 때
                     return Column(
                       children: [
-                        // 1. 캐릭터 이름
-                        //  Text(
-                        //       snapshot.data!.characterDetail,
-                        //       style: Theme.of(context).textTheme.titleLarge,
-                        //     ),
                         characterNameInput(
                           characterNameController,
                           snapshot.data!.characterDetail,
@@ -231,6 +236,7 @@ class _CharacterState extends State<Character> {
                     // 데이터가 성공적으로 로드되었을 때
                     // 추후 이미지 고르는 로직 추가
                     final characterImage = snapshot.data!;
+                    print('캐릭터 조합: $characterImage');
                     return Column(
                       children: [
                         // const Text('이미지 추가 예정'),

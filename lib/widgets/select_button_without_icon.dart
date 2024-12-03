@@ -7,7 +7,6 @@ class SelectButtonWithoutIcon extends StatelessWidget {
   final double radius;
   final String text;
   final Color textColor;
-  final double textSize;
   final Color? borderColor; // nullable 테두리 색상
   final double? borderWidth; // 테두리 두께
   final double? borderOpacity; // 테두리 투명도
@@ -21,7 +20,6 @@ class SelectButtonWithoutIcon extends StatelessWidget {
     required this.radius,
     required this.text,
     required this.textColor,
-    required this.textSize,
     this.borderColor,
     this.borderWidth,
     this.borderOpacity,

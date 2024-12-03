@@ -386,9 +386,9 @@ class _MapScreenState extends State<MapScreen> {
                 //네이버 지도 로딩이 끝났을 때 지도에 마커를 추가하기 위한 준비
                 print("네이버 맵 로딩됨!");
                 setState(() {
+                  naverMapController = mapController;
                   reloadWorkspaces = true;
                   isNaverMapLoaded = true;
-                  naverMapController = mapController;
                 });
               },
             ),

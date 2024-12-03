@@ -158,7 +158,6 @@ class _CurationTagState extends State<CurationTag> {
       textColor: selectedTagList.contains(textContent)
           ? Colors.white
           : const Color(0xFF6B4D38),
-      textSize: 14.0,
       borderWidth: selectedTagList.contains(textContent) ? null : 1.0,
       borderColor: selectedTagList.contains(textContent)
           ? null
