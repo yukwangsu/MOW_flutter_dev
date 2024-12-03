@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mow/services/character_service.dart';
 import 'package:flutter_mow/services/review_service.dart';
 import 'package:flutter_mow/widgets/appbar_back.dart';
 import 'package:flutter_mow/widgets/button_main.dart';
+import 'package:flutter_mow/widgets/long_dialog.dart';
 import 'package:flutter_mow/widgets/select_button.dart';
+import 'package:flutter_mow/widgets/short_dialog.dart';
 import 'package:flutter_svg/svg.dart';
 
 class AddReview extends StatefulWidget {
@@ -44,52 +47,74 @@ class _AddReviewState extends State<AddReview> {
     });
   }
 
+  // 리뷰 작성 버튼을 눌렀을 때
   void onClickButtonHandler() async {
-    if (addReviewWidenessDegree > 0) {
-      switch (addReviewWidenessDegree) {
-        case 0:
-          selectedTags.add('# 공간이 넓어요');
-          break;
-        case 1:
-          selectedTags.add('# 공간이 보통이에요');
-          break;
-        case 2:
-          selectedTags.add('# 공간이 좁아요');
-          break;
+    if (addReviewTextcontroller.text.isNotEmpty) {
+      // 줄글리뷰를 작성했을 때
+      if (addReviewWidenessDegree > 0) {
+        switch (addReviewWidenessDegree) {
+          case 0:
+            selectedTags.add('# 공간이 넓어요');
+            break;
+          case 1:
+            selectedTags.add('# 공간이 보통이에요');
+            break;
+          case 2:
+            selectedTags.add('# 공간이 좁아요');
+            break;
+        }
       }
-    }
-    if (addReviewChairDegree > 0) {
-      switch (addReviewChairDegree) {
-        case 0:
-          selectedTags.add('# 좌석이 많아요');
-          break;
-        case 1:
-          selectedTags.add('# 좌석이 보통이에요');
-          break;
-        case 2:
-          selectedTags.add('# 좌석이 적어요');
-          break;
+      if (addReviewChairDegree > 0) {
+        switch (addReviewChairDegree) {
+          case 0:
+            selectedTags.add('# 좌석이 많아요');
+            break;
+          case 1:
+            selectedTags.add('# 좌석이 보통이에요');
+            break;
+          case 2:
+            selectedTags.add('# 좌석이 적어요');
+            break;
+        }
       }
-    }
-    if (addReviewOutletDegree > 0) {
-      switch (addReviewOutletDegree) {
-        case 0:
-          selectedTags.add('# 콘센트가 많아요');
-          break;
-        case 1:
-          selectedTags.add('# 콘센트가 보통이에요');
-          break;
-        case 2:
-          selectedTags.add('# 콘센트가 적어요');
-          break;
+      if (addReviewOutletDegree > 0) {
+        switch (addReviewOutletDegree) {
+          case 0:
+            selectedTags.add('# 콘센트가 많아요');
+            break;
+          case 1:
+            selectedTags.add('# 콘센트가 보통이에요');
+            break;
+          case 2:
+            selectedTags.add('# 콘센트가 적어요');
+            break;
+        }
       }
-    }
 
-    //api 호출
-    await ReviewService.addReview(addReviewTextcontroller.text, selectedTags,
-        widget.workspaceId, addReviewScore.toDouble());
+      //api 호출
+      await ReviewService.addReview(addReviewTextcontroller.text, selectedTags,
+          widget.workspaceId, addReviewScore.toDouble());
 
-    Navigator.pop(context);
+      Navigator.pop(context);
+      CharacterService.increaseReward(1); // 젤리 1개 지급
+
+      // 젤리 지급 메시지 띄움.
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return LongDialog(
+              contentTitle: '리뷰 등록 완료!', content: '젤리 1개가 지급되었어요 \u{1F606}');
+        },
+      );
+    } else {
+      // 줄글을 작성하지 않았을 때
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return ShortDialog(content: '줄글 리뷰를 작성해 주세요');
+        },
+      );
+    }
   }
 
   @override
@@ -710,6 +735,7 @@ class _AddReviewState extends State<AddReview> {
                         controller: addReviewTextcontroller,
                         focusNode: addReviewTextFocusNode,
                         maxLines: 7, // 여러 줄 입력 가능
+                        maxLength: 300, // 최대 입력 가능 문자 수
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius:
@@ -737,7 +763,7 @@ class _AddReviewState extends State<AddReview> {
                           ),
                           hintText: addReviewTextFocusNode.hasFocus
                               ? ''
-                              : '리뷰를 입력하세요.',
+                              : '콘센트, 와이파이는 어땠나요?\n화장실은 사용하기 편했나요?',
                           hintStyle: Theme.of(context)
                               .textTheme
                               .titleSmall!

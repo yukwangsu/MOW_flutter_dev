@@ -193,7 +193,13 @@ class _CharacterShopState extends State<CharacterShop> {
                   children: [
                     GestureDetector(
                         onDoubleTap: () async {
-                          await CharacterService.increaseReward(10);
+                          final tempJelly =
+                              await CharacterService.getMyReward();
+                          if (tempJelly >= 10) {
+                            await CharacterService.decreaseReward(10);
+                          } else {
+                            await CharacterService.increaseReward(10);
+                          }
                           reloadAfterBuyItem();
                         },
                         child: SvgPicture.asset('assets/icons/jelly_icon.svg')),

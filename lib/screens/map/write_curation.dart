@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mow/models/curation_page_model.dart';
 import 'package:flutter_mow/models/image_model.dart';
 import 'package:flutter_mow/models/place_detail_model.dart';
+import 'package:flutter_mow/services/character_service.dart';
 import 'package:flutter_mow/services/curation_service.dart';
 import 'package:flutter_mow/services/image_service.dart';
 import 'package:flutter_mow/services/search_service.dart';
@@ -11,6 +12,7 @@ import 'package:flutter_mow/widgets/appbar_back.dart';
 import 'package:flutter_mow/widgets/button_main.dart';
 import 'package:flutter_mow/widgets/button_main_without_border.dart';
 import 'package:flutter_mow/widgets/curation_tag.dart';
+import 'package:flutter_mow/widgets/long_dialog.dart';
 import 'package:flutter_mow/widgets/select_button.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -146,6 +148,19 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
         widget.workspaceId,
         imageUrlList,
       );
+
+      CharacterService.increaseReward(2); // 젤리 2개 지급
+
+      // 젤리 지급 메시지 띄워줌
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return LongDialog(
+              contentTitle: '리뷰 등록 완료!', content: '젤리 2개가 지급되었어요 \u{1F606}');
+        },
+      );
+
+      // 큐레이션 detail화면으로 이동
       Navigator.pop(
         context,
         widget.workspaceId,
