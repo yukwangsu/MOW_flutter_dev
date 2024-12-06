@@ -146,6 +146,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             Opacity(
               opacity: 1.0,
               child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () {
                   Navigator.push(
                     context,
@@ -176,6 +177,7 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             Opacity(
               opacity: 1.0,
               child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () {
                   Navigator.push(
                     context,

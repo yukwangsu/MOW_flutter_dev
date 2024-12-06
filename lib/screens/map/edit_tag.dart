@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_mow/variables.dart';
 import 'package:flutter_mow/widgets/appbar_back.dart';
 import 'package:flutter_mow/widgets/select_button.dart';
+import 'package:flutter_mow/widgets/select_button_without_icon.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -123,21 +125,38 @@ class _EditTagState extends State<EditTag> {
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(
                       height: 24.0,
                     ),
-                    tagListWidget(
-                      '# 공간이 넓어요',
-                      '# 좌석이 많아요',
-                      null,
+                    Wrap(
+                      spacing: 6.0,
+                      runSpacing: 10.0,
+                      children: [
+                        selectButtonWidget('# 공간이 넓어요'),
+                        selectButtonWidget('# 공간이 보통이에요'),
+                      ],
                     ),
                     const SizedBoxHeight10(),
-                    tagListWidget(
-                      '# 콘센트가 많아요',
-                      null,
-                      null,
+                    Wrap(
+                      spacing: 6.0,
+                      runSpacing: 10.0,
+                      children: [
+                        selectButtonWidget('# 좌석이 많아요'),
+                        selectButtonWidget('# 좌석이 보통이에요'),
+                      ],
                     ),
+                    const SizedBoxHeight10(),
+                    Wrap(
+                      spacing: 6.0,
+                      runSpacing: 10.0,
+                      children: [
+                        selectButtonWidget('# 콘센트가 많아요'),
+                        selectButtonWidget('# 콘센트가 보통이에요'),
+                      ],
+                    ),
+
                     const SizedBox(
                       height: 16.0,
                     ),
@@ -148,16 +167,17 @@ class _EditTagState extends State<EditTag> {
                       0,
                     ),
                     // 작업 편의 tags
-                    if (isTagOpen[0]) ...[
+                    if (isTagOpen[0])
                       Padding(
                         padding: const EdgeInsets.only(top: 8.0, bottom: 24.0),
-                        child: tagListWidget(
-                          '# 한산해요',
-                          '# 의자가 편해요',
-                          '# 책상이 넓어요',
+                        child: Wrap(
+                          spacing: 6.0,
+                          runSpacing: 10.0,
+                          children: workConvenienceTags.map((tag) {
+                            return selectButtonWidget(tag);
+                          }).toList(),
                         ),
                       ),
-                    ],
 
                     // 분위기 tab
                     tagTitleWidget(
@@ -165,50 +185,32 @@ class _EditTagState extends State<EditTag> {
                       1,
                     ),
                     // 분위기 tags
-                    if (isTagOpen[1]) ...[
+                    if (isTagOpen[1])
                       Padding(
                         padding: const EdgeInsets.only(top: 8.0, bottom: 24.0),
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            tagListWidget(
-                              '# 뷰가 좋아요',
-                              '# 조용해요',
-                              null,
+                            Wrap(
+                              spacing: 6.0,
+                              runSpacing: 10.0,
+                              children: atmosphereTags.map((tag) {
+                                return selectButtonWidget(tag);
+                              }).toList(),
                             ),
-                            const SizedBoxHeight10(),
-                            tagListWidget(
-                              '# 아늑해요',
-                              '# 인테리어가 깔끔해요',
-                              null,
+                            const SizedBox(
+                              height: 10.0,
                             ),
-                            const SizedBoxHeight10(),
-                            tagListWidget(
-                              '# 어두워요',
-                              '# 밝아요',
-                              '# 다시 오고 싶어요',
-                            ),
-                            const SizedBoxHeight10(),
-                            tagListWidget(
-                              '# 음악이 좋아요',
-                              '# 대화하기 좋아요',
-                              null,
-                            ),
-                            const SizedBoxHeight10(),
-                            tagListWidget(
-                              '# 감각적이에요',
-                              '# 혼자 작업하기 좋아요',
-                              null,
-                            ),
-                            const SizedBoxHeight10(),
-                            tagListWidget(
-                              '# 회의하기에 좋아요',
-                              null,
-                              null,
+                            Wrap(
+                              spacing: 6.0,
+                              runSpacing: 10.0,
+                              children: additionalAtmosphereTags.map((tag) {
+                                return selectButtonWidget(tag);
+                              }).toList(),
                             ),
                           ],
                         ),
                       ),
-                    ],
 
                     // 메뉴 tab
                     tagTitleWidget(
@@ -216,26 +218,17 @@ class _EditTagState extends State<EditTag> {
                       2,
                     ),
                     // 메뉴 tags
-                    if (isTagOpen[2]) ...[
+                    if (isTagOpen[2])
                       Padding(
                         padding: const EdgeInsets.only(top: 8.0, bottom: 24.0),
-                        child: Column(
-                          children: [
-                            tagListWidget(
-                              '# 저렴해요',
-                              '# 매뉴가 다양해요',
-                              null,
-                            ),
-                            const SizedBoxHeight10(),
-                            tagListWidget(
-                              '# 커피가 맛있어요',
-                              '# 디저트가 맛있어요',
-                              null,
-                            ),
-                          ],
+                        child: Wrap(
+                          spacing: 6.0,
+                          runSpacing: 10.0,
+                          children: menuTags.map((tag) {
+                            return selectButtonWidget(tag);
+                          }).toList(),
                         ),
                       ),
-                    ],
 
                     // 서비스 tab
                     tagTitleWidget(
@@ -243,26 +236,17 @@ class _EditTagState extends State<EditTag> {
                       3,
                     ),
                     // 서비스 tags
-                    if (isTagOpen[3]) ...[
+                    if (isTagOpen[3])
                       Padding(
                         padding: const EdgeInsets.only(top: 8.0, bottom: 24.0),
-                        child: Column(
-                          children: [
-                            tagListWidget(
-                              '# 친절해요',
-                              '# 와이파이가 잘 터져요',
-                              null,
-                            ),
-                            const SizedBoxHeight10(),
-                            tagListWidget(
-                              '# 에어컨이 잘 나와요',
-                              '# 오래 작업하기 좋아요',
-                              null,
-                            ),
-                          ],
+                        child: Wrap(
+                          spacing: 6.0,
+                          runSpacing: 10.0,
+                          children: serviceTags.map((tag) {
+                            return selectButtonWidget(tag);
+                          }).toList(),
                         ),
                       ),
-                    ],
 
                     // 기타 tab
                     tagTitleWidget(
@@ -270,32 +254,17 @@ class _EditTagState extends State<EditTag> {
                       4,
                     ),
                     // 기타 tags
-                    if (isTagOpen[4]) ...[
+                    if (isTagOpen[4])
                       Padding(
                         padding: const EdgeInsets.only(top: 8.0, bottom: 24.0),
-                        child: Column(
-                          children: [
-                            tagListWidget(
-                              '# 화장실이 깨끗해요',
-                              '# 찾아가기 편해요',
-                              null,
-                            ),
-                            const SizedBoxHeight10(),
-                            tagListWidget(
-                              '# 무료로 이용이 가능해요',
-                              '# 주차가 가능해요',
-                              null,
-                            ),
-                            const SizedBoxHeight10(),
-                            tagListWidget(
-                              '# 24시간 운영이에요',
-                              null,
-                              null,
-                            ),
-                          ],
+                        child: Wrap(
+                          spacing: 6.0,
+                          runSpacing: 10.0,
+                          children: otherTags.map((tag) {
+                            return selectButtonWidget(tag);
+                          }).toList(),
                         ),
                       ),
-                    ],
 
                     //마지막 여백
                     const SizedBox(
@@ -314,72 +283,34 @@ class _EditTagState extends State<EditTag> {
   Widget tagTitleWidget(String title, int numberOfTag) {
     return Padding(
       padding: const EdgeInsets.only(top: 12.0, bottom: 12.0, right: 12.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16, //임의 수정
-              fontWeight: FontWeight.bold,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          setState(() {
+            isTagOpen[numberOfTag] = !isTagOpen[numberOfTag];
+          });
+        },
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16, //임의 수정
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                isTagOpen[numberOfTag] = !isTagOpen[numberOfTag];
-              });
-            },
-            child: SvgPicture.asset(isTagOpen[numberOfTag]
+            SvgPicture.asset(isTagOpen[numberOfTag]
                 ? 'assets/icons/dropdown_up_padding.svg'
                 : 'assets/icons/dropdown_down_padding.svg'),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget tagListWidget(
-      String tagContent1, String? tagContent2, String? tagContent3) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    // tag Content 1
-                    selectButtonWidget(
-                      tagContent1,
-                    ),
-                    if (tagContent2 != null) ...[
-                      const SizedBoxWidth6(),
-                      // tag Content 2
-                      selectButtonWidget(
-                        tagContent2,
-                      ),
-                      if (tagContent3 != null) ...[
-                        const SizedBoxWidth6(),
-                        // tag Content 3
-                        selectButtonWidget(
-                          tagContent3,
-                        ),
-                      ]
-                    ]
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget selectButtonWidget(String textContent) {
-    return SelectButton(
+    return SelectButtonWithoutIcon(
       height: 32.0,
       padding: 14.0,
       bgColor: taggedList.contains(textContent)
@@ -390,7 +321,6 @@ class _EditTagState extends State<EditTag> {
       textColor: taggedList.contains(textContent)
           ? Colors.white
           : const Color(0xFF6B4D38),
-      textSize: 14.0,
       borderWidth: taggedList.contains(textContent) ? null : 1.0,
       borderColor:
           taggedList.contains(textContent) ? null : const Color(0xFFAD7541),

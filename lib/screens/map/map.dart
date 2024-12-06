@@ -35,7 +35,7 @@ class _MapScreenState extends State<MapScreen> {
   late double screenWidth; // 화면 넓이 저장
   late double latitude; // 위치 위도
   late double longitude; // 위치 경도
-  bool isLoadingMap = true; // 지도가 로딩중인지 기록
+  bool isLoadingLocation = true; // 위치가 로딩중인지 기록
   double bottomSheetHeight = 134; // 초기 높이 (134픽셀)
   final double minBottomSheetHeightNormal = 134;
   final double minBottomSheetHeightDetail = 321;
@@ -222,8 +222,27 @@ class _MapScreenState extends State<MapScreen> {
     final prefs = await SharedPreferences.getInstance();
     reloadWorkspaces = true;
     setState(() {
-      taggedList =
-          prefs.getStringList('taggedList') ?? []; // 저장된 리스트가 없으면 빈 리스트 사용
+      if (prefs.getStringList('taggedList') == null) {
+        // 만약 taggedList가 없을 경우(처음 접속한 유저)
+        prefs.setStringList(
+          'taggedList',
+          [
+            '# 공간이 넓어요',
+            '# 좌석이 많아요',
+            '# 콘센트가 많아요',
+            '# 한산해요',
+            '# 오래 작업하기 좋아요',
+          ],
+        );
+      }
+      taggedList = prefs.getStringList('taggedList') ??
+          [
+            '# 공간이 넓어요',
+            '# 좌석이 많아요',
+            '# 콘센트가 많아요',
+            '# 한산해요',
+            '# 오래 작업하기 좋아요',
+          ];
     });
   }
 
@@ -258,10 +277,24 @@ class _MapScreenState extends State<MapScreen> {
     longitude = position.longitude < 0 ? 126.9368894 : position.longitude;
     print('********latitude: ${position.latitude}');
     print('********longitude: ${position.longitude}');
-    isLoadingMap = false;
+    isLoadingLocation = false;
     reloadWorkspaces = true;
     setState(() {});
     return true;
+  }
+
+  // url로 이동하는 함수
+  Future<void> _openWebsite(String link) async {
+    final Uri url = Uri.parse(link);
+
+    try {
+      await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication, // 기본 브라우저에서 열기
+      );
+    } catch (e) {
+      print('링크 열기 실패: $e');
+    }
   }
 
   // 화면 터치를 n초동안 막는 함수
@@ -316,8 +349,8 @@ class _MapScreenState extends State<MapScreen> {
           //   color: const Color(0xFFAD7541),
           // ),
 
-          // 지도 로딩중 화면
-          if (isLoadingMap)
+          // 위치 로딩중 화면
+          if (isLoadingLocation)
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -352,8 +385,8 @@ class _MapScreenState extends State<MapScreen> {
                 ],
               ),
             ),
-          // 지도 로딩이 끝났을 때 화면
-          if (!isLoadingMap)
+          // 위치 로딩이 끝났을 때 화면
+          if (!isLoadingLocation)
             // // 테스트 후 SizedBox 삭제 가능
             // SizedBox(
             //   height: screenHeight - bottomSheetHeight + 40.0,
@@ -767,7 +800,7 @@ class _MapScreenState extends State<MapScreen> {
                                   const ListBorderLine(),
                                   buildPlaceList(context, '도서관'),
                                   const ListBorderLine(),
-                                  buildPlaceList(context, '스터디카페'),
+                                  buildPlaceList(context, '스터디 카페'),
                                   const ListBorderLine(),
                                   buildPlaceList(context, '기타 작업공간'),
                                 ],
@@ -794,8 +827,8 @@ class _MapScreenState extends State<MapScreen> {
 
         // 스크롤되는 부분(장소 리스트)
         // 1. 장소를 reload하는 setstate 일 경우 showWorkspace 진행
-        if (reloadWorkspaces)
-          isLoadingMap
+        if (reloadWorkspaces && isNaverMapLoaded)
+          isLoadingLocation
               //사용자의 위치를 받아오기 중
               ? Expanded(
                   child: ListView.builder(
@@ -1076,7 +1109,11 @@ class _MapScreenState extends State<MapScreen> {
                                                               .workspaceStatus ==
                                                           2
                                                       ? '영업종료'
-                                                      : '휴무',
+                                                      : placeDetail
+                                                                  .workspaceStatus ==
+                                                              3
+                                                          ? '휴무'
+                                                          : '(알 수 없음)',
                                           style: Theme.of(context)
                                               .textTheme
                                               .titleSmall!
@@ -1213,24 +1250,34 @@ class _MapScreenState extends State<MapScreen> {
                                       height: 28,
                                       width: double.infinity,
                                     ),
-                                    Text(
-                                      '웹사이트',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineMedium,
+                                    Row(
+                                      children: [
+                                        Text(
+                                          '웹사이트',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .headlineMedium,
+                                        ),
+                                      ],
                                     ),
                                     const SizedBox(
                                       height: 12,
                                     ),
-                                    Text(
-                                      placeDetail.spaceUrl,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineMedium
-                                          ?.copyWith(
-                                            decoration:
-                                                TextDecoration.underline,
-                                          ),
+
+                                    GestureDetector(
+                                      onTap: () {
+                                        _openWebsite(placeDetail.spaceUrl);
+                                      },
+                                      child: Text(
+                                        placeDetail.spaceUrl,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineMedium
+                                            ?.copyWith(
+                                              decoration:
+                                                  TextDecoration.underline,
+                                            ),
+                                      ),
                                     ),
                                     const SizedBox(
                                       height: 18.0,
@@ -1847,7 +1894,11 @@ class _MapScreenState extends State<MapScreen> {
                                                                 .workspaceStatus ==
                                                             2
                                                         ? '영업종료'
-                                                        : '휴무',
+                                                        : placeDetail
+                                                                    .workspaceStatus ==
+                                                                3
+                                                            ? '휴무'
+                                                            : '(알 수 없음)',
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .titleSmall!
@@ -2731,47 +2782,47 @@ class _MapScreenState extends State<MapScreen> {
     int currentWeekday = nowKst.weekday;
 
     // 요일을 Map의 키와 연결 및 첫 글자 정의
-    String day;
-    String dayInitial; // 요일의 첫 글자
-    switch (currentWeekday) {
-      case 1:
-        day = 'Monday';
-        dayInitial = '월';
-        break;
-      case 2:
-        day = 'Tuesday';
-        dayInitial = '화';
-        break;
-      case 3:
-        day = 'Wednesday';
-        dayInitial = '수';
-        break;
-      case 4:
-        day = 'Thursday';
-        dayInitial = '목';
-        break;
-      case 5:
-        day = 'Friday';
-        dayInitial = '금';
-        break;
-      case 6:
-        day = 'Saturday';
-        dayInitial = '토';
-        break;
-      case 7:
-        day = 'Sunday';
-        dayInitial = '일';
-        break;
-      default:
-        day = 'Unknown';
-        dayInitial = '';
-    }
+    // String day;
+    // String dayInitial; // 요일의 첫 글자
+    // switch (currentWeekday) {
+    //   case 1:
+    //     day = 'Monday';
+    //     dayInitial = '월';
+    //     break;
+    //   case 2:
+    //     day = 'Tuesday';
+    //     dayInitial = '화';
+    //     break;
+    //   case 3:
+    //     day = 'Wednesday';
+    //     dayInitial = '수';
+    //     break;
+    //   case 4:
+    //     day = 'Thursday';
+    //     dayInitial = '목';
+    //     break;
+    //   case 5:
+    //     day = 'Friday';
+    //     dayInitial = '금';
+    //     break;
+    //   case 6:
+    //     day = 'Saturday';
+    //     dayInitial = '토';
+    //     break;
+    //   case 7:
+    //     day = 'Sunday';
+    //     dayInitial = '일';
+    //     break;
+    //   default:
+    //     day = 'Unknown';
+    //     dayInitial = '';
+    // }
 
     // 해당 요일의 영업 시간을 반환 (없으면 기본값으로 '정보 없음')
-    String hours = hour[day] ?? '휴무';
+    String hours = hour[day[currentWeekday % 7]] ?? '(알 수 없음)';
 
     // 요일 첫 글자와 함께 반환
-    return '$dayInitial $hours';
+    return '${dayMap[day[currentWeekday % 7]]}  $hours';
   }
 
   Widget reviewList(dynamic reviewObj) {
@@ -3306,7 +3357,7 @@ class _MapScreenState extends State<MapScreen> {
           ]),
       padding: const EdgeInsets.only(
         top: 12.0,
-        right: 25.0,
+        right: 14.0,
         bottom: 6.0,
         left: 14.0,
       ),
@@ -3337,7 +3388,7 @@ class _MapScreenState extends State<MapScreen> {
                             : Theme.of(context).textTheme.bodySmall,
                       )
                     : Text(
-                        '휴무',
+                        '(알 수 없음)',
                         style: i == currentWeekday
                             ? Theme.of(context).textTheme.labelSmall
                             : Theme.of(context).textTheme.bodySmall,

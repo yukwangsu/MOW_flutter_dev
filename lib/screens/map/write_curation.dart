@@ -18,6 +18,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 class WriteCurationScreen extends StatefulWidget {
   final int workspaceId;
@@ -64,6 +65,20 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
     final prefs = await SharedPreferences.getInstance();
     String? savedNickname = prefs.getString('userNickname');
     return savedNickname ?? '{userNickname}';
+  }
+
+  // url로 이동하는 함수
+  Future<void> _openWebsite(String link) async {
+    final Uri url = Uri.parse(link);
+
+    try {
+      await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication, // 기본 브라우저에서 열기
+      );
+    } catch (e) {
+      print('링크 열기 실패: $e');
+    }
   }
 
   // 사진 추가 버튼을 눌렀을 때 호출되는 함수
@@ -260,7 +275,7 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
                                                         const Color(0xFF323232)
                                                             .withOpacity(0.5)),
                                           ),
-                                          maxLength: 35, // 최대 입력 가능 문자 수
+                                          maxLength: 20, // 최대 입력 가능 문자 수
                                           maxLines: 2, // 입력 필드를 세 줄로 제한
                                           style: Theme.of(context)
                                               .textTheme
@@ -430,7 +445,7 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
                                     decoration: InputDecoration(
                                       border: InputBorder.none, // 테두리 없애기
                                       hintText:
-                                          '큐레이션 내용을 작성해주세요 (30자 이내)', // placeholder 텍스트
+                                          '큐레이션 내용을 작성해주세요 (200자 이내)', // placeholder 텍스트
                                       hintMaxLines: 1, // placeholder 최대 줄 수
                                       hintStyle: Theme.of(context)
                                           .textTheme
@@ -438,8 +453,8 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
                                           .copyWith(
                                               color: const Color(0xFF868686)),
                                     ),
-                                    maxLength: 30, // 최대 입력 가능 문자 수
-                                    maxLines: 10, // 입력 필드를 세 줄로 제한
+                                    maxLength: 200, // 최대 입력 가능 문자 수
+                                    maxLines: 10, // 입력 필드를 10 줄로 제한
                                     style:
                                         Theme.of(context).textTheme.titleSmall,
                                     controller: contentController,
@@ -584,12 +599,29 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
                                                   ],
                                                 ),
                                               ),
-                                              Text(
-                                                snapshot.data!.spaceUrl,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .titleSmall,
+                                              GestureDetector(
+                                                onTap: () {
+                                                  _openWebsite(
+                                                      snapshot.data!.spaceUrl);
+                                                },
+                                                child: Text(
+                                                  '홈페이지로 이동하기',
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .titleSmall!
+                                                      .copyWith(
+                                                        decoration:
+                                                            TextDecoration
+                                                                .underline,
+                                                      ),
+                                                ),
                                               ),
+                                              // Text(
+                                              //   snapshot.data!.spaceUrl,
+                                              //   style: Theme.of(context)
+                                              //       .textTheme
+                                              //       .titleSmall,
+                                              // ),
                                             ],
                                           ),
                                         ],
@@ -703,13 +735,13 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
 
   Widget openHourWidget(Map<String, String> openHour) {
     List<String> daysOfWeek = [
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday',
+      '월요일',
+      '화요일',
+      '수요일',
+      '목요일',
+      '금요일',
+      '토요일',
+      '일요일',
     ];
     List<String> daysOfWeekFirstWord = [
       '월',
@@ -732,7 +764,7 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
               ),
               openHour[daysOfWeek[n]] == null
                   ? Text(
-                      '  Closed',
+                      '  (알 수 없음)',
                       style: Theme.of(context).textTheme.titleSmall,
                     )
                   : Text(

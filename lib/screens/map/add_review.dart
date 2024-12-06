@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mow/services/character_service.dart';
 import 'package:flutter_mow/services/review_service.dart';
+import 'package:flutter_mow/variables.dart';
 import 'package:flutter_mow/widgets/appbar_back.dart';
 import 'package:flutter_mow/widgets/button_main.dart';
 import 'package:flutter_mow/widgets/long_dialog.dart';
 import 'package:flutter_mow/widgets/select_button.dart';
+import 'package:flutter_mow/widgets/select_button_without_icon.dart';
 import 'package:flutter_mow/widgets/short_dialog.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -152,6 +154,7 @@ class _AddReviewState extends State<AddReview> {
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(
                         height: 21,
@@ -480,230 +483,125 @@ class _AddReviewState extends State<AddReview> {
                         height: 16.0,
                       ),
 
-                      // 작업 편의 tab
+                      // 1. 작업 편의 tab
                       tagTitleWidget(
                         '작업 편의',
                         0,
                       ),
                       // 작업 편의 tags
-                      // 애니메이션 효과 추가
-                      AnimatedSwitcher(
-                        duration:
-                            const Duration(milliseconds: 200), // 애니메이션 지속 시간
-                        transitionBuilder:
-                            (Widget child, Animation<double> animation) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: child,
-                          );
-                        },
-                        child: isTagOpen[0]
-                            ? Padding(
-                                key: const ValueKey(1), // 키를 다르게 설정해야 애니메이션이 동작
-                                padding: const EdgeInsets.only(
-                                    top: 8.0, bottom: 24.0),
-                                child: tagListWidget(
-                                  '# 한산해요',
-                                  '# 의자가 편해요',
-                                  '# 책상이 넓어요',
-                                ),
-                              )
-                            : Container(key: const ValueKey(2)), // 빈 컨테이너로 대체
-                      ),
-                      // 분위기 tab
+                      isTagOpen[0]
+                          ? Padding(
+                              padding:
+                                  const EdgeInsets.only(top: 8.0, bottom: 24.0),
+                              child: Wrap(
+                                spacing: 6.0,
+                                runSpacing: 10.0,
+                                children: workConvenienceTags.map((tag) {
+                                  return selectButtonWidget(tag);
+                                }).toList(),
+                              ),
+                            )
+                          : Container(),
+
+                      // 2. 분위기 tab
                       tagTitleWidget(
                         '분위기',
                         1,
                       ),
                       // 분위기 tags
-                      // 애니메이션 효과 추가
-                      AnimatedSwitcher(
-                        duration:
-                            const Duration(milliseconds: 200), // 애니메이션 지속 시간
-                        transitionBuilder:
-                            (Widget child, Animation<double> animation) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: child,
-                          );
-                        },
-                        child: isTagOpen[1]
-                            ? Padding(
-                                key: const ValueKey(1), // 키를 다르게 설정해야 애니메이션이 동작
-                                padding: const EdgeInsets.only(
-                                    top: 8.0, bottom: 24.0),
-                                child: Column(
-                                  children: [
-                                    tagListWidget(
-                                      '# 뷰가 좋아요',
-                                      '# 조용해요',
-                                      null,
-                                    ),
-                                    const SizedBoxHeight10(),
-                                    tagListWidget(
-                                      '# 아늑해요',
-                                      '# 인테리어가 깔끔해요',
-                                      null,
-                                    ),
-                                    const SizedBoxHeight10(),
-                                    tagListWidget(
-                                      '# 어두워요',
-                                      '# 밝아요',
-                                      '# 다시 오고 싶어요',
-                                    ),
-                                    const SizedBoxHeight10(),
-                                    tagListWidget(
-                                      '# 음악이 좋아요',
-                                      '# 대화하기 좋아요',
-                                      null,
-                                    ),
-                                    const SizedBoxHeight10(),
-                                    tagListWidget(
-                                      '# 감각적이에요',
-                                      '# 혼자 작업하기 좋아요',
-                                      null,
-                                    ),
-                                    const SizedBoxHeight10(),
-                                    tagListWidget(
-                                      '# 회의하기에 좋아요',
-                                      null,
-                                      null,
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : Container(key: const ValueKey(2)), // 빈 컨테이너로 대체
-                      ),
-                      // 메뉴 tab
+                      isTagOpen[1]
+                          ? Padding(
+                              padding:
+                                  const EdgeInsets.only(top: 8.0, bottom: 24.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Wrap(
+                                    spacing: 6.0,
+                                    runSpacing: 10.0,
+                                    children: atmosphereTags.map((tag) {
+                                      return selectButtonWidget(tag);
+                                    }).toList(),
+                                  ),
+                                  const SizedBox(
+                                    height: 10.0,
+                                  ),
+                                  Wrap(
+                                    spacing: 6.0,
+                                    runSpacing: 10.0,
+                                    children:
+                                        additionalAtmosphereTags.map((tag) {
+                                      return selectButtonWidget(tag);
+                                    }).toList(),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : Container(),
+
+                      // 3. 메뉴 tab
                       tagTitleWidget(
                         '메뉴',
                         2,
                       ),
                       // 메뉴 tags
-                      // 애니메이션 효과 추가
-                      AnimatedSwitcher(
-                        duration:
-                            const Duration(milliseconds: 200), // 애니메이션 지속 시간
-                        transitionBuilder:
-                            (Widget child, Animation<double> animation) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: child,
-                          );
-                        },
-                        child: isTagOpen[2]
-                            ? Padding(
-                                key: const ValueKey(1), // 키를 다르게 설정해야 애니메이션이 동작
-                                padding: const EdgeInsets.only(
-                                    top: 8.0, bottom: 24.0),
-                                child: Column(
-                                  children: [
-                                    tagListWidget(
-                                      '# 저렴해요',
-                                      '# 매뉴가 다양해요',
-                                      null,
-                                    ),
-                                    const SizedBoxHeight10(),
-                                    tagListWidget(
-                                      '# 커피가 맛있어요',
-                                      '# 디저트가 맛있어요',
-                                      null,
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : Container(key: const ValueKey(2)), // 빈 컨테이너로 대체
-                      ),
-                      // 서비스 tab
+                      isTagOpen[2]
+                          ? Padding(
+                              padding:
+                                  const EdgeInsets.only(top: 8.0, bottom: 24.0),
+                              child: Wrap(
+                                spacing: 6.0,
+                                runSpacing: 10.0,
+                                children: menuTags.map((tag) {
+                                  return selectButtonWidget(tag);
+                                }).toList(),
+                              ),
+                            )
+                          : Container(),
+
+                      // 4. 서비스 tab
                       tagTitleWidget(
                         '서비스',
                         3,
                       ),
                       // 서비스 tags
-                      // 애니메이션 효과 추가
-                      AnimatedSwitcher(
-                        duration:
-                            const Duration(milliseconds: 200), // 애니메이션 지속 시간
-                        transitionBuilder:
-                            (Widget child, Animation<double> animation) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: child,
-                          );
-                        },
-                        child: isTagOpen[3]
-                            ? Padding(
-                                key: const ValueKey(1), // 키를 다르게 설정해야 애니메이션이 동작
-                                padding: const EdgeInsets.only(
-                                    top: 8.0, bottom: 24.0),
-                                child: Column(
-                                  children: [
-                                    tagListWidget(
-                                      '# 친절해요',
-                                      '# 와이파이가 잘 터져요',
-                                      null,
-                                    ),
-                                    const SizedBoxHeight10(),
-                                    tagListWidget(
-                                      '# 에어컨이 잘 나와요',
-                                      '# 오래 작업하기 좋아요',
-                                      null,
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : Container(key: const ValueKey(2)), // 빈 컨테이너로 대체
-                      ),
+                      isTagOpen[3]
+                          ? Padding(
+                              padding:
+                                  const EdgeInsets.only(top: 8.0, bottom: 24.0),
+                              child: Wrap(
+                                spacing: 6.0,
+                                runSpacing: 10.0,
+                                children: serviceTags.map((tag) {
+                                  return selectButtonWidget(tag);
+                                }).toList(),
+                              ),
+                            )
+                          : Container(),
 
-                      // 기타 tab
+                      // 5. 기타 tab
                       tagTitleWidget(
                         '기타',
                         4,
                       ),
                       // 기타 tags
-                      // 애니메이션 효과 추가
-                      AnimatedSwitcher(
-                        duration:
-                            const Duration(milliseconds: 200), // 애니메이션 지속 시간
-                        transitionBuilder:
-                            (Widget child, Animation<double> animation) {
-                          return FadeTransition(
-                            opacity: animation,
-                            child: child,
-                          );
-                        },
-                        child: isTagOpen[4]
-                            ? Padding(
-                                key: const ValueKey(1), // 키를 다르게 설정해야 애니메이션이 동작
-                                padding: const EdgeInsets.only(
-                                    top: 8.0, bottom: 24.0),
-                                child: Column(
-                                  children: [
-                                    tagListWidget(
-                                      '# 화장실이 깨끗해요',
-                                      '# 찾아가기 편해요',
-                                      null,
-                                    ),
-                                    const SizedBox(height: 10),
-                                    tagListWidget(
-                                      '# 무료로 이용이 가능해요',
-                                      '# 주차가 가능해요',
-                                      null,
-                                    ),
-                                    const SizedBox(height: 10),
-                                    tagListWidget(
-                                      '# 24시간 운영이에요',
-                                      null,
-                                      null,
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : Container(key: const ValueKey(2)), // 빈 컨테이너로 대체
-                      ),
+                      isTagOpen[4]
+                          ? Padding(
+                              padding:
+                                  const EdgeInsets.only(top: 8.0, bottom: 24.0),
+                              child: Wrap(
+                                spacing: 6.0,
+                                runSpacing: 10.0,
+                                children: otherTags.map((tag) {
+                                  return selectButtonWidget(tag);
+                                }).toList(),
+                              ),
+                            )
+                          : Container(),
                       const SizedBox(
                         height: 56,
                       ),
+
                       //줄글 리뷰
                       Row(
                         children: [
@@ -735,7 +633,7 @@ class _AddReviewState extends State<AddReview> {
                         controller: addReviewTextcontroller,
                         focusNode: addReviewTextFocusNode,
                         maxLines: 7, // 여러 줄 입력 가능
-                        maxLength: 300, // 최대 입력 가능 문자 수
+                        maxLength: 100, // 최대 입력 가능 문자 수
                         decoration: InputDecoration(
                           border: OutlineInputBorder(
                             borderRadius:
@@ -803,72 +701,34 @@ class _AddReviewState extends State<AddReview> {
   Widget tagTitleWidget(String title, int numberOfTag) {
     return Padding(
       padding: const EdgeInsets.only(top: 12.0, bottom: 12.0, right: 12.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16, //임의 수정
-              fontWeight: FontWeight.bold,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          setState(() {
+            isTagOpen[numberOfTag] = !isTagOpen[numberOfTag];
+          });
+        },
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16, //임의 수정
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                isTagOpen[numberOfTag] = !isTagOpen[numberOfTag];
-              });
-            },
-            child: SvgPicture.asset(isTagOpen[numberOfTag]
+            SvgPicture.asset(isTagOpen[numberOfTag]
                 ? 'assets/icons/dropdown_up_padding.svg'
                 : 'assets/icons/dropdown_down_padding.svg'),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget tagListWidget(
-      String tagContent1, String? tagContent2, String? tagContent3) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    // tag Content 1
-                    selectButtonWidget(
-                      tagContent1,
-                    ),
-                    if (tagContent2 != null) ...[
-                      const SizedBoxWidth6(),
-                      // tag Content 2
-                      selectButtonWidget(
-                        tagContent2,
-                      ),
-                      if (tagContent3 != null) ...[
-                        const SizedBoxWidth6(),
-                        // tag Content 3
-                        selectButtonWidget(
-                          tagContent3,
-                        ),
-                      ]
-                    ]
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
   Widget selectButtonWidget(String textContent) {
-    return SelectButton(
+    return SelectButtonWithoutIcon(
       height: 32.0,
       padding: 14.0,
       bgColor: selectedTags.contains(textContent)
@@ -879,7 +739,6 @@ class _AddReviewState extends State<AddReview> {
       textColor: selectedTags.contains(textContent)
           ? Colors.white
           : const Color(0xFF6B4D38),
-      textSize: 14.0,
       borderWidth: selectedTags.contains(textContent) ? null : 1.0,
       borderColor:
           selectedTags.contains(textContent) ? null : const Color(0xFFAD7541),

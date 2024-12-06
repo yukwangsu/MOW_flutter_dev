@@ -8,6 +8,7 @@ import 'package:flutter_mow/widgets/appbar_back_edit.dart';
 import 'package:flutter_mow/widgets/select_button.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CurationPage extends StatefulWidget {
   final int curationId;
@@ -71,6 +72,20 @@ class _CurationPageState extends State<CurationPage> {
       setState(() {
         isLiked = !isLiked;
       });
+    }
+  }
+
+  // url로 이동하는 함수
+  Future<void> _openWebsite(String link) async {
+    final Uri url = Uri.parse(link);
+
+    try {
+      await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication, // 기본 브라우저에서 열기
+      );
+    } catch (e) {
+      print('링크 열기 실패: $e');
     }
   }
 
@@ -527,12 +542,32 @@ class _CurationPageState extends State<CurationPage> {
                                                       ],
                                                     ),
                                                   ),
-                                                  Text(
-                                                    snapshot.data!.spaceUrl,
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .titleSmall,
+                                                  GestureDetector(
+                                                    onTap: () {
+                                                      _openWebsite(snapshot
+                                                          .data!.spaceUrl);
+                                                    },
+                                                    child: Text(
+                                                      '홈페이지로 이동하기',
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .titleSmall!
+                                                          .copyWith(
+                                                            decoration:
+                                                                TextDecoration
+                                                                    .underline,
+                                                          ),
+                                                    ),
                                                   ),
+                                                  // Text(
+                                                  //   snapshot.data!.spaceUrl,
+                                                  //   overflow:
+                                                  //       TextOverflow.ellipsis,
+                                                  //   maxLines: 2,
+                                                  //   style: Theme.of(context)
+                                                  //       .textTheme
+                                                  //       .titleSmall,
+                                                  // ),
                                                 ],
                                               ),
                                             ],
@@ -602,13 +637,13 @@ class _CurationPageState extends State<CurationPage> {
 
   Widget openHourWidget(Map<String, String> openHour) {
     List<String> daysOfWeek = [
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday',
+      '월요일',
+      '화요일',
+      '수요일',
+      '목요일',
+      '금요일',
+      '토요일',
+      '일요일',
     ];
     List<String> daysOfWeekFirstWord = [
       '월',
@@ -631,7 +666,7 @@ class _CurationPageState extends State<CurationPage> {
               ),
               openHour[daysOfWeek[n]] == null
                   ? Text(
-                      '  Closed',
+                      '  (알 수 없음)',
                       style: Theme.of(context).textTheme.titleSmall,
                     )
                   : Text(
