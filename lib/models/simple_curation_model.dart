@@ -34,3 +34,35 @@ class SimpleCurationDtoModel {
         featureTags = json['featureTags'] ?? '',
         curationPhoto = json['curationPhoto'] ?? '';
 }
+
+class MyCurationListModel {
+  final List<MyCurationModel> myCurationList;
+
+  MyCurationListModel.fromJson(json)
+      : myCurationList = (json != null)
+            ? List<MyCurationModel>.from(json
+                .map((curationJson) => MyCurationModel.fromJson(curationJson)))
+            : [];
+}
+
+class MyCurationModel {
+  final int curationId, workspaceId, userId, likes;
+  final String userNickname,
+      workSpaceName,
+      location,
+      curationTitle,
+      featureTags,
+      curationPhoto;
+
+  MyCurationModel.fromJson(Map<dynamic, dynamic> json)
+      : curationId = json['curationId'] ?? 0,
+        workspaceId = json['workspaceId'] ?? 0,
+        userId = json['userId'] ?? 0,
+        likes = json['likes'] ?? 0,
+        userNickname = json['userNickname'] ?? '',
+        workSpaceName = json['workSpaceName'] ?? '',
+        location = json['location'] ?? '',
+        curationTitle = json['curationTitle'] ?? '',
+        featureTags = json['featureTags'] ?? '',
+        curationPhoto = json['curationPhoto'] ?? '';
+}

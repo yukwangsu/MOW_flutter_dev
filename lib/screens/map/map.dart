@@ -1232,10 +1232,135 @@ class _MapScreenState extends State<MapScreen> {
                                                 TextDecoration.underline,
                                           ),
                                     ),
+                                    const SizedBox(
+                                      height: 18.0,
+                                    ),
+                                    // 이미지(최대 열장)
+                                    SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: Row(
+                                        children: List.generate(
+                                          placeDetail.photos.length,
+                                          (index) {
+                                            return Padding(
+                                              padding: const EdgeInsets.only(
+                                                  right: 8.0),
+                                              child: GestureDetector(
+                                                onTap: () {
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (context) {
+                                                      return Dialog(
+                                                        child: StatefulBuilder(
+                                                          builder: (context,
+                                                              setState) {
+                                                            int currentIndex =
+                                                                index;
+                                                            return SizedBox(
+                                                              height: 500.0,
+                                                              child: PageView
+                                                                  .builder(
+                                                                controller:
+                                                                    PageController(
+                                                                        initialPage:
+                                                                            index),
+                                                                itemCount:
+                                                                    placeDetail
+                                                                        .photos
+                                                                        .length,
+                                                                onPageChanged:
+                                                                    (newIndex) {
+                                                                  setState(() {
+                                                                    currentIndex =
+                                                                        newIndex;
+                                                                  });
+                                                                },
+                                                                itemBuilder:
+                                                                    (context,
+                                                                        pageIndex) {
+                                                                  return Container(
+                                                                    color: Colors
+                                                                        .black,
+                                                                    child: Image
+                                                                        .network(
+                                                                      placeDetail
+                                                                              .photos[
+                                                                          pageIndex],
+                                                                      fit: BoxFit
+                                                                          .contain,
+                                                                      loadingBuilder: (context,
+                                                                          child,
+                                                                          loadingProgress) {
+                                                                        if (loadingProgress ==
+                                                                            null)
+                                                                          return child;
+                                                                        return Center(
+                                                                          child:
+                                                                              CircularProgressIndicator(
+                                                                            value: loadingProgress.expectedTotalBytes != null
+                                                                                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                                                                : null,
+                                                                          ),
+                                                                        );
+                                                                      },
+                                                                      errorBuilder: (context,
+                                                                          error,
+                                                                          stackTrace) {
+                                                                        return const Center(
+                                                                          child:
+                                                                              Text(
+                                                                            '이미지를 불러올 수 없습니다.',
+                                                                            style:
+                                                                                TextStyle(color: Colors.white),
+                                                                          ),
+                                                                        );
+                                                                      },
+                                                                    ),
+                                                                  );
+                                                                },
+                                                              ),
+                                                            );
+                                                          },
+                                                        ),
+                                                      );
+                                                    },
+                                                  );
+                                                },
+                                                child: Container(
+                                                  width: 180,
+                                                  height: 180,
+                                                  color:
+                                                      const Color(0xFFD9D9D9),
+                                                  child: Image.network(
+                                                    placeDetail.photos[index],
+                                                    fit: BoxFit.cover,
+                                                    loadingBuilder: (context,
+                                                        child,
+                                                        loadingProgress) {
+                                                      if (loadingProgress ==
+                                                          null) return child;
+                                                      return Container(
+                                                          color: const Color(
+                                                              0xFFD9D9D9));
+                                                    },
+                                                    errorBuilder: (context,
+                                                        error, stackTrace) {
+                                                      return const SizedBox
+                                                          .shrink();
+                                                    },
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+
                                     const SizedBoxHeight30(),
                                     const ListBorderLine(),
                                     const SizedBoxHeight30(),
-                                    //리뷰
+                                    // 리뷰
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
@@ -2222,10 +2347,30 @@ class _MapScreenState extends State<MapScreen> {
                   children: [
                     //가게 이미지
                     Container(
-                      decoration: const BoxDecoration(color: Colors.black),
-                      width: 80.0,
-                      height: 80.0,
-                    ),
+                        width: 80.0,
+                        height: 80.0,
+                        color: const Color(0xFFD9D9D9), // 기본 배경색을 회색으로 설정
+                        child: workspaceData['workspaceThumbnailUrl'] == null
+                            // 1. 이미지가 없을 경우
+                            ? null
+                            :
+                            // 2. 이미지가 있을 경우
+                            Image.network(
+                                workspaceData['workspaceThumbnailUrl'],
+                                fit: BoxFit.cover,
+                                loadingBuilder:
+                                    (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Container(
+                                      color: const Color(
+                                          0xFFD9D9D9)); // 로딩 중일 때 회색 화면 유지
+                                },
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                      color: const Color(
+                                          0xFFD9D9D9)); // 로딩 실패 시 회색 화면 표시
+                                },
+                              )),
                     const SizedBox(
                       width: 14.0,
                     ),

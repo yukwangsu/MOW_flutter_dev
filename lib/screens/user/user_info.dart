@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mow/models/character_model.dart';
 import 'package:flutter_mow/screens/map/add_review.dart';
 import 'package:flutter_mow/screens/user/character.dart';
+import 'package:flutter_mow/screens/user/like_curation.dart';
+import 'package:flutter_mow/screens/user/my_curation.dart';
 import 'package:flutter_mow/screens/user/user_account.dart';
 import 'package:flutter_mow/services/character_service.dart';
 import 'package:flutter_mow/widgets/appbar_back.dart';
@@ -144,7 +146,14 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             Opacity(
               opacity: 1.0,
               child: GestureDetector(
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LikeCuration(),
+                    ),
+                  );
+                },
                 child: SizedBox(
                   height: 60.0,
                   child: Row(
@@ -167,7 +176,14 @@ class _UserInfoScreenState extends State<UserInfoScreen> {
             Opacity(
               opacity: 1.0,
               child: GestureDetector(
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MyCuration(),
+                    ),
+                  );
+                },
                 child: SizedBox(
                   height: 60.0,
                   child: Row(

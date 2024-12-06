@@ -65,7 +65,17 @@ class _UserAccountState extends State<UserAccount> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(
-              height: 50.0,
+              height: 28.0,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+              child: Text(
+                '계정 정보',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            const SizedBox(
+              height: 36.0,
             ),
             // 로그아웃
             Padding(

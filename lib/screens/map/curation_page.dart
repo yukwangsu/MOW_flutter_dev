@@ -241,67 +241,128 @@ class _CurationPageState extends State<CurationPage> {
                                   ),
                                   //이미지(최대 열장)
                                   SingleChildScrollView(
-                                      scrollDirection: Axis.horizontal,
-                                      child: Row(
-                                        children: List.generate(
-                                            snapshot.data!.imageList.length,
-                                            (index) {
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: List.generate(
+                                        snapshot.data!.imageList.length,
+                                        (index) {
                                           return Padding(
                                             padding: const EdgeInsets.only(
                                                 right: 8.0),
-                                            child: Container(
-                                              width: 186,
-                                              height: 248,
-                                              color: const Color(0xFFD9D9D9),
-                                              child: Image.network(
-                                                snapshot.data!.imageList[index],
-                                                fit: BoxFit.cover,
-                                                loadingBuilder: (context, child,
-                                                    loadingProgress) {
-                                                  if (loadingProgress == null)
-                                                    return child;
-                                                  return Container(
-                                                      color: const Color(
-                                                          0xFFD9D9D9)); // 로딩 중일 때 회색 화면 유지
-                                                },
-                                                errorBuilder: (context, error,
-                                                    stackTrace) {
-                                                  return const SizedBox
-                                                      .shrink(); // 에러 시 아무것도 표시하지 않음
-                                                },
+                                            child: GestureDetector(
+                                              onTap: () {
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (context) {
+                                                    return Dialog(
+                                                      child: StatefulBuilder(
+                                                        builder: (context,
+                                                            setState) {
+                                                          int currentIndex =
+                                                              index;
+                                                          return SizedBox(
+                                                            height: 500.0,
+                                                            child: PageView
+                                                                .builder(
+                                                              controller:
+                                                                  PageController(
+                                                                      initialPage:
+                                                                          index),
+                                                              itemCount:
+                                                                  snapshot
+                                                                      .data!
+                                                                      .imageList
+                                                                      .length,
+                                                              onPageChanged:
+                                                                  (newIndex) {
+                                                                setState(() {
+                                                                  currentIndex =
+                                                                      newIndex;
+                                                                });
+                                                              },
+                                                              itemBuilder:
+                                                                  (context,
+                                                                      pageIndex) {
+                                                                return Container(
+                                                                  color: Colors
+                                                                      .black,
+                                                                  child: Image
+                                                                      .network(
+                                                                    snapshot.data!
+                                                                            .imageList[
+                                                                        pageIndex],
+                                                                    fit: BoxFit
+                                                                        .contain,
+                                                                    loadingBuilder:
+                                                                        (context,
+                                                                            child,
+                                                                            loadingProgress) {
+                                                                      if (loadingProgress ==
+                                                                          null)
+                                                                        return child;
+                                                                      return Center(
+                                                                        child:
+                                                                            CircularProgressIndicator(
+                                                                          value: loadingProgress.expectedTotalBytes != null
+                                                                              ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                                                              : null,
+                                                                        ),
+                                                                      );
+                                                                    },
+                                                                    errorBuilder:
+                                                                        (context,
+                                                                            error,
+                                                                            stackTrace) {
+                                                                      return const Center(
+                                                                        child:
+                                                                            Text(
+                                                                          '이미지를 불러올 수 없습니다.',
+                                                                          style:
+                                                                              TextStyle(color: Colors.white),
+                                                                        ),
+                                                                      );
+                                                                    },
+                                                                  ),
+                                                                );
+                                                              },
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
+                                                    );
+                                                  },
+                                                );
+                                              },
+                                              child: Container(
+                                                width: 180,
+                                                height: 180,
+                                                color: const Color(0xFFD9D9D9),
+                                                child: Image.network(
+                                                  snapshot
+                                                      .data!.imageList[index],
+                                                  fit: BoxFit.cover,
+                                                  loadingBuilder: (context,
+                                                      child, loadingProgress) {
+                                                    if (loadingProgress == null)
+                                                      return child;
+                                                    return Container(
+                                                        color: const Color(
+                                                            0xFFD9D9D9));
+                                                  },
+                                                  errorBuilder: (context, error,
+                                                      stackTrace) {
+                                                    return const SizedBox
+                                                        .shrink();
+                                                  },
+                                                ),
                                               ),
                                             ),
                                           );
-                                        }),
-                                      )),
-                                  // SingleChildScrollView(
-                                  //   scrollDirection: Axis.horizontal,
-                                  //   child: Row(
-                                  //     children: [
-                                  //       Container(
-                                  //         width: 186,
-                                  //         height: 248,
-                                  //         color: Colors.grey,
-                                  //       ),
-                                  //       const SizedBox(
-                                  //         width: 6.0,
-                                  //       ),
-                                  //       Container(
-                                  //         width: 186,
-                                  //         height: 248,
-                                  //         color: Colors.grey,
-                                  //       ),
-                                  //       const SizedBox(
-                                  //         width: 6.0,
-                                  //       ),
-                                  //       Container(
-                                  //         width: 186,
-                                  //         height: 248,
-                                  //         color: Colors.grey,
-                                  //       ),
-                                  //     ],
-                                  //   ),
-                                  // ),
+                                        },
+                                      ),
+                                    ),
+                                  ),
+
                                   const SizedBox(
                                     height: 18.0,
                                   ),

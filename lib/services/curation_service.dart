@@ -74,7 +74,7 @@ class CurationService {
     }
   }
 
-  //큐레이션 리스트 불러오기
+  //특정 장소의 큐레이션 리스트 불러오기
   static Future<CurationPlaceModel> getCurationPlace(
     int workspaceId,
     int order, // 0(최신 순), 1(오래된 순), 2(좋아요 순)
@@ -481,6 +481,76 @@ class CurationService {
     } catch (e) {
       print('Error during cancelLikeCuration: $e');
       return false;
+    }
+  }
+
+  // 본인이 작성한 큐레이션 리스트 불러오기
+  static Future<MyCurationListModel> getMyCuration() async {
+    final url = Uri.parse('${Secrets.awsKey}curation/mine/all');
+
+    //토큰 가져오기
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('accessToken');
+
+    var headers = {
+      'accessToken': '$token',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final response = await http.get(url, headers: headers);
+      print('----------[service] getMyCuration----------');
+      print('Response status: ${response.statusCode}');
+
+      // UTF-8로 응답을 수동 디코딩
+      final utf8Body = utf8.decode(response.bodyBytes);
+      print('Response body: $utf8Body');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final responseData = json.decode(utf8Body);
+        return MyCurationListModel.fromJson(responseData);
+      } else {
+        print('Fail getMyCuration');
+        throw Error();
+      }
+    } catch (e) {
+      print('Error during getMyCuration: $e');
+      throw Error();
+    }
+  }
+
+  // 본인이 좋아요를 누른 큐레이션 리스트 불러오기
+  static Future<MyCurationListModel> getLikeCuration() async {
+    final url = Uri.parse('${Secrets.awsKey}curation/mine/like');
+
+    //토큰 가져오기
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('accessToken');
+
+    var headers = {
+      'accessToken': '$token',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final response = await http.get(url, headers: headers);
+      print('----------[service] getLikeCuration----------');
+      print('Response status: ${response.statusCode}');
+
+      // UTF-8로 응답을 수동 디코딩
+      final utf8Body = utf8.decode(response.bodyBytes);
+      print('Response body: $utf8Body');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final responseData = json.decode(utf8Body);
+        return MyCurationListModel.fromJson(responseData);
+      } else {
+        print('Fail getLikeCuration');
+        throw Error();
+      }
+    } catch (e) {
+      print('Error during getLikeCuration: $e');
+      throw Error();
     }
   }
 }
