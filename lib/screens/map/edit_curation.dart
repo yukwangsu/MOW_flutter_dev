@@ -534,7 +534,7 @@ class _EditCurationScreenState extends State<EditCurationScreen> {
                                                 border:
                                                     InputBorder.none, // 테두리 없애기
                                                 hintText:
-                                                    '큐레이션 내용을 작성해주세요 (200자 이내)', // placeholder 텍스트
+                                                    '큐레이션 내용을 작성해주세요 (500자 이내)', // placeholder 텍스트
                                                 hintMaxLines:
                                                     1, // placeholder 최대 줄 수
                                                 hintStyle: Theme.of(context)
@@ -544,7 +544,7 @@ class _EditCurationScreenState extends State<EditCurationScreen> {
                                                         color: const Color(
                                                             0xFF868686)),
                                               ),
-                                              maxLength: 200, // 최대 입력 가능 문자 수
+                                              maxLength: 500, // 최대 입력 가능 문자 수
                                               maxLines: 10, // 입력 필드를 10 줄로 제한
                                               style: Theme.of(context)
                                                   .textTheme

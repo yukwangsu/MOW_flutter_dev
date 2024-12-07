@@ -1013,7 +1013,10 @@ class _MapScreenState extends State<MapScreen> {
                                               'assets/icons/star_fill_icon.svg'),
                                         ],
                                         for (int i = 0;
-                                            i < 5 - 4.round();
+                                            i <
+                                                5 -
+                                                    placeDetail.starscore
+                                                        .round();
                                             i++) ...[
                                           SvgPicture.asset(
                                               'assets/icons/star_unfill_icon.svg'),
@@ -1403,10 +1406,10 @@ class _MapScreenState extends State<MapScreen> {
                                         ),
                                       ),
                                     ),
-
                                     const SizedBoxHeight30(),
                                     const ListBorderLine(),
                                     const SizedBoxHeight30(),
+
                                     // 리뷰
                                     Row(
                                       mainAxisAlignment:
@@ -2849,7 +2852,15 @@ class _MapScreenState extends State<MapScreen> {
     return '${dayMap[day[currentWeekday % 7]]}  $hours';
   }
 
-  Widget reviewList(dynamic reviewObj) {
+  Widget reviewList(ReviewModel reviewObj) {
+    // 리뷰 태그 변환(int -> String)
+    List<String> reviewTags = reviewObj.featureTags.isEmpty
+        ? []
+        : reviewObj.featureTags
+            .split(',')
+            .where((tag) => (reversedTagMap[int.parse(tag)]) != null)
+            .map((tag) => (reversedTagMap[int.parse(tag)])!)
+            .toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2884,11 +2895,64 @@ class _MapScreenState extends State<MapScreen> {
           ],
         ),
         const SizedBox(
-          height: 16,
+          height: 10.0,
         ),
-        Text(
-          reviewObj.reviewText,
-          style: Theme.of(context).textTheme.bodyMedium,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 7.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 리뷰 별점
+              Row(
+                children: [
+                  for (int i = 0; i < reviewObj.stars.round(); i++) ...[
+                    SvgPicture.asset('assets/icons/star_fill_icon.svg'),
+                  ],
+                  for (int i = 0; i < 5 - reviewObj.stars.round(); i++) ...[
+                    SvgPicture.asset('assets/icons/star_unfill_icon.svg'),
+                  ],
+                ],
+              ),
+              // 리뷰 태그
+              if (reviewTags.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: Column(
+                    children: [
+                      const SizedBox(
+                        height: 10.0,
+                      ),
+                      Wrap(
+                        spacing: 8.0, // 태그 간 간격
+                        runSpacing: 4.0, // 줄 바꿈 시 간격
+                        children: reviewTags.map((tag) {
+                          return Text(
+                            tag,
+                            style: Theme.of(context).textTheme.labelSmall,
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+              // 리뷰 텍스트
+              if (reviewObj.reviewText.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  child: Column(
+                    children: [
+                      const SizedBox(
+                        height: 10.0,
+                      ),
+                      Text(
+                        reviewObj.reviewText,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ),
       ],
     );
