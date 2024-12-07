@@ -41,7 +41,7 @@ class WorkspaceDtoModel {
         outletDegree = json['outletDegree'] ?? 0,
         chairDegree = json['chairDegree'] ?? 0,
         workspaceName = json['workspaceName'] ?? '',
-        workspaceThumbnailUrl = json['workspaceThumbnailUrl'] ?? '',
+        workspaceThumbnailUrl = json['workspaceThumbnailUrl'] ?? 'no image',
         workspaceType = json['workspaceType'] ?? '',
         location = json['location'] ?? '',
         phoneNumber = json['phoneNumber'] ?? '',

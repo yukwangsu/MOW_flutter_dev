@@ -255,21 +255,28 @@ class _SearchPlaceState extends State<SearchPlace> {
                       width: 80.0,
                       height: 80.0,
                       color: const Color(0xFFD9D9D9), // 기본 배경색을 회색으로 설정
-                      child: Image.network(
-                        place.workspaceThumbnailUrl,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                              color:
-                                  const Color(0xFFD9D9D9)); // 로딩 중일 때 회색 화면 유지
-                        },
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                              color:
-                                  const Color(0xFFD9D9D9)); // 로딩 실패 시 회색 화면 표시
-                        },
-                      )),
+                      child: place.workspaceThumbnailUrl == 'no image'
+                          ?
+                          // 1. 이미지가 없을 경우
+                          Image.asset('assets/images/default_image_80.png')
+
+                          // 2. 이미지가 있을 경우
+                          : Image.network(
+                              place.workspaceThumbnailUrl,
+                              fit: BoxFit.cover,
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Container(
+                                    color: const Color(
+                                        0xFFD9D9D9)); // 로딩 중일 때 회색 화면 유지
+                              },
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                    color: const Color(
+                                        0xFFD9D9D9)); // 로딩 실패 시 회색 화면 표시
+                              },
+                            )),
 
                   const SizedBox(
                     width: 14.0,

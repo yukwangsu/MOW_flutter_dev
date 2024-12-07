@@ -32,5 +32,5 @@ class CurationPlaceDtoModel {
         location = json['location'] ?? '',
         curationTitle = json['curationTitle'] ?? '',
         featureTags = json['featureTags'] ?? '',
-        curationPhoto = json['curationPhoto'] ?? '';
+        curationPhoto = json['curationPhoto'] ?? 'no image';
 }

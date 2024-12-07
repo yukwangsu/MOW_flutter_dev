@@ -2045,9 +2045,26 @@ class _MapScreenState extends State<MapScreen> {
                                                       horizontal: 18),
                                                   itemBuilder:
                                                       (context, index) {
-                                                    return curationPlaceWidget(
-                                                        curationPlaceList[
-                                                            index]);
+                                                    if (index ==
+                                                        curationPlaceList
+                                                                .length -
+                                                            1) {
+                                                      return Row(
+                                                        children: [
+                                                          curationPlaceWidget(
+                                                              curationPlaceList[
+                                                                  index]),
+                                                          const SizedBox(
+                                                            width: 8.0,
+                                                          ),
+                                                          defaultCurationPlaceWidget()
+                                                        ],
+                                                      );
+                                                    } else {
+                                                      return curationPlaceWidget(
+                                                          curationPlaceList[
+                                                              index]);
+                                                    }
                                                   },
                                                   separatorBuilder: (context,
                                                           index) =>
@@ -2403,7 +2420,7 @@ class _MapScreenState extends State<MapScreen> {
                         color: const Color(0xFFD9D9D9), // 기본 배경색을 회색으로 설정
                         child: workspaceData['workspaceThumbnailUrl'] == null
                             // 1. 이미지가 없을 경우
-                            ? null
+                            ? Image.asset('assets/images/default_image_80.png')
                             :
                             // 2. 이미지가 있을 경우
                             Image.network(
@@ -2685,21 +2702,28 @@ class _MapScreenState extends State<MapScreen> {
                         width: 80.0,
                         height: 80.0,
                         color: const Color(0xFFD9D9D9), // 기본 배경색을 회색으로 설정
-                        child: Image.network(
-                          curationPhoto,
-                          fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Container(
-                                color: const Color(
-                                    0xFFD9D9D9)); // 로딩 중일 때 회색 화면 유지
-                          },
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                                color: const Color(
-                                    0xFFD9D9D9)); // 로딩 실패 시 회색 화면 표시
-                          },
-                        )),
+                        child: curationPhoto == 'no image'
+                            ?
+                            // 1. 이미지가 없을 경우
+                            Image.asset('assets/images/default_image_80.png')
+
+                            // 2. 이미지가 있을 경우
+                            : Image.network(
+                                curationPhoto,
+                                fit: BoxFit.cover,
+                                loadingBuilder:
+                                    (context, child, loadingProgress) {
+                                  if (loadingProgress == null) return child;
+                                  return Container(
+                                      color: const Color(
+                                          0xFFD9D9D9)); // 로딩 중일 때 회색 화면 유지
+                                },
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                      color: const Color(
+                                          0xFFD9D9D9)); // 로딩 실패 시 회색 화면 표시
+                                },
+                              )),
 
                     const SizedBox(
                       width: 14.0,
@@ -3097,19 +3121,25 @@ class _MapScreenState extends State<MapScreen> {
               clipBehavior: Clip.hardEdge,
 
               // 이미지
-              child: Image.network(
-                data.curationPhoto,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                      color: const Color(0xFFD9D9D9)); // 로딩 중일 때 회색 화면 유지
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                      color: const Color(0xFFD9D9D9)); // 로딩 실패 시 검정 화면 표시
-                },
-              ),
+              child: data.curationPhoto == 'no image'
+                  ?
+                  // 1. 이미지가 없을 경우
+                  Image.asset('assets/images/curation_place_default_image.png')
+
+                  // 2. 이미지가 있을 경우
+                  : Image.network(
+                      data.curationPhoto,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                            color: const Color(0xFFD9D9D9)); // 로딩 중일 때 회색 화면 유지
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                            color: const Color(0xFFD9D9D9)); // 로딩 실패 시 검정 화면 표시
+                      },
+                    ),
             ),
             const SizedBox(
               height: 14,

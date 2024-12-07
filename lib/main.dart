@@ -5,6 +5,7 @@ import 'package:flutter_mow/screens/splash/splash_screen.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_mow/secrets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
