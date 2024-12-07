@@ -22,8 +22,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class MapScreen extends StatefulWidget {
+  final bool isNewUser;
+
   const MapScreen({
     super.key,
+    required this.isNewUser,
   });
 
   @override
@@ -107,9 +110,13 @@ class _MapScreenState extends State<MapScreen> {
   bool showBookmarkFilterBotton = true;
   //터치가 불가능하게 하는 변수
   bool isWaiting = false;
+  //지도 화면 정중앙을 기준으로 장소를 찾는 버튼을 보여줄지 저장하는 변수
+  bool showReloadWorkspaceButton = true;
   //길찾기
   double destinationLat = 37.566637964388796;
   double destinationLng = 126.97838246141094;
+  //큐레이션 전환 경험
+  bool removeGuide = false;
 
   @override
   void initState() {
@@ -166,6 +173,7 @@ class _MapScreenState extends State<MapScreen> {
   void handleSwitchButtonTap() {
     print("지도 <-> 큐레이션 전환!!!!!!!!!!");
     setState(() {
+      removeGuide = true;
       // 검색 텍스트 초기화
       searchController.text = '';
       if (bottomsheetMode == 'normal' || bottomsheetMode == 'detail') {
@@ -283,6 +291,14 @@ class _MapScreenState extends State<MapScreen> {
     return true;
   }
 
+  // 현재 보고 있는 지도 중앙 좌표 저장하는 함수
+  Future<void> _getCenterPosition() async {
+    final cameraPosition = await naverMapController.getCameraPosition();
+    final center = cameraPosition.target; // LatLng 값
+    latitude = center.latitude;
+    longitude = center.longitude;
+  }
+
   // url로 이동하는 함수
   Future<void> _openWebsite(String link) async {
     final Uri url = Uri.parse(link);
@@ -341,14 +357,6 @@ class _MapScreenState extends State<MapScreen> {
       backgroundColor: const Color.fromARGB(255, 231, 215, 199),
       body: Stack(
         children: [
-          // 배경 화면
-          // // 테스트 후 삭제 가능
-          // Container(
-          //   height: screenHeight,
-          //   width: screenWidth,
-          //   color: const Color(0xFFAD7541),
-          // ),
-
           // 위치 로딩중 화면
           if (isLoadingLocation)
             Center(
@@ -387,43 +395,48 @@ class _MapScreenState extends State<MapScreen> {
             ),
           // 위치 로딩이 끝났을 때 화면
           if (!isLoadingLocation)
-            // // 테스트 후 SizedBox 삭제 가능
-            // SizedBox(
-            //   height: screenHeight - bottomSheetHeight + 40.0,
-            //   child:
-            NaverMap(
-              options: NaverMapViewOptions(
-                initialCameraPosition: NCameraPosition(
-                  target: NLatLng(latitude, longitude),
-                  zoom: 15,
-                ),
-                rotationGesturesEnable: false, // 지도 회전 금지
-                scrollGesturesFriction: 0.5, // 마찰계수
-                zoomGesturesFriction: 0.5, // 마찰계수
-                //줌 제한 (커질수록 더 자세히 보임)
-                minZoom: 12, // default is 0
-                maxZoom: 17, // default is 21
-                // 지도 영역을 대한민국 인근으로 제한
-                extent: const NLatLngBounds(
-                  southWest: NLatLng(31.43, 122.37),
-                  northEast: NLatLng(38.35, 132.0),
-                ),
-                // 지도에 표시되는 언어를 한국어로 제한
-                locale: const Locale('ko'),
-                // 현위치로 이동하는 버튼 비/활성화
-                locationButtonEnable: false,
-                logoMargin:
-                    EdgeInsets.only(bottom: bottomSheetHeight, left: 5.0),
+            ColorFiltered(
+              colorFilter: ColorFilter.mode(
+                Colors.black.withOpacity(
+                    (widget.isNewUser && removeGuide == false)
+                        ? 0.5
+                        : 0.0), // 검은색과 불투명도를 조정하여 어둡게
+                BlendMode.darken, // 어둡게 하는 블렌드 모드
               ),
-              onMapReady: (NaverMapController mapController) {
-                //네이버 지도 로딩이 끝났을 때 지도에 마커를 추가하기 위한 준비
-                print("네이버 맵 로딩됨!");
-                setState(() {
-                  naverMapController = mapController;
-                  reloadWorkspaces = true;
-                  isNaverMapLoaded = true;
-                });
-              },
+              child: NaverMap(
+                options: NaverMapViewOptions(
+                  initialCameraPosition: NCameraPosition(
+                    target: NLatLng(latitude, longitude),
+                    zoom: 15,
+                  ),
+                  rotationGesturesEnable: false, // 지도 회전 금지
+                  scrollGesturesFriction: 0.5, // 마찰계수
+                  zoomGesturesFriction: 0.5, // 마찰계수
+                  //줌 제한 (커질수록 더 자세히 보임)
+                  minZoom: 12, // default is 0
+                  maxZoom: 17, // default is 21
+                  // 지도 영역을 대한민국 인근으로 제한
+                  extent: const NLatLngBounds(
+                    southWest: NLatLng(31.43, 122.37),
+                    northEast: NLatLng(38.35, 132.0),
+                  ),
+                  // 지도에 표시되는 언어를 한국어로 제한
+                  locale: const Locale('ko'),
+                  // 현위치로 이동하는 버튼 비/활성화
+                  locationButtonEnable: false,
+                  logoMargin:
+                      EdgeInsets.only(bottom: bottomSheetHeight, left: 5.0),
+                ),
+                onMapReady: (NaverMapController mapController) {
+                  //네이버 지도 로딩이 끝났을 때 지도에 마커를 추가하기 위한 준비
+                  print("네이버 맵 로딩됨!");
+                  setState(() {
+                    naverMapController = mapController;
+                    reloadWorkspaces = true;
+                    isNaverMapLoaded = true;
+                  });
+                },
+              ),
             ),
           // ),
 
@@ -433,53 +446,100 @@ class _MapScreenState extends State<MapScreen> {
               top: 66,
               child: SwitchButton(onPress: handleSwitchButtonTap)),
 
+          // 큐레이션 전환 버튼 안내 문구
+          if (widget.isNewUser && removeGuide == false && isNaverMapLoaded)
+            Positioned(
+              right: 20,
+              top: 66 + 66,
+              child: GestureDetector(
+                  onTap: () {
+                    if (bottomSheetHeight <= screenHeight * 0.6) {
+                      setState(() {
+                        removeGuide = true;
+                      });
+                    }
+                  },
+                  //bottomSheetHeight의 높이가 screenHeight * 0.6보다 높으면 북마크 필터 버튼을 보여주지 않음
+                  child: bottomSheetHeight <= screenHeight * 0.6
+                      ? Container(
+                          decoration: BoxDecoration(
+                              color: Colors.white, // 배경색 흰색
+                              borderRadius: BorderRadius.circular(10.0)),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 18.0, vertical: 12.0),
+                          child: Center(
+                              child: Text(
+                            '큐레이션 페이지에서 새로운 공간을 알아봐요 💡',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          )),
+                        )
+                      : const Text('')),
+            ),
+
+          // 큐레이션 전환 버튼 안내 문구(삼각형)
+          if (widget.isNewUser && removeGuide == false && isNaverMapLoaded)
+            Positioned(
+              right: 32,
+              top: 66 + 58,
+              child: GestureDetector(
+                  onTap: () {
+                    if (bottomSheetHeight <= screenHeight * 0.6) {
+                      setState(() {
+                        removeGuide = true;
+                      });
+                    }
+                  },
+                  //bottomSheetHeight의 높이가 screenHeight * 0.6보다 높으면 북마크 필터 버튼을 보여주지 않음
+                  child: bottomSheetHeight <= screenHeight * 0.6
+                      ? SvgPicture.asset('assets/icons/triangle_up.svg')
+                      : const Text('')),
+            ),
+
           // 내 위치로 이동 버튼
-          Positioned(
-            left: 20,
-            bottom: bottomsheetMode == 'curation_normal' ||
-                    bottomsheetMode == 'curation_place'
-                ? bottomSheetHeight + 12 + 60
-                : bottomSheetHeight + 12,
-            child: GestureDetector(
-                onTap: () async {
-                  if (bottomSheetHeight <= screenHeight * 0.6) {
-                    // 로딩 시작
-                    setState(() {
-                      isLoadingUserLocation = true;
-                    });
+          if (removeGuide)
+            Positioned(
+              left: 20,
+              bottom: bottomSheetHeight + 12,
+              child: GestureDetector(
+                  onTap: () async {
+                    if (bottomSheetHeight <= screenHeight * 0.6) {
+                      // 로딩 시작
+                      setState(() {
+                        isLoadingUserLocation = true;
+                      });
 
-                    // 0. 사용자 위치 가져오기
-                    await getCurrentLocation();
-                    NLatLng location = NLatLng(
-                      latitude,
-                      longitude,
-                    );
-                    // 1. 카메라가 이동할 위치 설정
-                    final cameraUpdate =
-                        NCameraUpdate.scrollAndZoomTo(target: location);
-                    // 2. 카메라가 이동할 때 마커를 왼쪽에서 1/2, 위에서 1/3에 위치시키도록 설정
-                    cameraUpdate.setPivot(const NPoint(1 / 2, 1 / 3));
-                    // 3. 카메라 시점 업데이트
-                    naverMapController.updateCamera(cameraUpdate);
+                      // 0. 사용자 위치 가져오기
+                      await getCurrentLocation();
+                      NLatLng location = NLatLng(
+                        latitude,
+                        longitude,
+                      );
+                      // 1. 카메라가 이동할 위치 설정
+                      final cameraUpdate =
+                          NCameraUpdate.scrollAndZoomTo(target: location);
+                      // 2. 카메라가 이동할 때 마커를 왼쪽에서 1/2, 위에서 1/3에 위치시키도록 설정
+                      cameraUpdate.setPivot(const NPoint(1 / 2, 1 / 3));
+                      // 3. 카메라 시점 업데이트
+                      naverMapController.updateCamera(cameraUpdate);
 
-                    // 로딩 종료
-                    setState(() {
-                      isLoadingUserLocation = false;
-                    });
-                  }
-                },
-                //bottomSheetHeight의 높이가 screenHeight * 0.6보다 높으면 버튼을 보여주지 않음
-                child: bottomSheetHeight <= screenHeight * 0.6
-                    ? SvgPicture.asset('assets/icons/my_location_icon.svg')
-                    : const Text('')),
-          ),
+                      // 로딩 종료
+                      setState(() {
+                        isLoadingUserLocation = false;
+                      });
+                    }
+                  },
+                  //bottomSheetHeight의 높이가 screenHeight * 0.6보다 높으면 버튼을 보여주지 않음
+                  child: bottomSheetHeight <= screenHeight * 0.6
+                      ? SvgPicture.asset('assets/icons/my_location_icon.svg')
+                      : const Text('')),
+            ),
 
           // 큐레이션 작성 버튼
           if (bottomsheetMode == 'curation_normal' ||
               bottomsheetMode == 'curation_place')
             Positioned(
               left: 20,
-              bottom: bottomSheetHeight + 12,
+              bottom: bottomSheetHeight + 12 + 60,
               child: GestureDetector(
                   onTap: () async {
                     if (bottomSheetHeight <= screenHeight * 0.6) {
@@ -527,6 +587,7 @@ class _MapScreenState extends State<MapScreen> {
                       // 북마크 필터 버튼을 클릭했을 때 bottomsheet가 움직이지 않도록(setState 방지)
                       startWaiting();
                       setState(() {
+                        removeGuide = true;
                         reloadWorkspaces = true;
                         showOnlyBookmarkedPlace = !showOnlyBookmarkedPlace;
                       });
@@ -537,6 +598,113 @@ class _MapScreenState extends State<MapScreen> {
                       ? SvgPicture.asset(showOnlyBookmarkedPlace
                           ? 'assets/icons/bookmark_filtered_icon.svg'
                           : 'assets/icons/bookmark_unfiltered_icon.svg')
+                      : const Text('')),
+            ),
+
+          // 북마크 필터 버튼 안내 문구
+          if (widget.isNewUser && removeGuide == false && isNaverMapLoaded)
+            Positioned(
+              right: 20 + 48 + 10,
+              bottom: bottomSheetHeight + 12,
+              child: GestureDetector(
+                  onTap: () {
+                    if (bottomSheetHeight <= screenHeight * 0.6) {
+                      setState(() {
+                        removeGuide = true;
+                      });
+                    }
+                  },
+                  child: bottomSheetHeight <= screenHeight * 0.6
+                      ? Container(
+                          decoration: BoxDecoration(
+                              color: Colors.white, // 배경색 흰색
+                              borderRadius: BorderRadius.circular(10.0)),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 18.0, vertical: 12.0),
+                          child: Center(
+                              child: Text(
+                            '저장한 공간만 볼 수 있어요 🔍',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          )),
+                        )
+                      : const Text('')),
+            ),
+
+          // 장소 다시 불러오기 버튼
+          if (isNaverMapLoaded &&
+              (bottomsheetMode == 'normal' || bottomsheetMode == 'detail'))
+            Positioned(
+              right: 20,
+              bottom: bottomSheetHeight + 12 + 60,
+              child: GestureDetector(
+                  onTap: () async {
+                    if (bottomSheetHeight <= screenHeight * 0.6) {
+                      // 로딩 시작
+                      setState(() {
+                        isLoadingUserLocation = true;
+                        removeGuide = true;
+                      });
+
+                      // 현재 지도 위치 가져오기
+                      await _getCenterPosition();
+
+                      // 로딩 종료
+                      setState(() {
+                        isLoadingUserLocation = false;
+                        reloadWorkspaces = true;
+                      });
+                    }
+                  },
+                  //bottomSheetHeight의 높이가 screenHeight * 0.6보다 높으면 북마크 필터 버튼을 보여주지 않음
+                  child: bottomSheetHeight <= screenHeight * 0.6
+                      ? Container(
+                          width: 48.0,
+                          height: 48.0,
+                          decoration: BoxDecoration(
+                            color: Colors.white, // 배경색 흰색
+                            shape: BoxShape.circle, // 원형 모양
+                            border: Border.all(
+                              color: const Color(0xFFE4E3E2),
+                              width: 1.0,
+                            ),
+                          ),
+                          child: const Center(
+                            child: Icon(
+                              Icons.refresh_outlined,
+                              color: Color(0xFF6B4D38), // 아이콘 색상
+                              size: 32.0, // 아이콘 크기
+                            ),
+                          ),
+                        )
+                      : const Text('')),
+            ),
+
+          // 장소 다시 불러오기 버튼 안내 문구
+          if (widget.isNewUser && removeGuide == false && isNaverMapLoaded)
+            Positioned(
+              right: 20 + 48 + 10,
+              bottom: bottomSheetHeight + 12 + 60,
+              child: GestureDetector(
+                  onTap: () {
+                    if (bottomSheetHeight <= screenHeight * 0.6) {
+                      setState(() {
+                        removeGuide = true;
+                      });
+                    }
+                  },
+                  child: bottomSheetHeight <= screenHeight * 0.6
+                      ? Container(
+                          decoration: BoxDecoration(
+                              color: Colors.white, // 배경색 흰색
+                              borderRadius: BorderRadius.circular(10.0)),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 18.0, vertical: 12.0),
+                          child: Center(
+                              child: Text(
+                            '지도 위치에서 다시 검색해요 🔍',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          )),
+                        )
                       : const Text('')),
             ),
 
@@ -554,6 +722,7 @@ class _MapScreenState extends State<MapScreen> {
                   FocusScope.of(context).unfocus();
                   // showBookmarkFilterBotton = false; // 바텀시트 이동중에는 북마크 필터 버튼 안 보여주기
                   setState(() {
+                    removeGuide = true;
                     bottomSheetHeight -= details.primaryDelta!;
                     // 최소 높이 설정(모드에 따라 다름), 최대 높이는 화면 높이의 0.936
                     bottomSheetHeight = bottomSheetHeight.clamp(
@@ -2808,43 +2977,6 @@ class _MapScreenState extends State<MapScreen> {
     DateTime nowKst = nowUtc.add(const Duration(hours: 9));
     int currentWeekday = nowKst.weekday;
 
-    // 요일을 Map의 키와 연결 및 첫 글자 정의
-    // String day;
-    // String dayInitial; // 요일의 첫 글자
-    // switch (currentWeekday) {
-    //   case 1:
-    //     day = 'Monday';
-    //     dayInitial = '월';
-    //     break;
-    //   case 2:
-    //     day = 'Tuesday';
-    //     dayInitial = '화';
-    //     break;
-    //   case 3:
-    //     day = 'Wednesday';
-    //     dayInitial = '수';
-    //     break;
-    //   case 4:
-    //     day = 'Thursday';
-    //     dayInitial = '목';
-    //     break;
-    //   case 5:
-    //     day = 'Friday';
-    //     dayInitial = '금';
-    //     break;
-    //   case 6:
-    //     day = 'Saturday';
-    //     dayInitial = '토';
-    //     break;
-    //   case 7:
-    //     day = 'Sunday';
-    //     dayInitial = '일';
-    //     break;
-    //   default:
-    //     day = 'Unknown';
-    //     dayInitial = '';
-    // }
-
     // 해당 요일의 영업 시간을 반환 (없으면 기본값으로 '정보 없음')
     String hours = hour[day[currentWeekday % 7]] ?? '(알 수 없음)';
 
@@ -3519,25 +3651,6 @@ class _MapScreenState extends State<MapScreen> {
       },
     );
   }
-
-//   Widget markerIconWidget() {
-//     return Container(
-//       width: 50,
-//       height: 50,
-//       color: Colors.black,
-//       child: Row(
-//         children: [
-//           Container(
-//             width: 5,
-//             height: 5,
-//             color: Colors.white,
-//           ),
-//           SvgPicture.asset('assets/icons/marker_icon.svg'),
-//         ],
-//       ),
-//     );
-//   }
-// }
 
   // 마커.... 최후의 수단...
   Widget markerIconWidget() {

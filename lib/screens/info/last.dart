@@ -84,7 +84,7 @@ class Last extends StatelessWidget {
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const MapScreen(),
+                        builder: (context) => const MapScreen(isNewUser: true),
                       ),
                       (route) => false, // 모든 이전 화면을 제거
                     );
