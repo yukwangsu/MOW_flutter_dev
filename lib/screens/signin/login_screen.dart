@@ -127,11 +127,12 @@ class _LoginScreenState extends State<LoginScreen> {
                           );
                           //사용자 정보를 입력한 경우 지도 화면으로 이동
                         } else {
-                          Navigator.push(
+                          Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(
                               builder: (context) => const MapScreen(),
                             ),
+                            (route) => false, // 모든 이전 화면을 제거
                           );
                         }
                       } else {

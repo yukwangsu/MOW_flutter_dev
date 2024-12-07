@@ -81,11 +81,12 @@ class Last extends StatelessWidget {
                       job,
                       mbti,
                     );
-                    Navigator.push(
+                    Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => MapScreen(),
+                        builder: (context) => const MapScreen(),
                       ),
+                      (route) => false, // 모든 이전 화면을 제거
                     );
                   },
                 ),
