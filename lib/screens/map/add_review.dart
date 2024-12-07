@@ -51,7 +51,8 @@ class _AddReviewState extends State<AddReview> {
 
   // 리뷰 작성 버튼을 눌렀을 때
   void onClickButtonHandler() async {
-    if (addReviewTextcontroller.text.isNotEmpty) {
+    if (addReviewTextcontroller.text.isNotEmpty &&
+        addReviewScore.round() != 0) {
       // 줄글리뷰를 작성했을 때
       if (addReviewWidenessDegree > 0) {
         switch (addReviewWidenessDegree) {
@@ -108,7 +109,15 @@ class _AddReviewState extends State<AddReview> {
               contentTitle: '리뷰 등록 완료!', content: '젤리 1개가 지급되었어요 \u{1F606}');
         },
       );
-    } else {
+    } else if (addReviewScore.round() == 0) {
+      // 별점을 주지 않았을 때
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return ShortDialog(content: '별점을 체크해 주세요');
+        },
+      );
+    } else if (addReviewTextcontroller.text.isEmpty) {
       // 줄글을 작성하지 않았을 때
       await showDialog(
         context: context,
