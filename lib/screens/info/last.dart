@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mow/screens/map/map.dart';
+import 'package:flutter_mow/screens/signin/login_screen.dart';
+import 'package:flutter_mow/services/signin_service.dart';
 import 'package:flutter_mow/services/signup_service.dart';
 import 'package:flutter_mow/widgets/appbar_back.dart';
 import 'package:flutter_mow/widgets/button_main.dart';
@@ -65,7 +67,7 @@ class Last extends StatelessWidget {
                   textColor: Colors.white,
                   borderColor: const Color(0xFF6B4D38),
                   opacity: 1.0,
-                  onPress: () {
+                  onPress: () async {
                     print('''info[email: $email, 
                           passwd: $passwd, 
                           name: $name, 
@@ -74,20 +76,35 @@ class Last extends StatelessWidget {
                           job: $job,
                           mbti: $mbti]''');
                     //json 형식으로 변환해서 api 작업하기
-                    SignupService.signupDetails(
+                    bool signupDetailResult = await SignupService.signupDetails(
                       name,
                       age!,
                       sex,
                       job,
                       mbti,
                     );
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MapScreen(isNewUser: true),
-                      ),
-                      (route) => false, // 모든 이전 화면을 제거
+                    bool signinResult = await SigninService.signin(
+                      email,
+                      passwd,
                     );
+                    if (!signupDetailResult || !signinResult) {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
+                        (route) => false, // 모든 이전 화면을 제거
+                      );
+                    } else {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const MapScreen(isNewUser: true),
+                        ),
+                        (route) => false, // 모든 이전 화면을 제거
+                      );
+                    }
                   },
                 ),
                 const SizedBox(

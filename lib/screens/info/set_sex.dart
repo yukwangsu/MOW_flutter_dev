@@ -38,11 +38,11 @@ class _SetSexState extends State<SetSex> {
     });
   }
 
-  selectNone() {
-    setState(() {
-      sex = '선택안함';
-    });
-  }
+  // selectNone() {
+  //   setState(() {
+  //     sex = '선택안함';
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -106,25 +106,25 @@ class _SetSexState extends State<SetSex> {
                         selectWoman();
                       },
                     ),
-                    const SizedBox(
-                      width: 6,
-                    ),
-                    SelectButton(
-                      height: 49,
-                      padding: 26,
-                      bgColor: sex == '선택안함'
-                          ? const Color(0xFF6B4D38)
-                          : const Color(0xFFFFFCF8),
-                      radius: 1000,
-                      text: '선택안함',
-                      textColor: sex == '선택안함'
-                          ? Colors.white
-                          : const Color(0xFF6B4D38),
-                      textSize: 20.0,
-                      onPress: () {
-                        selectNone();
-                      },
-                    ),
+                    // const SizedBox(
+                    //   width: 6,
+                    // ),
+                    // SelectButton(
+                    //   height: 49,
+                    //   padding: 26,
+                    //   bgColor: sex == '선택안함'
+                    //       ? const Color(0xFF6B4D38)
+                    //       : const Color(0xFFFFFCF8),
+                    //   radius: 1000,
+                    //   text: '선택안함',
+                    //   textColor: sex == '선택안함'
+                    //       ? Colors.white
+                    //       : const Color(0xFF6B4D38),
+                    //   textSize: 20.0,
+                    //   onPress: () {
+                    //     selectNone();
+                    //   },
+                    // ),
                   ],
                 ),
               ),

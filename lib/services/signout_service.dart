@@ -21,6 +21,8 @@ class SignoutService {
       print('Response body: ${response.body}');
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
+        await prefs.remove('accessToken');
+        await prefs.remove('userNickname');
         return true;
       } else {
         return false;

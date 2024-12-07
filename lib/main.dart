@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mow/screens/map/map.dart';
 import 'package:flutter_mow/screens/signin/login_screen.dart';
+import 'package:flutter_mow/screens/splash/new_splash_screen.dart';
 import 'package:flutter_mow/screens/splash/splash_screen.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -23,7 +24,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: const LoginScreen(),
+      home: const NewSplashScreen(),
       theme: ThemeData(
         textTheme: const TextTheme(
           headlineLarge: TextStyle(

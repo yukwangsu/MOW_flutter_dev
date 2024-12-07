@@ -121,7 +121,7 @@ class SignupService {
   }
 
   //사용자 정보 입력
-  static signupDetails(
+  static Future<bool> signupDetails(
       String name, int age, String sex, String job, String mbti) async {
     final url = Uri.parse('${Secrets.awsKey}auth/signup/details');
     var data = {
@@ -139,10 +139,22 @@ class SignupService {
       'accessToken': '$token',
       'Content-Type': 'application/json',
     };
-    final response = await http.post(url, headers: headers, body: body);
-    print('----------sign up details----------');
-    print('Response status: ${response.statusCode}');
-    print('Response body: ${response.body}');
+    try {
+      final response = await http.post(url, headers: headers, body: body);
+      print('----------sign up details----------');
+      print('Response status: ${response.statusCode}');
+      // UTF-8로 응답을 수동 디코딩
+      final utf8Body = utf8.decode(response.bodyBytes);
+      print('Response body: $utf8Body');
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      print('Error during sign up details: $e');
+      return false;
+    }
   }
 
   //구글계정으로 회원가입

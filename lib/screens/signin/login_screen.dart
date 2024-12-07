@@ -131,7 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  const MapScreen(isNewUser: true),
+                                  const MapScreen(isNewUser: false),
                             ),
                             (route) => false, // 모든 이전 화면을 제거
                           );
@@ -237,34 +237,37 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(
                     height: 30,
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          // SignupService.googleSignup();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('기능 준비 중입니다 ㅠ.ㅠ(회원가입을 이용해주세요)'),
-                            ),
-                          );
-                        },
-                        child: Image.asset('assets/images/google.png'),
-                      ),
-                      const SizedBox(
-                        width: 22,
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('기능 준비 중입니다 ㅠ.ㅠ(회원가입을 이용해주세요)'),
-                            ),
-                          );
-                        },
-                        child: Image.asset('assets/images/kakao.png'),
-                      ),
-                    ],
+                  Opacity(
+                    opacity: 0.3,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            // SignupService.googleSignup();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('기능 준비 중입니다 ㅠ.ㅠ(회원가입을 이용해주세요)'),
+                              ),
+                            );
+                          },
+                          child: Image.asset('assets/images/google.png'),
+                        ),
+                        const SizedBox(
+                          width: 22,
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('기능 준비 중입니다 ㅠ.ㅠ(회원가입을 이용해주세요)'),
+                              ),
+                            );
+                          },
+                          child: Image.asset('assets/images/kakao.png'),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

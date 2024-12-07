@@ -44,8 +44,13 @@ dependencies:
   geolocator: ^13.0.1
   google_fonts: ^6.2.1
   image_picker: ^1.1.2
+  # flutter_native_splash: ^2.4.3
   # geolocator: ^13.0.1
   # location: ^4.3.0
+
+# flutter_native_splash:
+#   color: "#FFFCF8" # background color
+#   image: assets/images/splash_image.png # 추가할 이미지 파일 경로를 추가
 
 dev_dependencies:
   flutter_test:
