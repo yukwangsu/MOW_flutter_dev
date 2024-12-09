@@ -4,6 +4,7 @@ import 'package:flutter_mow/widgets/appbar_back.dart';
 import 'package:flutter_mow/widgets/button_main.dart';
 import 'package:flutter_mow/widgets/text_start.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SignUpAgree extends StatefulWidget {
   const SignUpAgree({super.key});
@@ -25,6 +26,20 @@ class _SignUpAgreeState extends State<SignUpAgree> {
     allOk = false;
     con1 = false;
     con2 = false;
+  }
+
+  // url로 이동하는 함수
+  Future<void> _openWebsite(String link) async {
+    print(link);
+    final Uri url = Uri.parse(link);
+    try {
+      await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication, // 기본 브라우저에서 열기
+      );
+    } catch (e) {
+      print('링크 열기 실패: $e');
+    }
   }
 
   setAllOk() {
@@ -165,9 +180,9 @@ class _SignUpAgreeState extends State<SignUpAgree> {
                           width: 8,
                         ),
                         GestureDetector(
-                          onTap: () {
-                            // 추후 notion 연결 필요1
-                            print('텍스트가 클릭되었습니다.1');
+                          onTap: () async {
+                            _openWebsite(
+                                'https://celestial-phosphorus-cfd.notion.site/MOW-156336c1a63e803189d5d11d31c47f6d');
                           },
                           child: const Text(
                             '보기',
@@ -214,8 +229,8 @@ class _SignUpAgreeState extends State<SignUpAgree> {
                         ),
                         GestureDetector(
                           onTap: () {
-                            // 추후 notion 연결 필요2
-                            print('텍스트가 클릭되었습니다.2');
+                            _openWebsite(
+                                'https://celestial-phosphorus-cfd.notion.site/MOW-156336c1a63e804581a1c84f111a828b');
                           },
                           child: const Text(
                             '보기',

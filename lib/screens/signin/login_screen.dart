@@ -161,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const Text(
                           '비밀번호를 잊었어요',
                           style: TextStyle(
-                            color: Color(0xFFC3C3C3),
+                            color: Color.fromARGB(255, 128, 128, 128),
                             fontSize: 14,
                             fontFamily: 'SF_Pro',
                           ),
@@ -192,7 +192,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const Text(
                           '회원가입',
                           style: TextStyle(
-                            color: Color(0xFFC3C3C3),
+                            color: Color.fromARGB(255, 128, 128, 128),
                             fontSize: 14,
                             fontFamily: 'SF_Pro',
                           ),
@@ -247,7 +247,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             // SignupService.googleSignup();
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('기능 준비 중입니다 ㅠ.ㅠ(회원가입을 이용해주세요)'),
+                                content: Text('기능 준비 중입니다 (회원가입을 이용해주세요)'),
                               ),
                             );
                           },
@@ -260,7 +260,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           onTap: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('기능 준비 중입니다 ㅠ.ㅠ(회원가입을 이용해주세요)'),
+                                content: Text('기능 준비 중입니다 (회원가입을 이용해주세요)'),
                               ),
                             );
                           },

@@ -171,7 +171,7 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
         context: context,
         builder: (BuildContext context) {
           return LongDialog(
-              contentTitle: '리뷰 등록 완료!', content: '젤리 2개가 지급되었어요 \u{1F606}');
+              contentTitle: '큐레이션 작성 완료!', content: '젤리 2개가 지급되었어요 \u{1F606}');
         },
       );
 

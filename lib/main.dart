@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NaverMapSdk.instance.initialize(
+      // 작심스터디 스타벅스
       clientId: Secrets.naverClientId,
       onAuthFailed: (ex) {
         print("********* 네이버맵 인증오류 : $ex *********");

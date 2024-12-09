@@ -496,7 +496,7 @@ class _MapScreenState extends State<MapScreen> {
             ),
 
           // 내 위치로 이동 버튼
-          if (removeGuide)
+          if (!widget.isNewUser || removeGuide)
             Positioned(
               left: 20,
               bottom: bottomSheetHeight + 12,
