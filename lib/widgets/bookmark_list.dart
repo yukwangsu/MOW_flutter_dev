@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_mow/models/bookmark.dart';
 import 'package:flutter_mow/services/bookmark_service.dart';
+import 'package:flutter_mow/services/search_service.dart';
 import 'package:flutter_mow/widgets/add_bookmark_list.dart';
 import 'package:flutter_mow/widgets/button_main.dart';
 import 'package:flutter_svg/svg.dart';
@@ -52,7 +53,7 @@ class _BookmarkListState extends State<BookmarkList> {
       setState(() {
         selectList = false;
         selectedListId = -1;
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(addSuccess);
       });
     }
   }

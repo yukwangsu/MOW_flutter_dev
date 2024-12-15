@@ -9,6 +9,7 @@ import 'package:flutter_mow/screens/map/edit_tag.dart';
 import 'package:flutter_mow/screens/map/search_place.dart';
 import 'package:flutter_mow/screens/map/write_curation.dart';
 import 'package:flutter_mow/screens/user/user_info.dart';
+import 'package:flutter_mow/services/bookmark_service.dart';
 import 'package:flutter_mow/services/curation_service.dart';
 import 'package:flutter_mow/services/search_service.dart';
 import 'package:flutter_mow/variables.dart';
@@ -1054,6 +1055,8 @@ class _MapScreenState extends State<MapScreen> {
     //api를 요청하지 않는다.
     if (reloadDetailspace) {
       place = SearchService.getPlaceById(workspaceId);
+      // 북마크 색 가져오기
+      // workspaceBookmarkColor = SearchService.getWorkspaceBookmarkColor();
       reloadDetailspace = false;
       detailShowAddress = false;
       detailShowNumber = false;
@@ -1391,7 +1394,33 @@ class _MapScreenState extends State<MapScreen> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  bookmarkButtonWidget(),
+                                  FutureBuilder(
+                                      future: workspaceBookmarkColor,
+                                      builder: (context, snapshot) {
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
+                                          // 데이터가 로드 중일 때 로딩 표시
+                                          return bookmarkButtonWidget();
+                                        } else if (snapshot.hasError) {
+                                          // 오류가 발생했을 때
+                                          return Text(
+                                              'Error: ${snapshot.error}');
+                                        } else {
+                                          // 북마크 색을 성공적으로 불러왔을 때
+                                          bool isBookmarked = snapshot.data!
+                                              .containsKey(
+                                                  workspaceId.toString());
+                                          if (isBookmarked)
+                                            return cancelBookmarkButtonWidget(
+                                                colorList[snapshot.data![
+                                                        workspaceId
+                                                            .toString()] -
+                                                    1]);
+                                          else
+                                            return bookmarkButtonWidget();
+                                        }
+                                      }),
+
                                   const SizedBox(
                                     width: 8.0,
                                   ),
@@ -2129,8 +2158,32 @@ class _MapScreenState extends State<MapScreen> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      // 북마크에 추가하기 버튼
-                                      bookmarkButtonWidget(),
+                                      FutureBuilder(
+                                          future: workspaceBookmarkColor,
+                                          builder: (context, snapshot) {
+                                            if (snapshot.connectionState ==
+                                                ConnectionState.waiting) {
+                                              // 데이터가 로드 중일 때 로딩 표시
+                                              return bookmarkButtonWidget();
+                                            } else if (snapshot.hasError) {
+                                              // 오류가 발생했을 때
+                                              return Text(
+                                                  'Error: ${snapshot.error}');
+                                            } else {
+                                              // 북마크 색을 성공적으로 불러왔을 때
+                                              bool isBookmarked = snapshot.data!
+                                                  .containsKey(
+                                                      workspaceId.toString());
+                                              if (isBookmarked)
+                                                return cancelBookmarkButtonWidget(
+                                                    colorList[snapshot.data![
+                                                            workspaceId
+                                                                .toString()] -
+                                                        1]);
+                                              else
+                                                return bookmarkButtonWidget();
+                                            }
+                                          }),
                                       const SizedBox(
                                         width: 8.0,
                                       ),
@@ -3466,6 +3519,7 @@ class _MapScreenState extends State<MapScreen> {
     );
   }
 
+  // 저장하기 버튼
   Widget bookmarkButtonWidget() {
     return SelectButton(
       height: 36.0,
@@ -3481,8 +3535,8 @@ class _MapScreenState extends State<MapScreen> {
       lineHeight: 1.5,
       svgIconPath: "assets/icons/unsave_icon.svg",
       isIconFirst: true,
-      onPress: () {
-        showModalBottomSheet(
+      onPress: () async {
+        bool? addBookmarkResult = await showModalBottomSheet(
           context: context,
           //showModalBottomSheet의 높이가 화면의 절반으로 제한
           //그러나 isScrollControlled를 사용하면 높이 제한이 풀리고 스크롤이 가능해짐
@@ -3499,6 +3553,45 @@ class _MapScreenState extends State<MapScreen> {
             return BookmarkList(workspaceId: workspaceId);
           },
         );
+        // 리스트에 저장했다면 새로고침해서 색을 반영해준다.
+        if (addBookmarkResult != null) {
+          setState(() {
+            reloadDetailspace = true;
+            reloadCurationPlace = true;
+            // 북마크 정보 다시 가져오기
+            workspaceBookmarkColor = SearchService.getWorkspaceBookmarkColor();
+          });
+        }
+      },
+    );
+  }
+
+  // 저장하기 취소 버튼
+  Widget cancelBookmarkButtonWidget(Color iconColor) {
+    return SelectButton(
+      height: 36.0,
+      padding: 10.0,
+      bgColor: const Color(0xFFFFFCF8),
+      radius: 12.0,
+      text: '저장됨',
+      textColor: const Color(0xFF6B4D38),
+      textSize: 16.0,
+      borderColor: const Color(0xFF6B4D38),
+      borderOpacity: 1.0,
+      borderWidth: 1.0,
+      lineHeight: 1.5,
+      svgIconPath: "assets/icons/unsave_icon.svg",
+      iconColor: iconColor,
+      isIconFirst: true,
+      onPress: () async {
+        // 삭제하는 api
+        // await BookmarkService.removeWorkspaceFromBookmarkList(workspaceId);
+        setState(() {
+          reloadDetailspace = true;
+          reloadCurationPlace = true;
+          // 북마크 정보 다시 가져오기
+          workspaceBookmarkColor = SearchService.getWorkspaceBookmarkColor();
+        });
       },
     );
   }

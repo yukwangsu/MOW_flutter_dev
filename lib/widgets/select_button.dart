@@ -16,6 +16,7 @@ class SelectButton extends StatelessWidget {
   final double? borderOpacity; // 테두리 투명도
   final String? svgIconPath; // 아이콘 추가
   final bool? isIconFirst; // 아이콘이 텍스트보다 먼저 배열
+  final Color? iconColor;
   final double? lineHeight;
   final Function onPress;
 
@@ -33,6 +34,7 @@ class SelectButton extends StatelessWidget {
     this.borderOpacity,
     this.svgIconPath,
     this.isIconFirst,
+    this.iconColor,
     this.lineHeight,
     required this.onPress,
   });
@@ -82,9 +84,15 @@ class SelectButton extends StatelessWidget {
                 ),
             ] else ...[
               if (svgIconPath != null) // 아이콘이 있으면 표시
-                SvgPicture.asset(
-                  svgIconPath!,
-                ),
+                if (iconColor == null)
+                  SvgPicture.asset(
+                    svgIconPath!,
+                  )
+                else
+                  SvgPicture.asset(
+                    svgIconPath!,
+                    color: iconColor,
+                  ),
               if (svgIconPath != null)
                 const SizedBox(width: 4.0), // 아이콘과 텍스트 사이의 간격
               Text(
