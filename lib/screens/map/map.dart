@@ -14,9 +14,11 @@ import 'package:flutter_mow/services/curation_service.dart';
 import 'package:flutter_mow/services/search_service.dart';
 import 'package:flutter_mow/variables.dart';
 import 'package:flutter_mow/widgets/bookmark_list.dart';
+import 'package:flutter_mow/widgets/button_main.dart';
 import 'package:flutter_mow/widgets/select_button.dart';
 import 'package:flutter_mow/widgets/switch_button.dart';
 import 'package:flutter_mow/widgets/user_marker_icon.dart';
+import 'package:flutter_mow/widgets/word_cloud.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:geolocator/geolocator.dart';
@@ -1457,6 +1459,47 @@ class _MapScreenState extends State<MapScreen> {
                                 ],
                               ),
                               const SizedBoxHeight30(),
+
+                              // 태그 추가
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20.0),
+                                child: Column(
+                                  children: [
+                                    const ListBorderLine(),
+                                    const SizedBoxHeight30(),
+                                    WordCloud(workspaceId: workspaceId!),
+                                    const SizedBoxHeight30(),
+                                    // 태그 추가하기 버튼(리뷰 쓰기)
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 11.0),
+                                      child: ButtonMain(
+                                          text: "나도 추가하기",
+                                          bgcolor: const Color(0xFF6B4D38),
+                                          textColor: Colors.white,
+                                          borderColor: const Color(0xFF6B4D38),
+                                          opacity: 1.0,
+                                          onPress: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => AddReview(
+                                                    workspaceId: workspaceId!),
+                                              ),
+                                            ).then((_) {
+                                              // *** 이 화면으로 돌아왔을 때 디테일 화면을 다시 로딩 => 리뷰 업데이트***
+                                              reloadDetailspace = true;
+                                              bottomsheetMode = 'detail';
+                                              setState(() {});
+                                            });
+                                          }),
+                                    ),
+                                    const SizedBoxHeight30(),
+                                  ],
+                                ),
+                              ),
+
                               // 상세정보, 리뷰 등등
                               Padding(
                                 padding: const EdgeInsets.symmetric(
@@ -3621,7 +3664,7 @@ class _MapScreenState extends State<MapScreen> {
       isIconFirst: true,
       onPress: () async {
         // 삭제하는 api
-        // await BookmarkService.removeWorkspaceFromBookmarkList(workspaceId);
+        await BookmarkService.removeWorkspaceFromBookmarkList(workspaceId!);
         setState(() {
           reloadDetailspace = true;
           reloadCurationPlace = true;

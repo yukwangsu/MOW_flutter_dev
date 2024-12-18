@@ -1,4 +1,5 @@
 import 'package:flutter_mow/models/place_detail_model.dart';
+import 'package:flutter_mow/models/word_cloud_model.dart';
 import 'package:flutter_mow/variables.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -60,6 +61,42 @@ class ReviewService {
       }
     } catch (e) {
       print('Error during addReview: $e');
+    }
+  }
+
+  static Future<WordCloudModel> getTags(
+    int workspaceId,
+  ) async {
+    final url = Uri.parse(
+        '${Secrets.awsKey}workspace/tag/cnt?workspaceId=$workspaceId');
+
+    //토큰 가져오기
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('accessToken');
+
+    var headers = {
+      'accessToken': '$token',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final response = await http.get(url, headers: headers);
+      print('----------[service] getTags----------');
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        print("[success] getTags");
+        final responseData = json.decode(response.body);
+        print(responseData);
+        return WordCloudModel.fromJson(responseData);
+      } else {
+        print("[fail] getTags");
+        throw Error();
+      }
+    } catch (e) {
+      print('Error during getTags: $e');
+      throw Error();
     }
   }
 }

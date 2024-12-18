@@ -74,6 +74,11 @@ const Map<int, String> reversedTagMap = {
   57: "# 화장실이 불편해요",
 };
 
+//  "# " 제거
+Map<int, String> reversedTagMapString = reversedTagMap.map(
+  (key, value) => MapEntry(key, value.replaceFirst('# ', '')),
+);
+
 // 작업 편의 태그 (1~10)
 const List<String> workConvenienceTags = [
   "# 한산해요",

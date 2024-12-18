@@ -11,7 +11,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NaverMapSdk.instance.initialize(
-      // 작심스터디 스타벅스
       clientId: Secrets.naverClientId,
       onAuthFailed: (ex) {
         print("********* 네이버맵 인증오류 : $ex *********");
@@ -45,6 +44,18 @@ class MyApp extends StatelessWidget {
             fontWeight: FontWeight.bold,
             fontFamily: 'SF_Pro',
             height: 25 / 20,
+          ),
+          labelLarge: TextStyle(
+            fontSize: 20.0,
+            fontWeight: FontWeight.normal,
+            fontFamily: 'SF_Pro',
+            height: 25 / 20,
+          ),
+          labelMedium: TextStyle(
+            fontSize: 18.0,
+            fontWeight: FontWeight.normal,
+            fontFamily: 'SF_Pro',
+            height: 21 / 18,
           ),
           bodyLarge: TextStyle(
             fontSize: 16.0,
