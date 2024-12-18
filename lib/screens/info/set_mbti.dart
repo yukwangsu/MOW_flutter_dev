@@ -61,7 +61,7 @@ class _SetMbtiState extends State<SetMbti> {
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 27),
                 child: SubText(
-                  text: '추천 컨텐츠를 위해서만 사용할 정보에요',
+                  text: '추천 컨텐츠를 위해서만 사용할 정보예요',
                   textColor: Color(0xFFC3C3C3),
                 ),
               ),

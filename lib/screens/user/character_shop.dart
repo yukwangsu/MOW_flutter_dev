@@ -191,18 +191,19 @@ class _CharacterShopState extends State<CharacterShop> {
                 // 보유한 젤리
                 Row(
                   children: [
-                    GestureDetector(
-                        onDoubleTap: () async {
-                          final tempJelly =
-                              await CharacterService.getMyReward();
-                          if (tempJelly >= 10) {
-                            await CharacterService.decreaseReward(10);
-                          } else {
-                            await CharacterService.increaseReward(10);
-                          }
-                          reloadAfterBuyItem();
-                        },
-                        child: SvgPicture.asset('assets/icons/jelly_icon.svg')),
+                    // GestureDetector(
+                    //     onDoubleTap: () async {
+                    //       final tempJelly =
+                    //           await CharacterService.getMyReward();
+                    //       if (tempJelly >= 10) {
+                    //         await CharacterService.decreaseReward(10);
+                    //       } else {
+                    //         await CharacterService.increaseReward(10);
+                    //       }
+                    //       reloadAfterBuyItem();
+                    //     },
+                    //     child: SvgPicture.asset('assets/icons/jelly_icon.svg')),
+                    SvgPicture.asset('assets/icons/jelly_icon.svg'),
                     const SizedBox(
                       width: 2.0,
                     ),
