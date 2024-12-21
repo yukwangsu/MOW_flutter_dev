@@ -17,7 +17,7 @@ class SearchService {
     double userLongitude,
   ) async {
     final url =
-        Uri.parse('${Secrets.awsKey}workspace?order=$order&page=0&size=40');
+        Uri.parse('${Secrets.awsKey}workspace?order=$order&page=0&size=100');
 
     //토큰 가져오기
     final prefs = await SharedPreferences.getInstance();
