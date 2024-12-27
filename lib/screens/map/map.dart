@@ -527,7 +527,7 @@ class _MapScreenState extends State<MapScreen> {
           if (!widget.isNewUser || removeGuide)
             Positioned(
               left: 20,
-              bottom: bottomSheetHeight + 12,
+              bottom: bottomSheetHeight + 12 + 60,
               child: GestureDetector(
                   onTap: () async {
                     if (bottomSheetHeight <= screenHeight * 0.6) {
@@ -562,12 +562,30 @@ class _MapScreenState extends State<MapScreen> {
                       : const Text('')),
             ),
 
+          // 장소제보 버튼
+          if (bottomsheetMode == 'normal' || bottomsheetMode == 'detail')
+            Positioned(
+              left: 20,
+              bottom: bottomSheetHeight + 12,
+              child: GestureDetector(
+                  onTap: () async {
+                    if (bottomSheetHeight <= screenHeight * 0.6) {
+                      // 구글 폼으로 이동
+                      _openWebsite('https://forms.gle/HLVaeMseWx5vkNFR8');
+                    }
+                  },
+                  //bottomSheetHeight의 높이가 screenHeight * 0.6보다 높으면 버튼을 보여주지 않음
+                  child: bottomSheetHeight <= screenHeight * 0.6
+                      ? SvgPicture.asset('assets/icons/add_space_icon.svg')
+                      : const Text('')),
+            ),
+
           // 큐레이션 작성 버튼
           if (bottomsheetMode == 'curation_normal' ||
               bottomsheetMode == 'curation_place')
             Positioned(
               left: 20,
-              bottom: bottomSheetHeight + 12 + 60,
+              bottom: bottomSheetHeight + 12,
               child: GestureDetector(
                   onTap: () async {
                     if (bottomSheetHeight <= screenHeight * 0.6) {

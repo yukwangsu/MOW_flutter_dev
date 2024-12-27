@@ -4,6 +4,7 @@ import 'package:flutter_mow/screens/map/write_curation.dart';
 import 'package:flutter_mow/services/search_service.dart';
 import 'package:flutter_mow/widgets/appbar_back.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SearchPlace extends StatefulWidget {
   final double userLatitude;
@@ -23,6 +24,19 @@ class _SearchPlaceState extends State<SearchPlace> {
   final TextEditingController searchController = TextEditingController();
   FocusNode searchFocusNode = FocusNode(); // 포커스 노드 추가, 가게 이름으로 검색 중인지 확인
   late Future<PlaceListModel> placeModel;
+
+  // url로 이동하는 함수
+  Future<void> _openWebsite(String link) async {
+    final Uri url = Uri.parse(link);
+    try {
+      await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication, // 기본 브라우저에서 열기
+      );
+    } catch (e) {
+      print('링크 열기 실패: $e');
+    }
+  }
 
   @override
   void initState() {
@@ -103,9 +117,14 @@ class _SearchPlaceState extends State<SearchPlace> {
                       child: ListView.separated(
                         scrollDirection: Axis.vertical,
                         padding: const EdgeInsets.only(top: 0.0),
-                        itemCount: placeList.length,
+                        itemCount: placeList.length + 1,
                         itemBuilder: (context, index) {
-                          return placeElement(placeList[index]);
+                          if (index == placeList.length) {
+                            return addSpaceWidget();
+                          } else {
+                            return placeElement(placeList[index]);
+                          }
+                          return null;
                         },
                         //separatorBuilder는 사이에 공간을 만드는 역할.
                         separatorBuilder: (context, index) =>
@@ -309,6 +328,36 @@ class _SearchPlaceState extends State<SearchPlace> {
                   ),
                 ],
               ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // 장소제보 칸
+  Widget addSpaceWidget() {
+    return Column(
+      children: [
+        const SizedBox(
+          height: 20.0,
+        ),
+        GestureDetector(
+          onTap: () async {
+            // 구글 폼으로 이동
+            _openWebsite('https://forms.gle/HLVaeMseWx5vkNFR8');
+          },
+          child: Container(
+            height: 60.0,
+            decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 219, 219, 219),
+                borderRadius: BorderRadius.circular(10.0)),
+            child: Center(
+              child: Text('장소제보하기',
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyLarge!
+                      .copyWith(color: Colors.white)),
             ),
           ),
         ),

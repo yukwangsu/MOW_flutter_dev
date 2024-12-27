@@ -197,7 +197,20 @@ class _CurationPageState extends State<CurationPage> {
                                               maxLines: 3,
                                               style: Theme.of(context)
                                                   .textTheme
-                                                  .headlineLarge,
+                                                  .headlineLarge!
+                                                  .copyWith(
+                                                shadows: [
+                                                  Shadow(
+                                                    // 그림자의 x, y 이동량
+                                                    offset: const Offset(1, 1),
+                                                    blurRadius:
+                                                        10.0, // 그림자 흐림 정도
+                                                    color: Colors.white
+                                                        .withOpacity(
+                                                            1.0), // 그림자 색상 및 투명도
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ],
                                         ),
