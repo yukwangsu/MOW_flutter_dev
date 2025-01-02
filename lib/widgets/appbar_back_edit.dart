@@ -103,7 +103,7 @@ class AppbarBackEdit extends StatelessWidget implements PreferredSizeWidget {
                           );
                           if (result != null && result) {
                             //삭제 버튼을 눌러서 result가 true일 때
-                            print('큐레이션이 삭제되었습니다');
+                            print('$curationId번 큐레이션 삭제 시도');
                             final deleteResult =
                                 await CurationService.deleteCurationById(
                                     curationId);
