@@ -99,4 +99,74 @@ class ReviewService {
       throw Error();
     }
   }
+
+  // 본인이 작성한 리뷰 불러오기
+  static Future<List<dynamic>> getReviewMine(int id) async {
+    final url = Uri.parse('${Secrets.awsKey}review/mine?workspaceId=$id');
+
+    //토큰 가져오기
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('accessToken');
+
+    var headers = {
+      'accessToken': '$token',
+      'Content-Type': 'application/json',
+    };
+
+    try {
+      final response = await http.get(url, headers: headers);
+      print('----------[service] getReviewMine----------');
+      print('Response status: ${response.statusCode}');
+
+      // UTF-8로 응답을 수동 디코딩
+      final utf8Body = utf8.decode(response.bodyBytes);
+      print('Response body: $utf8Body');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final responseData = json.decode(utf8Body);
+        return responseData;
+      } else {
+        print('Fail getReviewMine');
+        throw Error();
+      }
+    } catch (e) {
+      print('Error during getReviewMine: $e');
+      throw Error();
+    }
+  }
+
+  //리뷰 삭제하기
+  static Future<bool> deleteReviewById(
+    int reviewId,
+  ) async {
+    final url = Uri.parse('${Secrets.awsKey}review/delete?reviewId=$reviewId');
+
+    //토큰 가져오기
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('accessToken');
+
+    var headers = {
+      'accessToken': '$token',
+      'Content-Type': 'application/json',
+    };
+    try {
+      final response = await http.delete(url, headers: headers);
+      print('----------[service] deleteReviewById----------');
+      print('Response status: ${response.statusCode}');
+
+      // UTF-8로 응답을 수동 디코딩
+      final utf8Body = utf8.decode(response.bodyBytes);
+      print('Response body: $utf8Body');
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return true;
+      } else {
+        print('Fail deleteReviewById');
+        return false;
+      }
+    } catch (e) {
+      print('Error during deleteReviewById: $e');
+      return false;
+    }
+  }
 }

@@ -50,13 +50,14 @@ class PlaceDetailModel {
 }
 
 class ReviewModel {
-  final int workspaceId, userId;
+  final int reviewId, workspaceId, userId;
   final double stars;
   final String userNickname, reviewText, featureTags;
   final DateTime createdAt;
 
   ReviewModel.fromJson(Map<dynamic, dynamic> json)
-      : workspaceId = json['workspaceId'] ?? 0,
+      : reviewId = json['reviewId'] ?? 0,
+        workspaceId = json['workspaceId'] ?? 0,
         userId = json['userId'] ?? 0,
         stars = (json['stars'] != null) ? json['stars'].toDouble() : 0.0,
         reviewText = json['reviewText'] ?? '',

@@ -11,11 +11,14 @@ import 'package:flutter_mow/screens/map/write_curation.dart';
 import 'package:flutter_mow/screens/user/user_info.dart';
 import 'package:flutter_mow/services/bookmark_service.dart';
 import 'package:flutter_mow/services/curation_service.dart';
+import 'package:flutter_mow/services/review_service.dart';
 import 'package:flutter_mow/services/search_service.dart';
 import 'package:flutter_mow/variables.dart';
 import 'package:flutter_mow/widgets/bookmark_list.dart';
 import 'package:flutter_mow/widgets/button_main.dart';
+import 'package:flutter_mow/widgets/review_ask_delete.dart';
 import 'package:flutter_mow/widgets/select_button.dart';
+import 'package:flutter_mow/widgets/short_dialog.dart';
 import 'package:flutter_mow/widgets/switch_button.dart';
 import 'package:flutter_mow/widgets/user_marker_icon.dart';
 import 'package:flutter_mow/widgets/word_cloud.dart';
@@ -111,6 +114,8 @@ class _MapScreenState extends State<MapScreen> {
   bool isLoadingUserLocation = false;
   //workspace bookmark color map
   late Future<Map<String, dynamic>> workspaceBookmarkColor;
+  //workspace review check mine(check delete available)
+  late Future<List<dynamic>> reviewMine;
   //show only bookmarked place
   bool showOnlyBookmarkedPlace = false;
   bool showBookmarkFilterBotton = true;
@@ -703,25 +708,7 @@ class _MapScreenState extends State<MapScreen> {
                   },
                   //bottomSheetHeight의 높이가 screenHeight * 0.6보다 높으면 북마크 필터 버튼을 보여주지 않음
                   child: bottomSheetHeight <= screenHeight * 0.6
-                      ? Container(
-                          width: 48.0,
-                          height: 48.0,
-                          decoration: BoxDecoration(
-                            color: Colors.white, // 배경색 흰색
-                            shape: BoxShape.circle, // 원형 모양
-                            border: Border.all(
-                              color: const Color(0xFFE4E3E2),
-                              width: 1.0,
-                            ),
-                          ),
-                          child: const Center(
-                            child: Icon(
-                              Icons.refresh_outlined,
-                              color: Color(0xFF6B4D38), // 아이콘 색상
-                              size: 32.0, // 아이콘 크기
-                            ),
-                          ),
-                        )
+                      ? SvgPicture.asset('assets/icons/reload_button_icon.svg')
                       : const Text('')),
             ),
 
@@ -1100,8 +1087,8 @@ class _MapScreenState extends State<MapScreen> {
     //api를 요청하지 않는다.
     if (reloadDetailspace) {
       place = SearchService.getPlaceById(workspaceId!);
-      // 북마크 색 가져오기
-      // workspaceBookmarkColor = SearchService.getWorkspaceBookmarkColor();
+      // 작업공간 리뷰 삭제가능 여부(본인 작성 여부) 불러오기
+      reviewMine = ReviewService.getReviewMine(workspaceId!);
       reloadDetailspace = false;
       detailShowAddress = false;
       detailShowNumber = false;
@@ -1444,7 +1431,7 @@ class _MapScreenState extends State<MapScreen> {
                                       builder: (context, snapshot) {
                                         if (snapshot.connectionState ==
                                             ConnectionState.waiting) {
-                                          // 데이터가 로드 중일 때 로딩 표시
+                                          // 데이터가 로드 중일 때
                                           return bookmarkButtonWidget();
                                         } else if (snapshot.hasError) {
                                           // 오류가 발생했을 때
@@ -1759,26 +1746,59 @@ class _MapScreenState extends State<MapScreen> {
                                             ],
                                           )
                                         // 리뷰가 존재할 때
-                                        : Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              for (int i = 0;
-                                                  i <
-                                                      placeDetail
-                                                          .reviews.length;
-                                                  i++) ...[
-                                                reviewList(
-                                                    placeDetail.reviews[i]),
-                                                if (i <
-                                                    placeDetail.reviews.length -
-                                                        1)
-                                                  const SizedBox(
-                                                    height: 32,
-                                                  ), // 마지막 항목 뒤에는 추가 안되도록
-                                              ],
-                                            ],
-                                          ),
+                                        : FutureBuilder(
+                                            future: reviewMine,
+                                            builder: (context, snapshot) {
+                                              if (snapshot.connectionState ==
+                                                  ConnectionState.waiting) {
+                                                // 데이터가 로드 중일 때 로딩 표시
+                                                return const Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    CircularProgressIndicator(
+                                                      color: Color(0xFFAD7541),
+                                                    ),
+                                                  ],
+                                                );
+                                              } else if (snapshot.hasError) {
+                                                // 오류가 발생했을 때
+                                                return Text(
+                                                    'Error: ${snapshot.error}');
+                                              } else {
+                                                List<dynamic> reviewMineResult =
+                                                    snapshot.data!;
+                                                return Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    for (int i = 0;
+                                                        i <
+                                                            placeDetail
+                                                                .reviews.length;
+                                                        i++) ...[
+                                                      reviewList(
+                                                          placeDetail
+                                                              .reviews[i],
+                                                          reviewMineResult
+                                                              .contains(
+                                                                  placeDetail
+                                                                      .reviews[
+                                                                          i]
+                                                                      .reviewId)),
+                                                      if (i <
+                                                          placeDetail.reviews
+                                                                  .length -
+                                                              1)
+                                                        const SizedBox(
+                                                          height: 32,
+                                                        ), // 마지막 항목 뒤에는 추가 안되도록
+                                                    ],
+                                                  ],
+                                                );
+                                              }
+                                            }),
+
                                     const SizedBox(
                                       height: 72,
                                     ),
@@ -3134,7 +3154,7 @@ class _MapScreenState extends State<MapScreen> {
     return '${dayMap[day[currentWeekday % 7]]}  $hours';
   }
 
-  Widget reviewList(ReviewModel reviewObj) {
+  Widget reviewList(ReviewModel reviewObj, bool isMyReview) {
     // 리뷰 태그 변환(int -> String)
     List<String> reviewTags = reviewObj.featureTags.isEmpty
         ? []
@@ -3147,33 +3167,84 @@ class _MapScreenState extends State<MapScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SvgPicture.asset('assets/icons/review_user_default_img.svg'),
-            const SizedBox(
-              width: 12,
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // 댓글 작성 유저 이미지
+            Row(
               children: [
-                Text(
-                  reviewObj.userNickname,
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
+                SvgPicture.asset('assets/icons/review_user_default_img.svg'),
                 const SizedBox(
-                  height: 8,
+                  width: 12,
                 ),
-                //reviewObj.createdAt.year 는 int 타입이므로 String으로 변환
-                Text(
-                  '${reviewObj.createdAt.year.toString()}. ${reviewObj.createdAt.month.toString().padLeft(2, '0')}. ${reviewObj.createdAt.day.toString().padLeft(2, '0')}',
+                // 유저 닉네임, 댓글 작성 날짜
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      reviewObj.userNickname,
+                      style: Theme.of(context).textTheme.headlineMedium,
+                    ),
+                    const SizedBox(
+                      height: 8,
+                    ),
+                    //reviewObj.createdAt.year 는 int 타입이므로 String으로 변환
+                    Text(
+                      '${reviewObj.createdAt.year.toString()}. ${reviewObj.createdAt.month.toString().padLeft(2, '0')}. ${reviewObj.createdAt.day.toString().padLeft(2, '0')}',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleSmall!
+                          .copyWith(color: const Color(0xFFC3C3C3)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            if (isMyReview)
+              GestureDetector(
+                onTap: () async {
+                  var result = await showModalBottomSheet(
+                    context: context,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(25.0),
+                      ),
+                    ),
+                    backgroundColor: Colors.white,
+                    builder: (BuildContext context) {
+                      return const ReviewAskDelete();
+                    },
+                  );
+                  if (result != null && result) {
+                    //삭제 버튼을 눌러서 result가 true일 때
+                    final deleteResult = await ReviewService.deleteReviewById(
+                        reviewObj.reviewId);
+                    if (deleteResult) {
+                      // 삭제 확인 메시지 띄워줌.
+                      await showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return ShortDialog(content: '작성한 리뷰가 삭제되었어요');
+                        },
+                      ).then((_) {
+                        // *** 이 화면으로 돌아왔을 때 화면을 다시 로딩
+                        setState(() {
+                          reloadDetailspace = true;
+                          bottomsheetMode = 'detail';
+                        });
+                      });
+                    }
+                  }
+                },
+                child: Text(
+                  '삭제',
                   style: Theme.of(context)
                       .textTheme
                       .titleSmall!
-                      .copyWith(color: const Color(0xFFC3C3C3)),
+                      .copyWith(color: const Color(0xFF666666)),
                 ),
-              ],
-            )
+              ),
           ],
         ),
         const SizedBox(
