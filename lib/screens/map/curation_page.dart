@@ -477,6 +477,8 @@ class _CurationPageState extends State<CurationPage> {
                                               ),
                                               // 주소
                                               Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
                                                 children: [
                                                   SizedBox(
                                                     width: 75.0,
@@ -495,11 +497,16 @@ class _CurationPageState extends State<CurationPage> {
                                                       ],
                                                     ),
                                                   ),
-                                                  Text(
-                                                    snapshot.data!.location,
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .titleSmall,
+                                                  Flexible(
+                                                    child: Text(
+                                                      snapshot.data!.location,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      maxLines: 3,
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .titleSmall,
+                                                    ),
                                                   ),
                                                 ],
                                               ),

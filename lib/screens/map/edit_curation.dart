@@ -656,13 +656,19 @@ class _EditCurationScreenState extends State<EditCurationScreen> {
                                                             ],
                                                           ),
                                                         ),
-                                                        Text(
-                                                          snapshot
-                                                              .data!.location,
-                                                          style:
-                                                              Theme.of(context)
-                                                                  .textTheme
-                                                                  .titleSmall,
+                                                        Flexible(
+                                                          child: Text(
+                                                            snapshot
+                                                                .data!.location,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            maxLines: 3,
+                                                            style: Theme.of(
+                                                                    context)
+                                                                .textTheme
+                                                                .titleSmall,
+                                                          ),
                                                         ),
                                                       ],
                                                     ),

@@ -41,7 +41,7 @@ class _ReviewAskDeleteState extends State<ReviewAskDelete> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
-            '리뷰를를 삭제하시겠어요?',
+            '리뷰를 삭제하시겠어요?',
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(

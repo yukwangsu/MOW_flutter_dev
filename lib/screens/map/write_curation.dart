@@ -554,11 +554,16 @@ class _WriteCurationScreenState extends State<WriteCurationScreen> {
                                                   ],
                                                 ),
                                               ),
-                                              Text(
-                                                snapshot.data!.location,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .titleSmall,
+                                              Flexible(
+                                                child: Text(
+                                                  snapshot.data!.location,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  maxLines: 3,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .titleSmall,
+                                                ),
                                               ),
                                             ],
                                           ),
