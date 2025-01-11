@@ -20,22 +20,28 @@ class _NewSplashScreenState extends State<NewSplashScreen> {
     await Future.delayed(const Duration(milliseconds: 1500));
     if (result == true) {
       final detailNullResult = await SigninService.checkDetails();
+      // 1. 자동 로그인 실패
       if (detailNullResult) {
-        Navigator.push(
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false, // 모든 이전 화면을 제거
         );
-      } else {
-        Navigator.push(
+      }
+      // 2. 자동 로그인 성공
+      else {
+        Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
               builder: (context) => const MapScreen(isNewUser: false)),
+          (route) => false, // 모든 이전 화면을 제거
         );
       }
     } else if (result == false) {
-      Navigator.push(
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (route) => false, // 모든 이전 화면을 제거
       );
     }
   }
